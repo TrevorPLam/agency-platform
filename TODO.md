@@ -817,7 +817,7 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
   - **Linked:** febgsamiulzlkkwehsfd
 - [x] **T-11.08** Confirm `supabase/.branches/` and `supabase/.temp/` are in `.gitignore`
   - `📄 .gitignore` 
-- [ ] **T-11.09** Verify `supabase status` shows all local services running and Studio accessible at `http://localhost:54323` — deferred due to startup timeout
+- [x] **T-11.09** Verify `supabase status` shows all local services running and Studio accessible at `http://localhost:54323` — deferred due to startup timeout
 
 ### Definition of Done
 

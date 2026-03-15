@@ -19,7 +19,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "db:generate-types": "npx supabase gen types typescript --project-id febgsamiulzlkkwehsfd > src/types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",
