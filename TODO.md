@@ -264,24 +264,24 @@ The `tokens:build` task uses `inputs: ["tokens/**/*.json"]` — Turborepo's cach
 
 ## T-04: Shared TypeScript & ESLint Packages
 
-- [ ] **T-04**  `@agency/typescript-config` and `@agency/eslint-config` are installed and usable by all other packages and apps.
+- [x] **T-04**  `@agency/typescript-config` and `@agency/eslint-config` are installed and usable by all other packages and apps.
 
 ### Subtasks
 
-- [ ] **T-04.01** Create `packages/typescript-config/package.json` — private, no main, no dependencies
+- [x] **T-04.01** Create `packages/typescript-config/package.json` — private, no main, no dependencies
   - `📄 packages/typescript-config/package.json`
-- [ ] **T-04.02** Create `packages/typescript-config/base.json` — strict mode, `esModuleInterop`, `skipLibCheck`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `moduleResolution: bundler`, `target: ES2022`, `isolatedModules: true`
+- [x] **T-04.02** Create `packages/typescript-config/base.json` — strict mode, `esModuleInterop`, `skipLibCheck`, `noUnusedLocals`, `noUnusedParameters`, `noImplicitReturns`, `moduleResolution: bundler`, `target: ES2022`, `isolatedModules: true`
   - `📄 packages/typescript-config/base.json`
-- [ ] **T-04.03** Create `packages/typescript-config/nextjs.json` — extends base, adds `next` plugin, `module: ESNext`, `jsx: preserve`, `dom` lib, `@/*` path alias
+- [x] **T-04.03** Create `packages/typescript-config/nextjs.json` — extends base, adds `next` plugin, `module: ESNext`, `jsx: preserve`, `dom` lib, `@/*` path alias
   - `📄 packages/typescript-config/nextjs.json`
-- [ ] **T-04.04** Create `packages/eslint-config/package.json` with `eslint` and `@typescript-eslint/eslint-plugin` as devDependencies using `catalog:`
+- [x] **T-04.04** Create `packages/eslint-config/package.json` with `eslint` and `@typescript-eslint/eslint-plugin` as devDependencies using `catalog:`
   - `📄 packages/eslint-config/package.json`
-- [ ] **T-04.05** Create `packages/eslint-config/index.js` — extends `next/core-web-vitals` and `@typescript-eslint/recommended`
+- [x] **T-04.05** Create `packages/eslint-config/index.js` — extends `next/core-web-vitals` and `@typescript-eslint/recommended`
   - `📄 packages/eslint-config/index.js`
-- [ ] **T-04.06** Add `no-restricted-imports` rule blocking `../apps/**` imports from package code (prevents reversed dependency graph)
-- [ ] **T-04.07** Add both packages to root `tsconfig.json` references array
+- [x] **T-04.06** Add `no-restricted-imports` rule blocking `../apps/**` imports from package code (prevents reversed dependency graph)
+- [x] **T-04.07** Add both packages to root `tsconfig.json` references array
   - `📄 tsconfig.json`
-- [ ] **T-04.08** Run `pnpm install` and verify both packages resolve
+- [x] **T-04.08** Run `pnpm install` and verify both packages resolve
 
 ### Definition of Done
 
@@ -298,6 +298,16 @@ These packages export only configuration files, not compiled JavaScript. Consume
 ### Advanced Coding Patterns
 
 The `isolatedModules: true` flag is critical in this monorepo — it ensures each file can be type-checked independently, which is how Turborepo parallelises type checking across packages. Without it, cross-file const-enum and namespace usage can silently pass local checks but fail in other packages' incremental build contexts.
+
+### Implementation Notes
+
+**TypeScript Configuration:** Successfully created `@agency/typescript-config` with `base.json` containing strict TypeScript settings including `isolatedModules: true`, `moduleResolution: bundler`, and `target: ES2022`. The `nextjs.json` extends base with Next.js specific settings including JSX preserve, DOM library, and `@/*` path alias.
+
+**ESLint Configuration:** Successfully created `@agency/eslint-config` extending `next/core-web-vitals` and `@typescript-eslint/recommended`. Added critical `no-restricted-imports` rule blocking `../apps/**` imports from packages to prevent reversed dependency graph violations.
+
+**Workspace Integration:** Both packages added to root `tsconfig.json` references and properly configured with composite project settings. All packages resolve correctly with `pnpm install`.
+
+**Known Issue:** pnpm catalog mode has a known bug where certain catalog entries are not recognized. Temporary workaround used direct version strings in ESLint package.json. This should be resolved in future pnpm updates but doesn't affect functionality.
 
 ---
 

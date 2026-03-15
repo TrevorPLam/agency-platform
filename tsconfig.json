@@ -1,6 +1,9 @@
 {
   "files": [],
-  "references": [],
+  "references": [
+    { "path": "./packages/typescript-config" },
+    { "path": "./packages/eslint-config" }
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],

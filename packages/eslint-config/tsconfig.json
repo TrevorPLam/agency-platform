@@ -1,0 +1,10 @@
+{
+  "extends": "@agency/typescript-config/base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "allowJs": true
+  },
+  "include": ["*.js", "*.ts"]
+}
