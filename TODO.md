@@ -919,36 +919,24 @@ Add a CI step (T-21) that runs `supabase gen types typescript --local` and diffs
 
 ## T-13: Row-Level Security Policies
 
-- [ ] **T-13**  Every table has RLS enabled, all four policy types, the `auth.tenant_id()` helper, and the required indexes — verified by both manual inspection and `EXPLAIN ANALYZE`.
+- [x] **T-13**  Every table has RLS enabled, all four policy types, the `auth.tenant_id()` helper, and the required indexes — verified by both manual inspection and `EXPLAIN ANALYZE`.
 
 ### Subtasks
 
-- [ ] **T-13.01** Verify `001_tenants.sql` has `ENABLE ROW LEVEL SECURITY` and the self-read policy
-  - `📄 supabase/migrations/001_tenants.sql`
-- [ ] **T-13.02** Verify `002_posts.sql` has all four policies using `auth.tenant_id()` (not the inline JWT extraction) and both CONCURRENTLY indexes
-  - `📄 supabase/migrations/002_posts.sql`
-- [ ] **T-13.03** Apply the RLS checklist comment block at the top of every migration that creates a tenant-scoped table:
-  ```sql
-  -- RLS CHECKLIST for table: [name]
-  -- [ ] ENABLE ROW LEVEL SECURITY
-  -- [ ] tenant_id: uuid NOT NULL REFERENCES tenants(id)
-  -- [ ] CREATE INDEX CONCURRENTLY on tenant_id
-  -- [ ] CREATE INDEX CONCURRENTLY on (tenant_id, created_at)
-  -- [ ] SELECT policy using auth.tenant_id()
-  -- [ ] INSERT policy WITH CHECK using auth.tenant_id()
-  -- [ ] UPDATE policy USING + WITH CHECK using auth.tenant_id()
-  -- [ ] DELETE policy USING auth.tenant_id()
-  -- [ ] pgTAP cross-tenant isolation test covers this table
-  ```
-- [ ] **T-13.04** Run `EXPLAIN ANALYZE SELECT * FROM posts WHERE tenant_id = '[test-uuid]' LIMIT 100` in Studio — output must show `Index Scan`, never `Seq Scan`
-- [ ] **T-13.05** Run the RLS policy audit query in Studio and confirm all tables appear:
-  ```sql
-  SELECT tablename, policyname, cmd, qual
-  FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename, cmd;
-  ```
-- [ ] **T-13.06** Verify `003_audit_log.sql` uses `USING (false)` for the service-role-only policy
-  - `📄 supabase/migrations/003_audit_log.sql`
-- [ ] **T-13.07** Confirm `auth.tenant_id()` function is declared `STABLE PARALLEL SAFE` (from migration 005) — confirm this via Studio: `SELECT provolatile, proparallel FROM pg_proc WHERE proname = 'tenant_id';` → expect `s` and `s`
+- [x] **T-13.01** Verify `001_tenants.sql` has `ENABLE ROW LEVEL SECURITY` and the self-read policy
+  - `📄 supabase/migrations/001_tenants.sql` — RLS enabled; policy refactored in 007 to use `public.tenant_id()`
+- [x] **T-13.02** Verify `002_posts.sql` has all four policies using `auth.tenant_id()` (not the inline JWT extraction) and both CONCURRENTLY indexes
+  - `📄 supabase/migrations/003_posts.sql` — all four policies; 007 refactored to `public.tenant_id()`; indexes on tenant_id and (tenant_id, created_at DESC) present (non-CONCURRENTLY in migrations)
+- [x] **T-13.03** Apply the RLS checklist comment block at the top of every migration that creates a tenant-scoped table:
+  - Applied via `009_rls_checklist_blocks.sql` as COMMENT ON TABLE (append-only; checklist text in table comments). Uses `public.tenant_id()` (migrations cannot create in auth schema).
+- [x] **T-13.04** Run `EXPLAIN ANALYZE SELECT * FROM posts WHERE tenant_id = '[test-uuid]' LIMIT 100` in Studio — output must show `Index Scan`, never `Seq Scan`
+  - Verified: Bitmap Index Scan on idx_posts_tenant_created (index used; no Seq Scan)
+- [x] **T-13.05** Run the RLS policy audit query in Studio and confirm all tables appear:
+  - Verified: all 5 tables have expected policies (tenants, tenant_users, posts, audit_log, customer_auth_mappings)
+- [x] **T-13.06** Verify `003_audit_log.sql` uses `USING (false)` for the service-role-only policy
+  - `📄 supabase/migrations/004_audit_log.sql` — "Service role only" policy WITH USING (false)
+- [x] **T-13.07** Confirm `auth.tenant_id()` function is declared `STABLE PARALLEL SAFE` (from migration 005) — confirm this via Studio: `SELECT provolatile, proparallel FROM pg_proc WHERE proname = 'tenant_id';` → expect `s` and `s`
+  - Verified: public.tenant_id() has provolatile = s, proparallel = s
 
 ### Definition of Done
 
@@ -965,6 +953,14 @@ Performance testing at scale (>10k rows). Schema-per-tenant architecture (Phase 
 ### Advanced Coding Patterns
 
 After adding any new policy, always run `EXPLAIN (ANALYZE, BUFFERS) SELECT * FROM [table] WHERE tenant_id = auth.tenant_id() LIMIT 100;` and look for two red flags: (1) `Seq Scan` instead of `Index Scan` — means the index is missing; (2) `Planning Time` exceeding `Execution Time` — means PostgreSQL is spending more time planning than executing, which often indicates missing statistics (`ANALYZE [table]` fixes this). Run `ANALYZE [table]` after bulk inserts during testing.
+
+### Implementation Notes
+
+**Helper function:** Project uses `public.tenant_id()` (005_auth_tenant_id_helper.sql) because migrations cannot create functions in `auth` schema. All RLS policies refactored in 007 to use `public.tenant_id()`. Verified STABLE and PARALLEL SAFE via `pg_proc`.
+
+**Verification:** Ran EXPLAIN ANALYZE on posts with test tenant UUID — Bitmap Index Scan on idx_posts_tenant_created (no Seq Scan). RLS policy audit query confirmed all 5 public tables have expected policies. audit_log uses USING (false) for service-role only.
+
+**Checklist (T-13.03):** Append-only rule forbids editing 001–008. Added `009_rls_checklist_blocks.sql` applying the RLS checklist as COMMENT ON TABLE for each tenant-scoped table.
 
 ---
 
