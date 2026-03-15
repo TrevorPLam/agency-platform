@@ -1,5 +1,5 @@
 import { getAdminClient } from './admin'
-import type { TenantId, UserId } from './types'
+import type { TenantId, UserId } from './ids'
 
 /**
  * User creation options interface.

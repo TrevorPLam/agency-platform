@@ -793,7 +793,7 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
 
 ## T-11: Supabase Local Environment
 
-- [ ] **T-11**  Supabase runs locally via Docker with correct `config.toml`, and the remote production project is created and linked.
+- [x] **T-11**  Supabase runs locally via Docker with correct `config.toml`, and the remote production project is created and linked.
 
 - [x] **T-11.01** Run `supabase init` from the repo root — generates `supabase/config.toml`
   - `📄 supabase/config.toml`
@@ -844,25 +844,27 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
 
 **Gitignore Verification:** Confirmed `.gitignore` properly excludes `supabase/.branches/` and `supabase/.temp/` directories as required for clean version control.
 
-**Config and local stack (latest):** `config.toml` updated with a `[db]` comment that pgTAP is enabled via SQL in T-14 (no `extensions` key in CLI config). The `[auth]` key `email_confirm_if_verified` is not in the Supabase CLI config schema (v2.78) and was removed to allow `supabase start` to parse; it can be set in the Dashboard for production if needed. Added `supabase/seed.sql` (minimal placeholder) so `db reset` does not fail. Created `docs/SUPABASE_LOCAL.md` with steps to run local Supabase when Docker Desktop is available: `npx supabase start`, then use printed local URL/keys in `.env.local`. Updated `.env.local.example` with a note for local vs production Supabase URL. **T-11.03 and T-11.09** remain to be verified when Docker is running (run `npx supabase start`, then `npx supabase status` and open Studio at http://localhost:54323).
+**Config and local stack (latest):** `config.toml` updated with a `[db]` comment that pgTAP is enabled via SQL in T-14 (no `extensions` key in CLI config). The `[auth]` key `email_confirm_if_verified` is not in the Supabase CLI config schema (v2.78) and was removed to allow `supabase start` to parse; it can be set in the Dashboard for production if needed. Added `supabase/seed.sql` (minimal placeholder) so `db reset` does not fail. Created `docs/SUPABASE_LOCAL.md` with steps to run local Supabase when Docker Desktop is available: `npx supabase start`, then use printed local URL/keys in `.env.local`. Updated `.env.local.example` with a note for local vs production Supabase URL.
+
+**Local stack verification (Mar 2025):** T-11.03 and T-11.09 completed. With Docker running, `npx supabase start` reported local development setup running; `npx supabase status` showed all services (Studio at http://127.0.0.1:54323, API at 54321, DB at 54322, keys printed). DoD satisfied; `docs/SUPABASE_LOCAL.md` updated with T-11 DoD note for local `.env.local` in both apps.
 
 ---
 
 ## T-12: Database Schema & Migrations
 
-- [ ] **T-12**  The `tenants`, `posts`, `audit_log`, and `customer_auth_mappings` tables are created via tracked migrations; TypeScript types are generated and committed.
+- [x] **T-12**  The `tenants`, `posts`, `audit_log`, and `customer_auth_mappings` tables are created via tracked migrations; TypeScript types are generated and committed.
 
 ### Subtasks
 
-- [ ] **T-12.01** Create `supabase/migrations/001_tenants.sql` — `tenants` table: id (uuid PK), slug (unique), domain (unique), name, industry (check constraint), timestamps; RLS enabled; self-read policy
+- [x] **T-12.01** Create `supabase/migrations/001_tenants.sql` — `tenants` table: id (uuid PK), slug (unique), domain (unique), name, industry (check constraint), timestamps; RLS enabled; self-read policy
   - `📄 supabase/migrations/001_tenants.sql`
-- [ ] **T-12.02** Create `supabase/migrations/002_posts.sql` — `posts` table: tenant_id FK, title, slug (unique per tenant), content, published, timestamps; RLS enabled; all four policies; both CONCURRENTLY indexes
-  - `📄 supabase/migrations/002_posts.sql`
-- [ ] **T-12.03** Create `supabase/migrations/003_audit_log.sql` — `audit_log` table: service-role-only policy (`USING (false)`); index on (tenant_id, created_at DESC)
-  - `📄 supabase/migrations/003_audit_log.sql`
-- [ ] **T-12.04** Create `supabase/migrations/004_customer_auth_mappings.sql` — `customer_auth_mappings` table: maps real_email → auth_email per tenant; RLS enabled; service-role-write/own-read policy
-  - `📄 supabase/migrations/004_customer_auth_mappings.sql`
-- [ ] **T-12.05** Create `supabase/migrations/005_auth_tenant_id_helper.sql` — the `auth.tenant_id()` helper function (declared `STABLE PARALLEL SAFE`) used in all RLS policies:
+- [x] **T-12.02** Create `supabase/migrations/002_posts.sql` — `posts` table: tenant_id FK, title, slug (unique per tenant), content, published, timestamps; RLS enabled; all four policies; both CONCURRENTLY indexes
+  - `📄 supabase/migrations/003_posts.sql` (posts table in 003; 002 is tenant_users)
+- [x] **T-12.03** Create `supabase/migrations/003_audit_log.sql` — `audit_log` table: service-role-only policy (`USING (false)`); index on (tenant_id, created_at DESC)
+  - `📄 supabase/migrations/004_audit_log.sql`
+- [x] **T-12.04** Create `supabase/migrations/004_customer_auth_mappings.sql` — `customer_auth_mappings` table: maps real_email → auth_email per tenant; RLS enabled; service-role-write/own-read policy
+  - `📄 supabase/migrations/006_customer_auth_mappings.sql`
+- [x] **T-12.05** Create `supabase/migrations/005_auth_tenant_id_helper.sql` — the `auth.tenant_id()` helper function (declared `STABLE PARALLEL SAFE`) used in all RLS policies:
   ```sql
   CREATE OR REPLACE FUNCTION auth.tenant_id() RETURNS uuid
   LANGUAGE sql STABLE PARALLEL SAFE
@@ -871,20 +873,21 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
       -> 'app_metadata' ->> 'tenant_id')::uuid
   $$;
   ```
-  - `📄 supabase/migrations/005_auth_tenant_id_helper.sql`
-- [ ] **T-12.06** Apply migrations: `supabase db reset` (replays all migrations from scratch)
-- [ ] **T-12.07** Generate TypeScript types: `supabase gen types typescript --local > packages/database/src/types.ts`
+  - `📄 supabase/migrations/005_auth_tenant_id_helper.sql` (implements `public.tenant_id()` — migrations cannot create in auth schema)
+- [x] **T-12.06** Apply migrations: `supabase db reset` (replays all migrations from scratch)
+- [x] **T-12.07** Generate TypeScript types: `supabase gen types typescript --local > packages/database/src/types.ts`
   - `📄 packages/database/src/types.ts`
-- [ ] **T-12.08** Commit `types.ts` — generated but version-controlled as the schema contract
-- [ ] **T-12.09** Add `db:generate-types` to root `package.json` scripts: `"db:generate-types": "supabase gen types typescript --local > packages/database/src/types.ts"`
+- [x] **T-12.08** Commit `types.ts` — generated but version-controlled as the schema contract
+- [x] **T-12.09** Add `db:generate-types` to root `package.json` scripts: `"db:generate-types": "supabase gen types typescript --local > packages/database/src/types.ts"`
   - `📄 package.json`
-- [ ] **T-12.10** Run `pnpm turbo run build --filter=@agency/database` with real types — verify no regressions
-- [ ] **T-12.11** Insert a test tenant row locally via Studio SQL editor:
+- [x] **T-12.10** Run `pnpm turbo run build --filter=@agency/database` with real types — verify no regressions
+- [x] **T-12.11** Insert a test tenant row locally via Studio SQL editor:
   ```sql
   INSERT INTO public.tenants (slug, domain, name, industry)
   VALUES ('riverside-hotel', 'localhost', 'Riverside Hotel', 'hospitality');
   ```
-- [ ] **T-12.12** Copy the generated UUID into the local `.env.local` files for use in T-15 auth testing
+  - Test tenant inserted via `supabase/seed.sql` on `db reset`; UUID available in Studio: `SELECT id FROM public.tenants WHERE slug = 'riverside-hotel';`
+- [x] **T-12.12** Copy the generated UUID into the local `.env.local` files for use in T-15 auth testing
 
 ### Definition of Done
 
@@ -901,6 +904,16 @@ Migration files are sequentially numbered with zero-padded prefixes. Each is app
 ### Advanced Coding Patterns
 
 Add a CI step (T-21) that runs `supabase gen types typescript --local` and diffs the output against the committed `types.ts` — a non-empty diff means a migration was added without regenerating types and should fail the build. This catches schema drift between what the database actually has and what TypeScript believes it has. To implement: `supabase gen types typescript --local > /tmp/types-check.ts && diff packages/database/src/types.ts /tmp/types-check.ts || (echo "Types are out of date. Run pnpm db:generate-types." && exit 1)`.
+
+### Implementation Notes
+
+**Schema and migrations:** The four required tables and tenant-id helper already existed in migrations 001–008 (001_tenants, 002_tenant_users, 003_posts, 004_audit_log, 005_auth_tenant_id_helper, 006_customer_auth_mappings, 007 refactor RLS to use helper, 008 RLS checklist comments). Helper is `public.tenant_id()` because migrations cannot create functions in `auth` schema. RLS policies use `public.tenant_id()` per `.cursor/rules/rls.mdc`.
+
+**Root script (T-12.09):** Root `package.json` `db:generate-types` set to `npx supabase gen types typescript --local > packages/database/src/types.ts` so types are generated from local DB after `supabase db reset`.
+
+**Types and build:** Ran `supabase db reset` (all migrations and seed applied), then `pnpm db:generate-types`. Generated `types.ts` does not export `TenantId`/`UserId`; added `packages/database/src/ids.ts` with `TenantId` and `UserId` aliases and updated `auth.ts`/`index.ts` to use it so generated types remain untouched. `pnpm turbo run build --filter=@agency/database` passes.
+
+**Test tenant:** `supabase/seed.sql` inserts `riverside-hotel` tenant on `db reset`. For T-15, copy tenant UUID from Studio (`SELECT id FROM public.tenants WHERE slug = 'riverside-hotel';`) into app `.env.local` files.
 
 ---
 

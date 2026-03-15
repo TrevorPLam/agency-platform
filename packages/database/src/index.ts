@@ -59,8 +59,9 @@
  * ```
  */
 
-// Type definitions
-export type { Database, TenantId, UserId } from './types'
+// Type definitions (Database from generated types; IDs from semantic aliases)
+export type { Database } from './types'
+export type { TenantId, UserId } from './ids'
 
 // Client factories
 export { 

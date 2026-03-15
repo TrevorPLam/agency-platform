@@ -1,7 +1,3 @@
-/**
- * Database type definitions (generated).
- * Regenerate with: pnpm db:generate-types (linked) or pnpm db:generate-types:local (local).
- */
 export type Json =
   | string
   | number
@@ -361,10 +357,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
-/** Supabase auth user ID (UUID). */
-export type UserId = string
-
-/** Tenant UUID from public.tenants.id. */
-export type TenantId = string
 

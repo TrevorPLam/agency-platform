@@ -12,7 +12,7 @@
     "type-check": "turbo run type-check",
     "tokens:build": "turbo run tokens:build",
     "scaffold": "tsx scripts/scaffold-client.ts",
-    "db:generate-types": "turbo run db:generate-types",
+    "db:generate-types": "npx supabase gen types typescript --local > packages/database/src/types.ts",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [
@@ -26,6 +26,7 @@
   "license": "ISC",
   "devDependencies": {
     "tsx": "catalog:",
-    "turbo": "catalog:"
+    "turbo": "catalog:",
+    "typescript": "catalog:"
   }
 }
