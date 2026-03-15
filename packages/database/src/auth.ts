@@ -71,15 +71,11 @@ export async function assignUserToTenant(
       return true // User already assigned
     }
 
-    // Create tenant assignment
+    // Create tenant assignment (type assertion until real types from db:generate-types)
     const { error } = await admin
       .from('tenant_users')
-      .insert({
-        user_id: userId,
-        tenant_id: tenantId,
-        role,
-        created_at: new Date().toISOString()
-      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .insert({ user_id: userId, tenant_id: tenantId, role, created_at: new Date().toISOString() } as any)
     
     if (error) {
       console.error('Error assigning user to tenant:', error)
@@ -135,15 +131,18 @@ export async function createUserForTenant(
     // This allows the same email to exist across multiple tenants
     const tenantSpecificEmail = generateTenantSpecificEmail(email, tenantId)
     
-    // Create user in Supabase auth with tenant-specific email
+    // Create user in Supabase auth with tenant-specific email.
+    // Tenant identity MUST be in app_metadata (server-controlled); user_metadata is user-editable (GUIDE §6, §18).
     const { data: authData, error: authError } = await admin.auth.admin.createUser({
       email: tenantSpecificEmail,
       password: password || generateSecurePassword(),
       email_confirm: emailConfirm,
       user_metadata: {
-        real_email: email, // Store original email for display
-        tenant_id: tenantId,
+        real_email: email, // Display only; do not use for RLS or tenant resolution
         ...metadata
+      },
+      app_metadata: {
+        tenant_id: tenantId
       }
     })
 
@@ -153,11 +152,23 @@ export async function createUserForTenant(
 
     // Assign user to tenant in tenant_users table
     const assigned = await assignUserToTenant(authData.user.id, tenantId)
-    
     if (!assigned) {
-      // Clean up auth user if tenant assignment fails
       await admin.auth.admin.deleteUser(authData.user.id)
       throw new Error('Failed to assign user to tenant')
+    }
+
+    // Store real_email → auth_email mapping for login-by-real-email flow (T-15).
+    const { error: mappingError } = await admin
+      .from('customer_auth_mappings')
+      .insert({
+        tenant_id: tenantId,
+        user_id: authData.user.id,
+        real_email: email,
+        auth_email: tenantSpecificEmail
+      })
+    if (mappingError) {
+      await admin.auth.admin.deleteUser(authData.user.id)
+      throw new Error(`Failed to create customer_auth_mapping: ${mappingError.message}`)
     }
 
     return {
@@ -287,10 +298,11 @@ export async function getUserTenants(userId: UserId): Promise<Array<{
       return []
     }
 
-    return (data || []).map(item => ({
+    type Row = { tenant_id: string; role: string; tenants: { name: string } | null }
+    return ((data || []) as Row[]).map((item) => ({
       tenantId: item.tenant_id,
       role: item.role,
-      tenantName: item.tenants?.name
+      tenantName: item.tenants?.name ?? undefined,
     }))
   } catch (error) {
     console.error('Error in getUserTenants:', error)

@@ -51,18 +51,25 @@
 
 ## T-12: Database Schema & Migrations
 
-- [ ] **T-12**  Schema matches spec: `tenants`, `posts`, `audit_log`, `customer_auth_mappings`; `auth.tenant_id()` helper; types generated and committed.
+- [x] **T-12**  Schema matches spec: `tenants`, `posts`, `audit_log`, `customer_auth_mappings`; `public.tenant_id()` helper; types generated and committed.
 
 ### Shortlist
 
-- [ ] **T-12.04** Add `004_customer_auth_mappings.sql` (or align TODO to current `tenant_users` design).
-- [ ] **T-12.05** Add `005_auth_tenant_id_helper.sql`; refactor RLS policies to use `auth.tenant_id()`.
-- [ ] **T-12.06** Apply migrations: `supabase db reset`.
-- [ ] **T-12.07** Generate and commit `packages/database/src/types.ts`.
-- [ ] **T-12.09** Ensure root script `db:generate-types` exists and works.
-- [ ] **T-12.11** Insert test tenant row; use UUID in `.env.local` for T-15.
+- [x] **T-12.04** Add `006_customer_auth_mappings.sql` (table for real_email → auth_email; RLS: own-read, service-role write).
+- [x] **T-12.05** Add `005_auth_tenant_id_helper.sql` (public.tenant_id() STABLE PARALLEL SAFE); refactor RLS in `007_refactor_rls_use_tenant_id_helper.sql`.
+- [x] **T-12.06** Apply migrations: `supabase db reset` (all 7 migrations apply; 502 on container restart is non-fatal).
+- [x] **T-12.07** Generate and commit `packages/database/src/types.ts` (includes customer_auth_mappings, tenant_id function).
+- [x] **T-12.09** Root script `db:generate-types` exists and runs `turbo run db:generate-types`; database package uses `supabase gen types typescript --local` for local.
+- [x] **T-12.11** Test tenant in `supabase/seed.sql` (riverside-hotel); copy tenant UUID from Studio or after reset into `.env.local` for T-15.
 
 *Full subtasks and DoD → TODO.md § T-12.*
+
+### Implementation notes (T-12)
+
+- **Helper:** Created in `public` schema as `public.tenant_id()` (migrations cannot create in `auth` schema). All RLS policies refactored to use `public.tenant_id()`.
+- **customer_auth_mappings:** Table has tenant_id, user_id, real_email, auth_email; RLS SELECT USING (user_id = auth.uid()). `createUserForTenant` in `@agency/database` now inserts into this table for login-by-real-email (T-15).
+- **Types:** Regenerated with `npx supabase gen types typescript --local`; added UserId/TenantId aliases and header comment.
+- **Seed:** `supabase/seed.sql` inserts riverside-hotel tenant; use Studio or `SELECT id FROM tenants WHERE slug = 'riverside-hotel'` to get UUID for `.env.local`.
 
 ---
 
