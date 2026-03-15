@@ -123,9 +123,10 @@ Each client gets custom token compilation for brand consistency while sharing co
 
 ## 📚 Documentation
 
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Development guidelines
-- [TOOLCHAIN.md](./TOOLCHAIN.md) - Tool versions and setup
-- [docs/](./docs/) - Architecture decisions and guides
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines, local runbook, and contribution requirements
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — Monorepo structure, isolation layers, and scaling phases
+- [TOOLCHAIN.md](./TOOLCHAIN.md) — Tool versions and setup
+- [docs/](./docs/) — Architecture decisions and guides
 
 ## 🤝 Contributing
 

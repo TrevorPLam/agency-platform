@@ -63,8 +63,10 @@ jobs:
         with:
           version: latest
 
-      - name: Start Supabase (for types drift check)
-        run: supabase start
+      - name: Start Supabase (Postgres only for types drift check)
+        run: |
+          supabase db start
+          supabase db reset
 
       - name: Types drift check
         run: |

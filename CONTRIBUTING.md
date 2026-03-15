@@ -1,0 +1,147 @@
+# Contributing to Agency Platform
+
+This document covers everything you need to get running locally and contribute correctly. For tool versions and verification, see [TOOLCHAIN.md](./TOOLCHAIN.md). For high-level architecture, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+---
+
+## Prerequisites and first-run setup
+
+1. **Install required tools** (see [TOOLCHAIN.md](./TOOLCHAIN.md) and T-01 in TODO.md):
+   - Node.js 22.x LTS: `nvm install 22 && nvm use 22`
+   - pnpm 10.x: `npm install -g pnpm@latest`
+   - Turborepo: `pnpm add -g turbo` (or `npm install -g turbo`)
+   - Supabase CLI: `npm install -g supabase`
+   - Docker Desktop (required for `supabase start`)
+
+2. **Clone and install dependencies**
+
+   ```bash
+   git clone <repository-url>
+   cd agency-platform
+   nvm use 22   # or fnm use 22
+   pnpm install
+   ```
+
+   All dependencies use the **catalog** in `pnpm-workspace.yaml` — versions are centralised there. Internal packages use `workspace:*`. Do not add version strings to `package.json` for catalogued packages; use `catalog:` and add the entry to the root catalog if needed. See [docs/PNPM_NOTES.md](./docs/PNPM_NOTES.md) for the `catalogMode: strict` workaround.
+
+3. **Environment setup**
+
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+   Edit `.env.local` with your values (per machine; file is gitignored). Copy Supabase URL and keys from the output of `supabase start` for local development, or use production keys if you use a linked remote project. See [docs/SUPABASE_LOCAL.md](./docs/SUPABASE_LOCAL.md) for local Supabase steps.
+
+---
+
+## Full local stack startup sequence
+
+Run these in order when starting a full local development session.
+
+```bash
+# Step 1: Start Supabase (requires Docker)
+supabase start
+
+# Step 2: Apply latest migrations (if any new since last start)
+supabase db reset
+
+# Step 3: Start all apps in parallel
+pnpm dev
+
+# Step 4: Start Inngest dev server (separate terminal)
+npx inngest-cli@latest dev -u http://localhost:3001/api/inngest
+
+# Step 5: Compile design tokens (if token JSON changed)
+pnpm tokens:build
+```
+
+**Important:** (1) Start Supabase before `pnpm dev` or app DB calls will fail. (2) After changing any file under `packages/design-tokens/tokens/**/*.json`, run `pnpm tokens:build` or client apps will use stale CSS. (3) After adding or changing migrations, run `pnpm db:generate-types` and commit the updated `packages/database/src/types.ts`.
+
+---
+
+## Port assignments
+
+| Port  | Service                   |
+| ----- | ------------------------- |
+| 3000  | riley-day-care client app |
+| 3001  | agency-admin app          |
+| 54321 | Supabase API              |
+| 54323 | Supabase Studio           |
+| 8288  | Inngest dev UI            |
+
+Other apps (e.g. firm, the-barber-cave) get ports assigned by Turborepo when running `pnpm dev`; check the terminal output.
+
+---
+
+## Migration workflow
+
+1. **Create** a new migration under `supabase/migrations/` with the next sequential number (e.g. `010_my_feature.sql`).
+2. **Test locally:** `supabase db reset` then `supabase test db`. All pgTAP tests must pass.
+3. **Update types:** `pnpm db:generate-types` and commit `packages/database/src/types.ts`.
+4. **Commit** the migration file and the updated types (and see non-negotiable requirements below).
+5. **CI** runs on every PR: types drift check, RLS tests, affected build/lint/type-check.
+6. **On merge to `main`:** If the PR changed `supabase/migrations/**`, the deploy workflow runs `supabase db push` to apply migrations to the linked production project.
+
+---
+
+## Non-negotiable contribution requirements (migrations)
+
+- **Every new migration** that adds or removes a **public table** must:
+  1. Update `supabase/tests/EXPECTED_TABLE_COUNT.txt` to the new integer count of public tables.
+  2. Add at least four pgTAP assertions in `supabase/tests/database/01-tenant-isolation.sql` (one per CRUD operation) for the new table.
+- **Every new tenant-scoped table** must have the full RLS checklist: RLS enabled, `tenant_id` index, all four policy types (SELECT, INSERT, UPDATE, DELETE) using `public.tenant_id()`. See `.cursor/rules/rls.mdc` and the RLS policy template in `.cursor/rules/database.mdc`.
+
+A PR that adds a migration without updating `EXPECTED_TABLE_COUNT.txt` and adding the corresponding pgTAP tests will fail CI when the table count or tests do not match.
+
+---
+
+## Onboarding a new client
+
+Use the full checklist in [docs/ONBOARDING_CHECKLIST.md](./docs/ONBOARDING_CHECKLIST.md). In short:
+
+1. Run `pnpm scaffold` and choose **prospective** (demo) or **real** (production). Prospective apps go to `apps/prospective-clients/[slug]/`, production to `apps/clients/[slug]/`.
+2. Edit `packages/design-tokens/tokens/clients/[slug].json` with a distinct palette, then run `pnpm tokens:build`.
+3. Add the tenant row (e.g. in `supabase/seed.sql` for local/CI), create an admin user, run `supabase test db` and `pnpm turbo run build --affected`.
+4. Human steps: Vercel project, deploy, cross-tenant isolation test, document timing.
+
+---
+
+## Scaffolding a new client app
+
+```bash
+pnpm scaffold
+```
+
+Follow the prompts: display name, slug (kebab-case), industry, domain. The script creates the app under `apps/prospective-clients/[slug]/` or `apps/clients/[slug]/`, a token file placeholder, and tokens output directory. Then edit the client token JSON, run `pnpm tokens:build`, add the tenant to the DB and seed, and run RLS tests.
+
+---
+
+## Generating database types
+
+After changing the schema (new migration or edits to existing migrations), regenerate TypeScript types:
+
+```bash
+# With local Supabase running (supabase start or supabase db start + supabase db reset)
+pnpm db:generate-types
+```
+
+This overwrites `packages/database/src/types.ts`. Commit the updated file. CI will fail if a PR changes migrations but does not update `types.ts` (types drift check).
+
+---
+
+## Formatting
+
+- **Check:** `pnpm format:check` (fails if any file is not formatted).
+- **Fix:** `pnpm format` (writes Prettier output to all supported files).
+
+Prettier is enforced in CI. Use the repo's `prettier.config.mjs` (semi: false, singleQuote: true, trailingComma: 'es5', printWidth: 100). Tailwind class names are auto-sorted via `prettier-plugin-tailwindcss`. See [.prettierignore](./.prettierignore) for exclusions.
+
+---
+
+## Day-to-day workflow summary
+
+1. Start Supabase and run `supabase db reset` if migrations changed.
+2. Run `pnpm tokens:build` if token JSON changed.
+3. Run `pnpm dev` for apps; run Inngest dev server in a separate terminal if working on background jobs.
+4. Before committing: `pnpm format:check`, and after migration changes: `pnpm db:generate-types` and commit `types.ts`.
+5. Open a PR; CI runs affected build, lint, type-check, test, format check, security scans, types drift check, and RLS tests.

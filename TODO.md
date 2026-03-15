@@ -1429,6 +1429,10 @@ Set `VERCEL_REMOTE_CACHE_TIMEOUT=30` in Vercel environment variables. The defaul
 
 All CI jobs pass on a clean PR. `--affected` filtering is verified functional. Types drift check catches a stale `types.ts`. Migration deployment runs automatically on merge to `main`. The service role key security grep runs and returns no results. TAP and Supashield reports are uploaded as artifacts.
 
+### Implementation Notes (CI optimization 2026-03-15)
+
+**Types drift check:** CI `ci` job now uses `supabase db start` plus `supabase db reset` (instead of full `supabase start`) before the types drift check step, per GUIDE.md and TODO.md Advanced Coding Patterns — saves ~90 seconds per run. Stop step remains `supabase stop --no-backup`.
+
 ### Out of Scope
 
 Playwright E2E tests. Semantic versioning. Slack/email failure notifications. Deployment preview environments (Vercel GitHub integration handles these automatically).
@@ -1637,11 +1641,11 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
 
 ## T-25: CONTRIBUTING.md & Local Dev Runbook
 
-- [ ] **T-25** AGENT `CONTRIBUTING.md` documents everything a future contributor needs to get running locally and contribute correctly; the local dev runbook covers the day-to-day workflow.
+- [x] **T-25** AGENT `CONTRIBUTING.md` documents everything a future contributor needs to get running locally and contribute correctly; the local dev runbook covers the day-to-day workflow.
 
 ### Subtasks
 
-- [ ] **T-25.01** AGENT Create `CONTRIBUTING.md` at repo root covering:
+- [x] **T-25.01** AGENT Create `CONTRIBUTING.md` at repo root covering:
   - Prerequisites and first-run setup (reference T-01 steps)
   - `pnpm install` instructions and the `catalog:` protocol
   - How to start the full local stack: Supabase, all apps, Inngest dev server
@@ -1652,7 +1656,7 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
   - The `pnpm db:generate-types` workflow
   - The `pnpm format` workflow
   - `📄 CONTRIBUTING.md`
-- [ ] **T-25.02** AGENT Document the full local stack startup sequence in `CONTRIBUTING.md`:
+- [x] **T-25.02** AGENT Document the full local stack startup sequence in `CONTRIBUTING.md`:
 
   ```bash
   # Step 1: Start Supabase (requires Docker)
@@ -1671,20 +1675,28 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
   pnpm tokens:build
   ```
 
-- [ ] **T-25.03** AGENT Document the exact port assignments in `CONTRIBUTING.md`:
+- [x] **T-25.03** AGENT Document the exact port assignments in `CONTRIBUTING.md`:
   - `localhost:3000` → riley-day-care client app
   - `localhost:3001` → agency-admin app
   - `localhost:54321` → Supabase API
   - `localhost:54323` → Supabase Studio
   - `localhost:8288` → Inngest dev UI
-- [ ] **T-25.04** AGENT Create `docs/ARCHITECTURE.md` — the single-page architectural overview: monorepo structure, the three axes of complexity (multi-industry, multi-client, multi-site), the five isolation layers (code boundary, database, cache, CI/CD, deployment), and the scaling phase triggers
+- [x] **T-25.04** AGENT Create `docs/ARCHITECTURE.md` — the single-page architectural overview: monorepo structure, the three axes of complexity (multi-industry, multi-client, multi-site), the five isolation layers (code boundary, database, cache, CI/CD, deployment), and the scaling phase triggers
   - `📄 docs/ARCHITECTURE.md`
-- [ ] **T-25.05** AGENT Update `README.md` to link to `CONTRIBUTING.md` and `docs/ARCHITECTURE.md`
+- [x] **T-25.05** AGENT Update `README.md` to link to `CONTRIBUTING.md` and `docs/ARCHITECTURE.md`
   - `📄 README.md`
 
 ### Definition of Done
 
 A developer who has never seen this codebase can follow `CONTRIBUTING.md` alone to get a full local stack running. `CONTRIBUTING.md` explicitly states the two non-negotiable migration contribution requirements (update table count, add pgTAP tests). Port assignments are documented. `docs/ARCHITECTURE.md` exists and accurately describes the current build state.
+
+### Implementation Notes (2026-03-15)
+
+**CONTRIBUTING.md:** Created at repo root with prerequisites (T-01 ref), pnpm/catalog usage, full 5-step local stack sequence, port table (3000 riley-day-care, 3001 agency-admin, 54321/54323 Supabase, 8288 Inngest), migration workflow and non-negotiable requirements (EXPECTED_TABLE_COUNT.txt + pgTAP + RLS checklist), onboarding ref to docs/ONBOARDING_CHECKLIST.md, scaffold and db:generate-types and format workflows.
+
+**docs/ARCHITECTURE.md:** Single-page overview: monorepo structure (apps vs packages), three axes (multi-industry, multi-client, multi-site), five isolation layers (code boundary, database, cache, CI/CD, deployment), scaling Phase 1 (0–50), Phase 1→2 triggers, Phase 2 (50–200), Phase 2→3 triggers and Phase 3 note.
+
+**README.md:** Documentation section updated to link to CONTRIBUTING.md and docs/ARCHITECTURE.md with short descriptions.
 
 ### Out of Scope
 
