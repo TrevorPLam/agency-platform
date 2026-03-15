@@ -7,7 +7,9 @@
     { "path": "./packages/database" },
     { "path": "./packages/analytics" },
     { "path": "./packages/design-tokens" },
-    { "path": "./apps/firm" }
+    { "path": "./apps/firm" },
+    { "path": "./apps/agency-admin" },
+    { "path": "./apps/clients/riverside-hotel" }
   ],
   "compilerOptions": {
     "target": "ES2022",
