@@ -44,7 +44,7 @@
 <stop> Execute step six. </stop>
 
 
-7. Execute task based on the optimized execution plan.
+7. Make sure task has not already been executed, and unmistakenly left uncompleted, then execute task based on the optimized execution plan.
 
 
 <stop> Execute step seven. </stop>
