@@ -24,6 +24,8 @@ alwaysApply: true
 - ALWAYS use `cn()` from @agency/ui for merging Tailwind classes.
 - ALWAYS use Server Components by default. Add 'use client' only when needed.
 - ALWAYS use Port 6543 (Supavisor) for Supabase connections, never Port 5432.
+- ALWAYS use **tw-animate-css** for animations: import in app globals.css (`@import "tw-animate-css"`), use its utility classes. Never use `tailwindcss-animate` or custom keyframes.
+- Apps using Tailwind MUST include the **@source** directive in globals.css pointing at `packages/ui` (and any other shared UI) so Tailwind v4 scans those paths.
 
 ## File naming
 - kebab-case for all files: user-profile.tsx, not UserProfile.tsx

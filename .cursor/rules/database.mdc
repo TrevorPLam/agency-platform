@@ -30,5 +30,6 @@ alwaysApply: false
 ## RLS policy template (copy for every new table)
 - ALTER TABLE public.[name] ENABLE ROW LEVEL SECURITY;
 - CREATE INDEX CONCURRENTLY idx_[name]_tenant_id ON public.[name] (tenant_id);
-- All four policies (SELECT, INSERT WITH CHECK, UPDATE USING+WITH CHECK, DELETE)
-- JWT extraction pattern: (select (current_setting('request.jwt.claims', true)::jsonb -> 'app_metadata' ->> 'tenant_id')::uuid)
+- All four policies (SELECT, INSERT WITH CHECK, UPDATE USING+WITH CHECK, DELETE) using **public.tenant_id()** — see supabase/migrations/005_auth_tenant_id_helper.sql
+- For tenant-scoped tables: USING (tenant_id = public.tenant_id()); for tenants table: (id = public.tenant_id())
+- WRONG: inline JWT extraction in policy. CORRECT: USING (tenant_id = public.tenant_id())
