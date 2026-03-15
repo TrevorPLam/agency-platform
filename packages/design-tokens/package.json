@@ -1,0 +1,28 @@
+{
+  "name": "@agency/design-tokens",
+  "version": "1.0.0",
+  "description": "Design tokens package using Style Dictionary v4 and W3C DTCG format",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "tokens:build": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts"
+  },
+  "dependencies": {
+    "style-dictionary": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsup": "^8.0.0",
+    "@types/node": "^22.0.0"
+  },
+  "files": [
+    "dist",
+    "tokens"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

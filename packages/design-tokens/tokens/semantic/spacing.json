@@ -1,0 +1,96 @@
+{
+  "spacing": {
+    "semantic": {
+      "container": {
+        "xs": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.4}"
+        },
+        "sm": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.6}"
+        },
+        "md": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.8}"
+        },
+        "lg": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.12}"
+        },
+        "xl": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.16}"
+        }
+      },
+      "component": {
+        "padding": {
+          "xs": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.1}"
+          },
+          "sm": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.2}"
+          },
+          "md": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.4}"
+          },
+          "lg": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.6}"
+          },
+          "xl": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.8}"
+          }
+        },
+        "margin": {
+          "xs": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.1}"
+          },
+          "sm": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.2}"
+          },
+          "md": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.4}"
+          },
+          "lg": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.6}"
+          },
+          "xl": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.8}"
+          }
+        },
+        "gap": {
+          "xs": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.1}"
+          },
+          "sm": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.2}"
+          },
+          "md": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.4}"
+          },
+          "lg": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.6}"
+          },
+          "xl": {
+            "$type": "dimension",
+            "$value": "{spacing.primitive.8}"
+          }
+        }
+      }
+    }
+  }
+}

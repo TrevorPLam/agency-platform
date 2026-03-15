@@ -1,0 +1,42 @@
+{
+  "color": {
+    "primitive": {
+      "blue": {
+        "$type": "color",
+        "$value": "oklch(0.62 0.18 238.66)"
+      },
+      "red": {
+        "$type": "color",
+        "$value": "oklch(0.63 0.19 29.23)"
+      },
+      "green": {
+        "$type": "color",
+        "$value": "oklch(0.72 0.13 142.94)"
+      },
+      "yellow": {
+        "$type": "color",
+        "$value": "oklch(0.88 0.15 95.25)"
+      },
+      "purple": {
+        "$type": "color",
+        "$value": "oklch(0.69 0.16 307.21)"
+      },
+      "orange": {
+        "$type": "color",
+        "$value": "oklch(0.79 0.14 70.71)"
+      },
+      "gray": {
+        "$type": "color",
+        "$value": "oklch(0.53 0.02 0.00)"
+      },
+      "white": {
+        "$type": "color",
+        "$value": "oklch(1.00 0.00 0.00)"
+      },
+      "black": {
+        "$type": "color",
+        "$value": "oklch(0.00 0.00 0.00)"
+      }
+    }
+  }
+}

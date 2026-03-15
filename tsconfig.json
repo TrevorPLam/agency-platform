@@ -4,7 +4,9 @@
     { "path": "./packages/typescript-config" },
     { "path": "./packages/eslint-config" },
     { "path": "./packages/ui" },
-    { "path": "./packages/database" }
+    { "path": "./packages/database" },
+    { "path": "./packages/analytics" },
+    { "path": "./packages/design-tokens" }
   ],
   "compilerOptions": {
     "target": "ES2022",

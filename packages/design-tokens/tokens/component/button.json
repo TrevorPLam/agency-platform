@@ -1,0 +1,56 @@
+{
+  "component": {
+    "button": {
+      "padding": {
+        "horizontal": {
+          "$type": "dimension",
+          "$value": "{spacing.semantic.component.padding.lg}"
+        },
+        "vertical": {
+          "$type": "dimension",
+          "$value": "{spacing.semantic.component.padding.sm}"
+        }
+      },
+      "border": {
+        "radius": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.2}"
+        },
+        "width": {
+          "$type": "dimension",
+          "$value": "{spacing.primitive.0}"
+        }
+      },
+      "font": {
+        "size": {
+          "$type": "dimension",
+          "$value": "14px"
+        },
+        "weight": {
+          "$type": "fontWeight",
+          "$value": "500"
+        }
+      },
+      "shadow": {
+        "default": {
+          "$type": "shadow",
+          "$value": "0 1px 2px 0 oklch(0.00 0.00 0.00 / 0.05)"
+        },
+        "hover": {
+          "$type": "shadow",
+          "$value": "0 4px 6px -1px oklch(0.00 0.00 0.00 / 0.1), 0 2px 4px -1px oklch(0.00 0.00 0.00 / 0.06)"
+        }
+      },
+      "transition": {
+        "duration": {
+          "$type": "duration",
+          "$value": "150ms"
+        },
+        "easing": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0.4, 0, 0.2, 1)"
+        }
+      }
+    }
+  }
+}

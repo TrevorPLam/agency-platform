@@ -1,0 +1,40 @@
+{
+  "name": "@agency/analytics",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "dependencies": {
+    "posthog-js": "^1.236.0",
+    "posthog-node": "^4.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsup": "^8.0.0",
+    "@types/node": "^22.0.0"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit"
+  },
+  "tsup": {
+    "entry": {
+      "index": "src/index.ts"
+    },
+    "format": "esm",
+    "dts": {
+      "entry": {
+        "index": "src/index.ts"
+      }
+    },
+    "clean": true,
+    "external": ["posthog-js", "posthog-node"]
+  }
+}
