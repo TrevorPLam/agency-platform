@@ -172,7 +172,59 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  apps/clients/riley-day-care:
+  apps/firm:
+    dependencies:
+      '@agency/analytics':
+        specifier: workspace:*
+        version: link:../../packages/analytics
+      '@agency/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      next:
+        specifier: 'catalog:'
+        version: 16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.4
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.4(react@19.2.4)
+    devDependencies:
+      '@agency/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@agency/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@tailwindcss/postcss':
+        specifier: 'catalog:'
+        version: 4.2.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.15
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.14)
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.4(jiti@2.6.1)
+      postcss:
+        specifier: 'catalog:'
+        version: 8.5.8
+      tailwindcss:
+        specifier: 'catalog:'
+        version: 4.2.1
+      tw-animate-css:
+        specifier: 'catalog:'
+        version: 1.4.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
+  apps/prospective-clients/riley-day-care:
     dependencies:
       '@agency/analytics':
         specifier: workspace:*
@@ -233,59 +285,7 @@ importers:
         specifier: 'catalog:'
         version: 5.9.3
 
-  apps/firm:
-    dependencies:
-      '@agency/analytics':
-        specifier: workspace:*
-        version: link:../../packages/analytics
-      '@agency/ui':
-        specifier: workspace:*
-        version: link:../../packages/ui
-      next:
-        specifier: 'catalog:'
-        version: 16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      react:
-        specifier: 'catalog:'
-        version: 19.2.4
-      react-dom:
-        specifier: 'catalog:'
-        version: 19.2.4(react@19.2.4)
-    devDependencies:
-      '@agency/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@agency/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
-      '@tailwindcss/postcss':
-        specifier: 'catalog:'
-        version: 4.2.1
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.19.15
-      '@types/react':
-        specifier: 'catalog:'
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: 'catalog:'
-        version: 19.2.3(@types/react@19.2.14)
-      eslint:
-        specifier: 'catalog:'
-        version: 9.39.4(jiti@2.6.1)
-      postcss:
-        specifier: 'catalog:'
-        version: 8.5.8
-      tailwindcss:
-        specifier: 'catalog:'
-        version: 4.2.1
-      tw-animate-css:
-        specifier: 'catalog:'
-        version: 1.4.0
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-
-  apps/prospective-clients/acme-health:
+  apps/prospective-clients/the-barber-cave:
     dependencies:
       '@agency/analytics':
         specifier: workspace:*

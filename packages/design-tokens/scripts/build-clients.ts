@@ -40,8 +40,8 @@ function formatTokenValue(key: string, value: any, outputReferences: boolean, in
   return `${spaces}${cssVarName}: ${formattedValue};`;
 }
 
-/** Slugs that live under apps/prospective-clients (demo/test). All others go to apps/clients. */
-const PROSPECTIVE_SLUGS = ['acme-health'];
+/** Slugs that live under apps/prospective-clients (demo/test). All others go to apps/clients (production). */
+const PROSPECTIVE_SLUGS = ['riley-day-care', 'the-barber-cave'];
 
 async function buildClientTokens() {
   try {

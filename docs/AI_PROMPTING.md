@@ -76,7 +76,7 @@ Add a Server Action that [describe action]. Use createSupabaseServerClient from 
 
 **Prompt:**
 ```
-Add a new client token file for [slug] in packages/design-tokens/tokens/clients/[slug].json. Use W3C DTCG format ($type, $value). Include brand color tokens (brand-primary, brand-secondary, text-default, text-muted, background, surface) and font families. Reference semantic tokens where possible. Match the structure of tokens/clients/riverside-hotel.json.
+Add a new client token file for [slug] in packages/design-tokens/tokens/clients/[slug].json. Use W3C DTCG format ($type, $value). Include brand color tokens (brand-primary, brand-secondary, text-default, text-muted, background, surface) and font families. Reference semantic tokens where possible. Match the structure of tokens/clients/riley-day-care.json.
 ```
 
 ---
@@ -117,6 +117,8 @@ Debug RLS for table [name]. Policies should use public.tenant_id() (see supabase
 ## T-18 Cursor verification checklist
 
 Use this checklist to verify that Cursor rules produce stack-correct suggestions without manual correction. Run each scenario in Cursor and confirm the AI output matches the pass criteria before marking T-18.08–T-18.11 complete in TODO.md.
+
+**Step-by-step playbook and reference snippets:** See [T18_VERIFICATION_PLAYBOOK.md](T18_VERIFICATION_PLAYBOOK.md) for exact files to open, prompts to paste, and example “pass” outputs for each step.
 
 | ID | What to do | Pass criteria |
 |----|------------|---------------|

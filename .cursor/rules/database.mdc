@@ -22,6 +22,9 @@ alwaysApply: false
 - NEVER instantiate Supabase directly in app code — always use the package factory
 - NEVER expose the service role key to the client or in NEXT_PUBLIC_ variables
 
+## Cache keys (Redis or any cache)
+- Every cache key MUST be prefixed with `tenant:{id}:` so tenant data never collides. WRONG: `redis.get('posts:' + slug)`. CORRECT: `redis.get('tenant:' + tenantId + ':posts:' + slug)`.
+
 ## Migrations
 - All schema changes go in supabase/migrations/ with sequential numbering
 - Never use the Supabase dashboard to modify schema in production

@@ -175,6 +175,8 @@ enable_anonymous_sign_ins = false
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
 minimum_password_length = 12
+# Leaked password protection (HIBP): enable in Supabase Dashboard for production (Pro plan). See SECURITY.md.
+# leaked_password_protection = true
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""

@@ -45,6 +45,17 @@ jobs:
           fi
           echo "Security scan passed."
 
+      - name: Security scan (user_metadata in database package)
+        run: |
+          # Only packages/database/src/auth.ts may use user_metadata (Supabase createUser payload for display data; tenant is in app_metadata). See SECURITY.md Vector 1.
+          unauthorized=$(grep -r "user_metadata" --include="*.ts" packages/database/ -l 2>/dev/null | grep -v "src/auth.ts" || true)
+          if [ -n "$unauthorized" ]; then
+            echo "CRITICAL: user_metadata used in database package outside allowed auth.ts createUser payload."
+            echo "$unauthorized"
+            exit 1
+          fi
+          echo "user_metadata check passed."
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest

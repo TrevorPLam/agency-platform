@@ -133,7 +133,7 @@ find . -name "postcss.config.*" -not -path "*/node_modules/*"
 pnpm tokens:build
 
 # Build specific app
-pnpm turbo run build --filter=@agency/riverside-hotel
+pnpm turbo run build --filter=@agency/riley-day-care
 
 # Build all affected packages
 pnpm turbo run build --affected

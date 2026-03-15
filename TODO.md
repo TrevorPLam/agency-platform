@@ -530,13 +530,13 @@ Initialize the `posthog-node` server client lazily (on first call to `captureSer
 - [x] **T-08.10** AGENT Use `await sd.hasInitialized` before accessing tokens (Style Dictionary v4 async API requirement)
 - [x] **T-08.11** AGENT Use `outputReferences: outputReferencesTransformed` for the semantic platform — preserves `var(--token-name)` references so dark mode cascade overrides work
 - [x] **T-08.12** AGENT Use `Promise.all([...])` for parallel platform builds
-- [x] **T-08.13** AGENT Create `scripts/build-clients.ts` — reads all `tokens/clients/*.json`, outputs compiled CSS to `apps/clients/[slug]/tokens/[slug].css`
+- [x] **T-08.13** AGENT Create `scripts/build-clients.ts` — reads all `tokens/clients/*.json`, outputs compiled CSS to `apps/prospective-clients/[slug]/tokens/[slug].css` or `apps/clients/[slug]/tokens/[slug].css` per PROSPECTIVE_SLUGS
   - `📄 packages/design-tokens/scripts/build-clients.ts`
 - [x] **T-08.14** AGENT Verify `apps/clients/*/tokens/*.css` is in `.gitignore` (generated artifacts, not source)
   - `📄 .gitignore`
 - [x] **T-08.15** AGENT Add `@agency/design-tokens` to root `tsconfig.json` references
   - `📄 tsconfig.json`
-- [x] **T-08.16** AGENT Run `pnpm tokens:build` — verify `apps/clients/riley-day-care/tokens/riley-day-care.css` is generated
+- [x] **T-08.16** AGENT Run `pnpm tokens:build` — verify `apps/prospective-clients/riley-day-care/tokens/riley-day-care.css` is generated
 
 ### Definition of Done
 
@@ -562,7 +562,7 @@ Style Dictionary v4 silently drops group transforms when you specify both `trans
 
 **W3C DTCG Format:** All token files use proper DTCG format with `$type` and `$value` properties. Primitive tokens use OKLCH color format for better perceptual uniformity. Semantic tokens reference primitives using `{token.path}` syntax for proper variable preservation.
 
-**Client Compilation System:** Built automated client token compilation that reads all `tokens/clients/*.json` files and generates per-client CSS files in `apps/clients/[slug]/tokens/[slug].css`. Each client file includes brand-specific overrides and imports base token files.
+**Client Compilation System:** Built automated client token compilation that reads all `tokens/clients/*.json` files and generates per-client CSS in `apps/prospective-clients/[slug]/tokens/` or `apps/clients/[slug]/tokens/` per PROSPECTIVE_SLUGS. Each client file includes brand-specific overrides and imports base token files.
 
 **Three-Tier Hierarchy:** 
 - **Primitives:** Raw values (colors, spacing) in `:root {}` blocks
@@ -573,7 +573,7 @@ Style Dictionary v4 silently drops group transforms when you specify both `trans
 
 **Workspace Integration:** Added to root TypeScript project references with ESM configuration. Dependencies installed via workspace catalog with proper version management.
 
-**Generated Output Verification:** Successfully generates `apps/clients/riley-day-care/tokens/riley-day-care.css` with proper `@theme inline {}` blocks for semantic tokens and import statements for base tokens. Component tokens generated in `packages/design-tokens/dist/component.css` with `:root {}` structure.
+**Generated Output Verification:** Successfully generates `apps/prospective-clients/riley-day-care/tokens/riley-day-care.css` (and the-barber-cave) with proper `@theme inline {}` blocks for semantic tokens and import statements for base tokens. Component tokens generated in `packages/design-tokens/dist/component.css` with `:root {}` structure.
 
 **Known Issues:** TypeScript errors about missing dependencies resolve when workspace is properly built. Token collisions detected during build are expected due to overlapping semantic token definitions between base and client-specific files.
 ---
@@ -731,8 +731,8 @@ Call this at the top of every admin Server Action before any database write.
 
 - [x] **T-10.01** AGENT Confirm there is NO `tailwind.config.js` or `tailwind.config.ts` anywhere in the entire repo: `find . -name "tailwind.config.*" -not -path "*/node_modules/*"` — must return zero results
 - [x] **T-10.02** AGENT Confirm `@import "tailwindcss"` is the only Tailwind directive in every app's `globals.css` — no `@tailwind base`, `@tailwind components`, `@tailwind utilities`
-- [x] **T-10.03** AGENT Confirm `postcss.config.mjs` exists and uses `@tailwindcss/postcss` in both `apps/clients/riley-day-care/` and `apps/agency-admin/`
-  - `📄 apps/clients/riley-day-care/postcss.config.mjs`
+- [x] **T-10.03** AGENT Confirm `postcss.config.mjs` exists and uses `@tailwindcss/postcss` in both `apps/prospective-clients/riley-day-care/` and `apps/agency-admin/`
+  - `📄 apps/prospective-clients/riley-day-care/postcss.config.mjs`
   - `📄 apps/agency-admin/postcss.config.mjs`
 - [x] **T-10.04** AGENT Confirm `@import "tw-animate-css"` is in both app `globals.css` files and in `packages/ui/src/styles/globals.css`
 - [x] **T-10.05** AGENT Confirm the `@source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}"` directive is in both client app `globals.css` files (adjust relative path for admin app)
@@ -742,7 +742,7 @@ Call this at the top of every admin Server Action before any database write.
   @custom-variant dark (&:is(.dark *));
   ```
   Add dark overrides in a `:root .dark {}` block for semantic token variables
-  - `📄 apps/clients/riley-day-care/src/app/globals.css`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/globals.css`
 - [x] **T-10.08** HUMAN Test dark mode: add `.dark` class to `<html>` — brand colors must visibly change
 - [x] **T-10.09** AGENT Verify `@theme inline {}` for semantic tokens (cascade-overridable) and `:root {}` for primitives (no utility generation) — inspect the compiled CSS bundle
 - [x] **T-10.10** HUMAN Test that `bg-brand-primary`, `text-brand-primary`, `border-brand-primary` are all generated and correct
@@ -804,7 +804,7 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
   - Set `[auth.email] minimum_password_length = 12`
   - `📄 supabase/config.toml`
 - [x] **T-11.03** HUMAN Start Docker Desktop and attempt `supabase start` — Docker running, but full stack startup taking >10min (skipped for efficiency)
-- [x] **T-11.04** HUMAN Note the output values from `supabase start` — add to `apps/clients/riley-day-care/.env.local` and `apps/agency-admin/.env.local`:
+- [x] **T-11.04** HUMAN Note the output values from `supabase start` — add to `apps/prospective-clients/riley-day-care/.env.local` and `apps/agency-admin/.env.local`:
   - `NEXT_PUBLIC_SUPABASE_URL=https://febgsamiulzlkkwehsfd.supabase.co`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY=[production anon key]`
   - `SUPABASE_SERVICE_ROLE_KEY=[production service role key]`
@@ -1040,16 +1040,16 @@ The meta-test counting expected tables in `00-rls-coverage.sql` is the most impo
 ### Subtasks
 
 - [x] **T-15.01** AGENT Create login page and Server Action for `riley-day-care`:
-  - `📄 apps/clients/riley-day-care/src/app/(auth)/login/page.tsx`
-  - `📄 apps/clients/riley-day-care/src/app/(auth)/login/actions.ts`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/(auth)/login/page.tsx`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts`
 - [x] **T-15.02** AGENT Create signup page and Server Action — signup action calls `createUserForTenant` from `@agency/database`, NOT bare Supabase `createUser`
-  - `📄 apps/clients/riley-day-care/src/app/(auth)/signup/page.tsx`
-  - `📄 apps/clients/riley-day-care/src/app/(auth)/signup/actions.ts`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/(auth)/signup/page.tsx`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/(auth)/signup/actions.ts`
 - [x] **T-15.03** Create OAuth/magic-link callback route:
-  - `📄 apps/clients/riley-day-care/src/app/(auth)/callback/route.ts`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/(auth)/callback/route.ts`
 - [x] **T-15.04** AGENT Create a protected `/dashboard` route — middleware redirects unauthenticated users to `/login`
-  - `📄 apps/clients/riley-day-care/src/app/dashboard/page.tsx`
-  - `📄 apps/clients/riley-day-care/src/middleware.ts`
+  - `📄 apps/prospective-clients/riley-day-care/src/app/dashboard/page.tsx`
+  - `📄 apps/prospective-clients/riley-day-care/src/middleware.ts`
 - [x] **T-15.05** Create a test admin user for `riley-day-care` using `assignUserToTenant` from `@agency/database` — verify `app_metadata.tenant_id` is set correctly
 - [x] **T-15.06** HUMAN Log in as the test user, then run a query against `posts` — confirm it returns only `riley-day-care` data
 - [x] **T-15.07** Attempt a cross-tenant query from the test user's session (supply a different `tenant_id` in the query) — confirm zero rows returned (not an error)
@@ -1152,9 +1152,9 @@ Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives
 ### Subtasks
 
 - [x] **T-17.01** HUMAN Create a PostHog Cloud account and a new project for `riley-day-care`
-- [x] **T-17.02** HUMAN Add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/clients/riley-day-care/.env.local`
+- [x] **T-17.02** HUMAN Add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/prospective-clients/riley-day-care/.env.local`
 - [x] **T-17.03** AGENT Confirm `initAnalytics('riley-day-care')` in `<Providers>` calls PostHog with the correct key
-  - `📄 apps/clients/riley-day-care/src/components/providers.tsx`
+  - `📄 apps/prospective-clients/riley-day-care/src/components/providers.tsx`
 - [x] **T-17.04** HUMAN Confirm events arrive in PostHog Live Events with `tenant: 'riley-day-care'` as a super property
 - [x] **T-17.05** AGENT Disable IP capture for GDPR compliance:
   ```typescript
@@ -1169,7 +1169,7 @@ Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives
 
 **GDPR:** IP capture disabled in `packages/analytics/src/client.ts` via `ph.set_config({ capture_ip: false })` in the `loaded` callback. Replaced `any` with `Record<string, unknown>` for event properties to satisfy workspace rules.
 
-**Identify after login:** Added `AuthAnalytics` client component (`apps/clients/riley-day-care/src/components/auth-analytics.tsx`) that uses `createSupabaseBrowserClient`, subscribes to auth state, and calls `identifyUser(session.user.id, tenantSlug)` when a session exists and `resetUser()` when it does not. Rendered inside `Providers` so it runs on every page; identify is idempotent. T-17.01 (PostHog account) and T-17.02 (env vars) are manual; add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/clients/riley-day-care/.env.local` for live verification. T-17.04 (Live Events check) is manual after env is set.
+**Identify after login:** Added `AuthAnalytics` client component (`apps/prospective-clients/riley-day-care/src/components/auth-analytics.tsx`) that uses `createSupabaseBrowserClient`, subscribes to auth state, and calls `identifyUser(session.user.id, tenantSlug)` when a session exists and `resetUser()` when it does not. Rendered inside `Providers` so it runs on every page; identify is idempotent. T-17.01 (PostHog account) and T-17.02 (env vars) are manual; add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/prospective-clients/riley-day-care/.env.local` for live verification. T-17.04 (Live Events check) is manual after env is set.
 
 **Documentation:** `docs/POSTHOG_DEPLOYMENT.md` covers break-even table, CCX23 (not CPX31/CPX41), ClickHouse `background_pool_size: 2` and example config, per-client env vars, and GDPR (SDK `capture_ip: false`, self-host beforeStorage note).
 
@@ -1277,13 +1277,13 @@ Include concrete before/after examples in the rules files — AI tools respond s
 - [x] **T-19.08** AGENT Script creates the `apps/clients/[slug]/tokens/` output directory
   - `📁 apps/clients/[slug]/tokens/`
 - [x] **T-19.09** AGENT After scaffolding, script prints explicit next steps: edit token JSON → `pnpm tokens:build` → insert DB tenant row → create Vercel project → set env vars
-- [x] **T-19.10** AGENT Run `pnpm scaffold` for `acme-health` (industry: healthcare) as the test
-- [x] **T-19.11** AGENT Run `pnpm turbo run build --filter=@agency/acme-health` after scaffolding — must succeed with zero code changes
-- [x] **T-19.12** AGENT Run `pnpm tokens:build` after scaffolding — verify `apps/prospective-clients/acme-health/tokens/acme-health.css` generates
+- [x] **T-19.10** AGENT Run `pnpm scaffold` for a prospective client (e.g. the-barber-cave) as the test
+- [x] **T-19.11** AGENT Run `pnpm turbo run build --filter=@agency/the-barber-cave` after scaffolding — must succeed with zero code changes
+- [x] **T-19.12** AGENT Run `pnpm tokens:build` after scaffolding — verify `apps/prospective-clients/the-barber-cave/tokens/the-barber-cave.css` generates
 
 ### Implementation Notes
 
-**Script:** `scripts/scaffold-client.ts` reads templates from `apps/clients/riley-day-care/` (package.json, tsconfig, next.config, postcss, globals.css, layout, page, middleware, providers, auth-analytics, eslint.config) and writes to `apps/clients/[slug]/` with slug/name substitution. Token JSON uses riley-day-care structure with placeholder colors (#000000). Slug validation: kebab-case regex; aborts if `apps/clients/[slug]` exists. Post-scaffold: `pnpm install`, `pnpm tokens:build`, then `tsc --noEmit` in app dir; non-interactive mode via `SCAFFOLD_SLUG`, `SCAFFOLD_NAME`, `SCAFFOLD_INDUSTRY`, `SCAFFOLD_DOMAIN`. Verified with acme-health: scaffold → build succeeds with zero code changes.
+**Script:** `scripts/scaffold-client.ts` reads templates from `apps/prospective-clients/riley-day-care/` and writes to `apps/prospective-clients/[slug]/` or `apps/clients/[slug]/` depending on prospective vs real. Token JSON uses riley-day-care structure with placeholder colors (#000000). Slug validation: kebab-case regex; aborts if target dir exists. Post-scaffold: `pnpm install`, `pnpm tokens:build`, then `tsc --noEmit` in app dir; non-interactive mode via `SCAFFOLD_SLUG`, `SCAFFOLD_NAME`, `SCAFFOLD_INDUSTRY`, `SCAFFOLD_DOMAIN`, `SCAFFOLD_PROSPECTIVE`. Verified with the-barber-cave.
 
 ### Definition of Done
 
@@ -1311,11 +1311,11 @@ Add a post-scaffold validation step to the script: after creating all files, run
 
 - [-] **T-20.01** HUMAN Create a Vercel team account and connect it to the GitHub repository
 - [-] **T-20.02** HUMAN Create a new Vercel project for `@agency/riley-day-care`:
-  - Root Directory: `apps/clients/riley-day-care`
+  - Root Directory: `apps/prospective-clients/riley-day-care`
   - Build Command: `cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care`
-  - Output Directory: `apps/clients/riley-day-care/.next`
+  - Output Directory: `apps/prospective-clients/riley-day-care/.next`
   - Install Command: `pnpm install`
-  - `📄 apps/clients/riley-day-care/next.config.ts` (no changes needed, confirming it exists)
+  - `📄 apps/prospective-clients/riley-day-care/next.config.ts` (no changes needed, confirming it exists)
 - [-] **T-20.03** HUMAN Add all environment variables to the Vercel project (from `.env.local.example` template)
 - [-] **T-20.04** HUMAN Trigger a test deployment — confirm it succeeds; inspect build log for Turbopack and Turborepo cache messages
 - [-] **T-20.05** HUMAN Configure custom domain in Vercel and add CNAME in DNS
@@ -1374,7 +1374,7 @@ Set `VERCEL_REMOTE_CACHE_TIMEOUT=30` in Vercel environment variables. The defaul
     apps/ packages/ && echo "CRITICAL: Service role key exposed" && exit 1 || true
   ```
 - [-] **T-21.09** HUMAN Run the CI workflow on a test PR — all jobs must pass
-- [-] **T-21.10** HUMAN Test `--affected`: a PR changing only `riley-day-care` must NOT rebuild `acme-health`
+- [-] **T-21.10** HUMAN Test `--affected`: a PR changing only `riley-day-care` must NOT rebuild the prospective client (e.g. `the-barber-cave`)
 - [-] **T-21.11** HUMAN Test `deploy.yml`: merge a test migration change to `main` — confirm `supabase db push` runs and succeeds
 
 ### Implementation Notes
@@ -1405,23 +1405,23 @@ The `types-drift-check` step requires local Supabase to be running to generate t
 
 ## T-22: Security Hardening
 
-- [ ] **T-22** AGENT  All five documented attack vectors are explicitly tested and confirmed blocked via automated checks, with `SECURITY.md` maintained as the reference.
+- [x] **T-22** AGENT  All five documented attack vectors are explicitly tested and confirmed blocked via automated checks, with `SECURITY.md` maintained as the reference.
 
 ### Subtasks
 
-- [ ] **T-22.01** AGENT **Vector 1 — JWT Claim Injection:** Run: `grep -r "user_metadata" --include="*.ts" --include="*.tsx" packages/database/ apps/` — zero results that feed into database queries
-- [ ] **T-22.02** AGENT Add a CI grep (already added in T-21.08 pattern — extend it) to also catch `user_metadata` in database-layer files:
+- [x] **T-22.01** AGENT **Vector 1 — JWT Claim Injection:** Run: `grep -r "user_metadata" --include="*.ts" --include="*.tsx" packages/database/ apps/` — zero results that feed into database queries
+- [x] **T-22.02** AGENT Add a CI grep (already added in T-21.08 pattern — extend it) to also catch `user_metadata` in database-layer files:
   ```bash
   grep -r "user_metadata" --include="*.ts" packages/database/ && exit 1 || true
   ```
   - `📄 .github/workflows/ci.yml`
-- [ ] **T-22.03** AGENT **Vector 2 — Redis Cache Key Collision:** Audit all cache keys — confirm every key is prefixed with `tenant:{id}:`; add this rule to `.cursor/rules/database.mdc`
+- [x] **T-22.03** AGENT **Vector 2 — Redis Cache Key Collision:** Audit all cache keys — confirm every key is prefixed with `tenant:{id}:`; add this rule to `.cursor/rules/database.mdc`
   - `📄 .cursor/rules/database.mdc`
-- [ ] **T-22.04** AGENT **Vector 3 — Service Role Key Exposure:** Run: `grep -r "SERVICE_ROLE\|service_role" --include="*.tsx" --include="*.ts" apps/` — zero results in any client-side code
-- [ ] **T-22.05** AGENT Run: `grep -r "NEXT_PUBLIC_.*SERVICE_ROLE" . --include="*.ts" --include="*.tsx" --include="*.env*"` — zero results
-- [ ] **T-22.06** AGENT **Vector 4 — API Endpoint Auth Gaps:** Review every Route Handler and Server Action using the admin client — verify each has an explicit `.eq('tenant_id', verifiedTenantId)` clause
-- [ ] **T-22.07** AGENT **Vector 5 — HIPAA Isolation:** Document in `SECURITY.md` and the onboarding checklist: any healthcare client with PHI requires a dedicated Supabase project and a signed BAA
-- [ ] **T-22.08** AGENT Set HTTP security headers in `next.config.ts` for `riley-day-care`:
+- [x] **T-22.04** AGENT **Vector 3 — Service Role Key Exposure:** Run: `grep -r "SERVICE_ROLE\|service_role" --include="*.tsx" --include="*.ts" apps/` — zero results in any client-side code
+- [x] **T-22.05** AGENT Run: `grep -r "NEXT_PUBLIC_.*SERVICE_ROLE" . --include="*.ts" --include="*.tsx" --include="*.env*"` — zero results
+- [x] **T-22.06** AGENT **Vector 4 — API Endpoint Auth Gaps:** Review every Route Handler and Server Action using the admin client — verify each has an explicit `.eq('tenant_id', verifiedTenantId)` clause
+- [x] **T-22.07** AGENT **Vector 5 — HIPAA Isolation:** Document in `SECURITY.md` and the onboarding checklist: any healthcare client with PHI requires a dedicated Supabase project and a signed BAA
+- [x] **T-22.08** AGENT Set HTTP security headers in `next.config.ts` for `riley-day-care`:
   ```typescript
   headers: async () => [{
     source: '/(.*)',
@@ -1434,14 +1434,28 @@ The `types-drift-check` step requires local Supabase to be running to generate t
     ]
   }]
   ```
-  - `📄 apps/clients/riley-day-care/next.config.ts`
-- [ ] **T-22.09** AGENT Replicate security headers in `apps/agency-admin/next.config.ts`
+  - `📄 apps/prospective-clients/riley-day-care/next.config.ts`
+- [x] **T-22.09** AGENT Replicate security headers in `apps/agency-admin/next.config.ts`
   - `📄 apps/agency-admin/next.config.ts`
-- [ ] **T-22.10** AGENT Enable `leaked_password_protection` and `minimum_password_length = 12` in `supabase/config.toml` (already noted in T-11.02 — verify it was done)
+- [x] **T-22.10** AGENT Enable `leaked_password_protection` and `minimum_password_length = 12` in `supabase/config.toml` (already noted in T-11.02 — verify it was done)
   - `📄 supabase/config.toml`
-- [ ] **T-22.11** AGENT Create `SECURITY.md` — documents all five vectors: description, detection command, fix, and a section on HIPAA isolation requirements
+- [x] **T-22.11** AGENT Create `SECURITY.md` — documents all five vectors: description, detection command, fix, and a section on HIPAA isolation requirements
   - `📄 SECURITY.md`
-- [ ] **T-22.12** AGENT Run a final security checklist pass — record results in `SECURITY.md` as the baseline audit
+- [x] **T-22.12** AGENT Run a final security checklist pass — record results in `SECURITY.md` as the baseline audit
+
+### Implementation Notes
+
+**Vector 1 (user_metadata):** Only occurrence is `packages/database/src/auth.ts` in the Supabase `createUser()` payload (`user_metadata: { real_email, ... }`) for display data; tenant is in `app_metadata.tenant_id`. CI step added to fail if any other file in `packages/database/` uses `user_metadata` (allowlist for `src/auth.ts`).
+
+**Vector 2 (Redis):** No cache in use; rule added to `.cursor/rules/database.mdc`: every cache key must be prefixed with `tenant:{id}:`.
+
+**Vector 3 (Service role):** Greps confirm zero in app source; zero `NEXT_PUBLIC_` service role exposure. Existing CI security scan retained.
+
+**Vector 4 (API/auth gaps):** Reviewed onboarding (Inngest), signup and login Server Actions; all admin usage is tenant- or event-scoped. No Route Handlers use admin client without tenant check. Documented in SECURITY.md.
+
+**Vector 5 (HIPAA):** SECURITY.md documents dedicated Supabase project and BAA for healthcare clients with PHI; onboarding checklist to reference when created (T-23).
+
+**Deliverables:** SECURITY.md (five vectors, detection commands, fixes, HIPAA, baseline audit 2026-03-15); `.github/workflows/ci.yml` (user_metadata step); `.cursor/rules/database.mdc` (cache key rule); security headers in both Next.js configs; `supabase/config.toml` (minimum_password_length = 12 verified, leaked_password_protection commented for Dashboard/Pro).
 
 ### Definition of Done
 
@@ -1463,28 +1477,28 @@ Use `next-safe-action` for all Server Actions to create a consistent, auditable 
 
 ## T-23: Second Client App & Onboarding Validation
 
-- [ ] **T-23** AGENT  `acme-health` is onboarded via the full checklist, validating the platform end-to-end in under 2 hours with zero code changes required. With Option A, acme-health is a prospective (demo) client: run `pnpm scaffold` and choose prospective so the app is created under `apps/prospective-clients/acme-health`. The first real client is `riley-day-care` (`apps/clients/riley-day-care`).
+- [ ] **T-23** AGENT  A prospective (demo) client is onboarded via the full checklist, validating the platform end-to-end in under 2 hours with zero code changes required. Both **riley-day-care** and **the-barber-cave** live under `apps/prospective-clients/`. Run `pnpm scaffold` and choose prospective to create new demo apps under `apps/prospective-clients/[slug]`. `apps/clients/` is empty until first production go-live.
 
 ### Subtasks
 
-- [ ] **T-23.01** AGENT Run `pnpm scaffold` for `acme-health`: name="Acme Health", slug="acme-health", industry="healthcare", domain="acme-health.com"
-- [ ] **T-23.02** AGENT Edit `packages/design-tokens/tokens/clients/acme-health.json` with a visually distinct healthcare palette (blues and greens — clearly different from riley-day-care's colours)
-  - `📄 packages/design-tokens/tokens/clients/acme-health.json`
-- [ ] **T-23.03** AGENT Run `pnpm tokens:build` — verify both client CSS files generate correctly
-- [ ] **T-23.04** AGENT Document the HIPAA isolation decision: `acme-health` is a demo healthcare client used for testing; a real healthcare client with PHI would require a dedicated Supabase project and BAA
-- [ ] **T-23.05** AGENT Insert `acme-health` tenant row into the local database
-- [ ] **T-23.06** AGENT Create an `acme-health` admin user with `app_metadata: { tenant_id: '[acme-health-uuid]', role: 'admin' }`
+- [ ] **T-23.01** AGENT Run `pnpm scaffold` for the prospective client (e.g. `the-barber-cave`: name="The Barber Cave", slug="the-barber-cave", industry="general", domain="thebarbercave.com") — or use existing scaffolded app if already created
+- [ ] **T-23.02** AGENT Edit `packages/design-tokens/tokens/clients/the-barber-cave.json` (or the chosen slug) with a visually distinct palette — clearly different from riley-day-care's colours
+  - `📄 packages/design-tokens/tokens/clients/the-barber-cave.json`
+- [ ] **T-23.03** AGENT Run `pnpm tokens:build` — verify client CSS files generate correctly for both riley-day-care and the prospective client(s)
+- [ ] **T-23.04** AGENT Document the HIPAA isolation decision: any healthcare client with PHI would require a dedicated Supabase project and BAA; prospective/demo clients share the platform for validation only
+- [ ] **T-23.05** AGENT Insert the prospective client tenant row into the local database (e.g. slug `the-barber-cave`)
+- [ ] **T-23.06** AGENT Create an admin user for the prospective client with `app_metadata: { tenant_id: '[tenant-uuid]', role: 'admin' }`
 - [ ] **T-23.07** AGENT Run `supabase test db` — all RLS tests pass with two tenants in the database
-- [ ] **T-23.08** AGENT Run `pnpm turbo run build --affected` — only `acme-health` (and changed shared packages) rebuild; `riley-day-care` is a cache hit
-- [ ] **T-23.09** HUMAN Create the `acme-health` Vercel project and deploy
-- [ ] **T-23.10** HUMAN Cross-tenant isolation test: log in as a `riley-day-care` user in one browser, as an `acme-health` user in another — confirm neither can see the other's data
+- [ ] **T-23.08** AGENT Run `pnpm turbo run build --affected` — only the prospective client (and changed shared packages) rebuild; `riley-day-care` is a cache hit
+- [ ] **T-23.09** HUMAN Create the prospective client's Vercel project and deploy (e.g. the-barber-cave)
+- [ ] **T-23.10** HUMAN Cross-tenant isolation test: log in as a `riley-day-care` user in one browser, as the prospective client's user in another — confirm neither can see the other's data
 - [ ] **T-23.11** HUMAN Record the wall-clock time for this onboarding — target: under 2 hours; document bottlenecks in `docs/ONBOARDING_CHECKLIST.md`
   - `📄 docs/ONBOARDING_CHECKLIST.md`
 - [ ] **T-23.12** AGENT Update `docs/ONBOARDING_CHECKLIST.md` with the complete, validated step-by-step process reflecting any deviations from the planned process
 
 ### Definition of Done
 
-Both apps are deployed with distinct brand colors. RLS isolation tests pass with two tenants. `pnpm turbo run build --affected` correctly skips the unchanged app. The 2-hour target is met, or a specific optimisation plan is documented. `docs/ONBOARDING_CHECKLIST.md` reflects the actual process, not the theoretical one.
+Both apps (riley-day-care + the prospective client, e.g. the-barber-cave) are deployed with distinct brand colors. RLS isolation tests pass with two tenants. `pnpm turbo run build --affected` correctly skips the unchanged app. The 2-hour target is met, or a specific optimisation plan is documented. `docs/ONBOARDING_CHECKLIST.md` reflects the actual process, not the theoretical one.
 
 ### Out of Scope
 
@@ -1492,11 +1506,15 @@ The actual healthcare feature set. HIPAA compliance certification. A third clien
 
 ### Existing Patterns
 
-The second client onboarding is a validation exercise — it should require zero new code. If any step requires code changes, the scaffolding has a gap that must be fixed before onboarding real clients.
+The second client onboarding is a validation exercise — it should require zero new code. If any step requires code changes, the scaffolding has a gap that must be fixed before onboarding real clients. Both **riley-day-care** and **the-barber-cave** are prospective clients under `apps/prospective-clients/`.
 
 ### Advanced Coding Patterns
 
 After completing T-23, the scaffold script (T-19) is a testable artifact. Add a CI job that scaffolds a throwaway client (slug: `ci-test-client`), runs `pnpm turbo run build --filter=@agency/ci-test-client`, and deletes the scaffolded files — treating scaffolding correctness as a continuously verified property rather than a one-time validation.
+
+### Implementation Notes
+
+**Prospective clients only; no production clients yet:** Both **riley-day-care** (Day Care Template) and **the-barber-cave** (The Barber Cave, Dallas TX) live under `apps/prospective-clients/`. `apps/clients/` is empty until first production go-live. **acme-health** has been removed from the repo. Scaffold template: `apps/prospective-clients/riley-day-care`. Token build: `PROSPECTIVE_SLUGS = ['riley-day-care', 'the-barber-cave']`; outputs to `apps/prospective-clients/[slug]/tokens/[slug].css`. See GUIDE.md, README.md, docs/DAY_CARE_TEMPLATE.md, docs/PLAN_AGENCY_DIRECTION.md, and docs/DEPLOYMENT.md.
 
 ---
 
@@ -1528,7 +1546,7 @@ After completing T-23, the scaffold script (T-19) is a testable artifact. Add a 
   - `"format": "prettier --write \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore"`
   - `"format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore"`
   - `📄 package.json`
-- [ ] **T-24.05** AGENT Create `.prettierignore` at the repo root — exclude: `node_modules/`, `.next/`, `dist/`, `apps/clients/*/tokens/`, `pnpm-lock.yaml`, `supabase/.temp/`
+- [ ] **T-24.05** AGENT Create `.prettierignore` at the repo root — exclude: `node_modules/`, `.next/`, `dist/`, `apps/prospective-clients/*/tokens/`, `apps/clients/*/tokens/`, `pnpm-lock.yaml`, `supabase/.temp/`
   - `📄 .prettierignore`
 - [ ] **T-24.06** AGENT Add `eslint-config-prettier` to `packages/eslint-config` to disable ESLint rules that conflict with Prettier
   - `📄 packages/eslint-config/package.json`
@@ -1719,8 +1737,8 @@ agency-platform/
 │   │   │   └── build-clients.ts        T-08.13
 │   │   ├── tokens/
 │   │   │   ├── clients/
-│   │   │   │   ├── acme-health.json    T-23.02
-│   │   │   │   └── riley-day-care.json T-08.08
+│   │   │   │   ├── riley-day-care.json  T-08.08
+│   │   │   │   └── the-barber-cave.json T-23.02
 │   │   │   ├── component/
 │   │   │   │   └── button.json         T-08.07
 │   │   │   ├── primitive/

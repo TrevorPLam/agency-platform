@@ -43,7 +43,7 @@ code lives in apps/clients/[slug]/.
 
 ## Running tasks
 - pnpm dev — starts all apps in watch mode
-- pnpm turbo run dev --filter=@agency/riverside-hotel — starts one app
+- pnpm turbo run dev --filter=@agency/riley-day-care — starts one app
 - pnpm tokens:build — compiles design tokens to CSS
 - supabase test db — runs pgTAP RLS isolation tests
 - supabase start — starts local Supabase (requires Docker)

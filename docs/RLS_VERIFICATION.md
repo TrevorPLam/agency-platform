@@ -29,20 +29,20 @@ All tenant-scoped policies on `tenants`, `tenant_users`, and `posts` use `public
 
 ## 3. Verifying Index Scan (Not Seq Scan)
 
-Run the script below with a **real tenant UUID** from your local seed (e.g. `SELECT id FROM public.tenants WHERE slug = 'riverside-hotel';`). Use that UUID in place of `YOUR_TENANT_UUID`.
+Run the script below with a **real tenant UUID** from your local seed (e.g. `SELECT id FROM public.tenants WHERE slug = 'riley-day-care';`). Use that UUID in place of `YOUR_TENANT_UUID`.
 
 **Option A — Run `supabase/verify-rls-indexes.sql`:**
 
 From repo root after `npx supabase start`:
 
 ```bash
-# Replace YOUR_TENANT_UUID with actual UUID from: SELECT id FROM public.tenants WHERE slug = 'riverside-hotel';
+# Replace YOUR_TENANT_UUID with actual UUID from: SELECT id FROM public.tenants WHERE slug = 'riley-day-care';
 psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v tenant_id=YOUR_TENANT_UUID -f supabase/verify-rls-indexes.sql
 ```
 
 **Option B — Run in Supabase Studio SQL editor:**
 
-1. Get tenant UUID: `SELECT id FROM public.tenants WHERE slug = 'riverside-hotel';`
+1. Get tenant UUID: `SELECT id FROM public.tenants WHERE slug = 'riley-day-care';`
 2. Copy the contents of `supabase/verify-rls-indexes.sql` and replace `YOUR_TENANT_UUID` with that UUID.
 3. Execute. Check the plan output for **Index Scan** (or **Index Only Scan**) on the expected indexes, not **Seq Scan**.
 

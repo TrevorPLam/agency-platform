@@ -14,7 +14,7 @@
 | **Firm site scope** | **Broad** — form, blogs, etc. (not just minimum pages). |
 | **Riley Day Care** | **Convert riverside-hotel → Riley Day Care** and build out the site in full per your spec. |
 | **Template** | **“Day Care Template”** for now — sufficient until you know the repo better; can be refined later (e.g. scaffold variant or dedicated template). |
-| **Riverside-hotel** | **In-place convert** — not preserved (not a real place). Prospective-clients gets only acme-health. |
+| **Riverside-hotel** | **In-place convert** — not preserved (not a real place). All current client apps are **prospective** (demo): **riley-day-care** and **the-barber-cave** in `apps/prospective-clients/`. `apps/clients/` is empty until first production go-live. |
 
 ---
 
@@ -33,15 +33,13 @@ You specified building out the site in full using: **https://share.google/3MQFHV
 apps/
   firm/                        # Agency marketing site (broad: form, blogs, etc.)
   agency-admin/                # Internal dashboard
-  prospective-clients/         # Demo/test only
-    acme-health/               # (moved from apps/clients/)
-  clients/                     # Real clients only
-    riley-day-care/            # Converted in place from riverside-hotel; build out in full
+  prospective-clients/         # Demo/test only (all current client apps)
+    riley-day-care/            # Day Care Template
+    the-barber-cave/           # Barber shop (Dallas) demo
+  clients/                     # Production clients only (empty until first go-live)
 ```
 
-(Riverside-hotel is not preserved — it was only a placeholder; converted to Riley Day Care.)
-
-- **Riley Day Care:** Created by **turning the current riverside-hotel app into Riley Day Care** (rename, rebrand, then build out in full per spec). So the first “real” client is not a fresh scaffold from acme-health; it’s the existing riverside-hotel codebase repurposed and expanded.
+- **Riley Day Care** and **The Barber Cave** both live under `apps/prospective-clients/`. The scaffold template is `riley-day-care`. **Production clients** will go in `apps/clients/` when the first real client goes live.
 - **Template:** For now, a **“Day Care Template”** suffices — e.g. the Riley Day Care app (once built) can serve as the template for future day-care-style clients, or the scaffold can later get a “day care” variant. You can decide the exact mechanism after you understand the repository better.
 
 ---
@@ -50,13 +48,10 @@ apps/
 
 ### Phase 1: Restructure (prospective vs real)
 
-- Create `apps/prospective-clients/`.
-- **Move** `apps/clients/acme-health` → `apps/prospective-clients/acme-health`.
-- **Riley Day Care (Phase 2):** Convert `apps/clients/riverside-hotel` in place to `riley-day-care` (no riverside-hotel preserved).
-- **Riley Day Care:** Convert **in place** — rename/convert the current `apps/clients/riverside-hotel` to Riley Day Care (folder → `riley-day-care`, package name, slug, tokens, branding, content). Riverside-hotel is not a real place; do **not** preserve or recreate it. After conversion, `apps/clients/` contains only `riley-day-care`.
-- **Prospective clients:** Only **acme-health** is moved to `apps/prospective-clients/acme-health`. No riverside-hotel in prospective-clients.
-- Update **tokens build** to support both `apps/prospective-clients/*/tokens/` and `apps/clients/*/tokens/` (or one parameterized output).
-- Update **scaffold script** to create apps under either `prospective-clients` or `clients`; keep one main template (e.g. riverside-hotel clone for prospective, or “day care” template for real day-care clients).
+- Create `apps/prospective-clients/`. **Done:** Riley Day Care and The Barber Cave live in `apps/prospective-clients/`. `apps/clients/` is empty (for production go-live).
+- **Prospective clients:** `riley-day-care` (Day Care Template) and `the-barber-cave` (barber shop demo). No acme-health; removed from repo.
+- Update **tokens build** to support both `apps/prospective-clients/*/tokens/` and `apps/clients/*/tokens/`. **Done:** `PROSPECTIVE_SLUGS` lists riley-day-care and the-barber-cave.
+- Update **scaffold script** to create apps under either `prospective-clients` or `clients`; template is `apps/prospective-clients/riley-day-care`. **Done.**
 - Update **root tsconfig** references, **turbo** outputs, **docs**, and **TODO** paths.
 
 ### Phase 2: Riley Day Care (convert + build out)

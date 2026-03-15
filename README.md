@@ -13,9 +13,8 @@ agency-platform/
 ├── apps/
 │   ├── firm/              # Agency marketing site
 │   ├── agency-admin/      # Internal agency management
-│   ├── prospective-clients/  # Demo/test sites (e.g. acme-health)
-│   └── clients/           # Real client applications only
-│       └── riley-day-care/   # First real client (day care)
+│   ├── prospective-clients/  # Demo/test sites (riley-day-care, the-barber-cave)
+│   └── clients/             # Production clients only (empty until first go-live)
 ├── packages/              # Shared packages
 │   ├── ui/               # Shared UI components (shadcn/ui)
 │   ├── database/         # Supabase client factories

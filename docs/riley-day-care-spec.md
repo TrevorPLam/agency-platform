@@ -2,7 +2,7 @@
 
 **Source:** The full spec (content, structure, and requirements) is at: https://share.google/3MQFHVDZjzpTBa8kV (auth/share required).
 
-**Purpose of this file:** Paste the key sections from that spec here (pages, features, copy, forms, blog requirements) so implementation can be done against a single source of truth. Until then, the app at `apps/clients/riley-day-care/` is the converted riverside-hotel scaffold with Riley Day Care branding and placeholder content.
+**Purpose of this file:** Paste the key sections from that spec here (pages, features, copy, forms, blog requirements) so implementation can be done against a single source of truth. Until then, the app at `apps/clients/riley-day-care/` is the Day Care Template scaffold with Riley Day Care branding and placeholder content.
 
 ---
 

@@ -4,10 +4,10 @@ This document covers the project-per-client deployment model, the Vercel Pro to 
 
 ## Project-per-Client Model
 
-Each client app has its own Vercel project: its own environment variables, deployment history, and rollback points. We use one project for `@agency/riverside-hotel` and a separate project for `@agency/agency-admin`.
+Each client app has its own Vercel project: its own environment variables, deployment history, and rollback points. We use one project for `@agency/riley-day-care` (or `@agency/the-barber-cave`) and a separate project for `@agency/agency-admin`. Current client apps live under `apps/prospective-clients/`; production clients will use `apps/clients/`.
 
 - **Isolation:** Client data and branding stay separate; no shared env values between Vercel projects. Each client has its own Supabase anon key scope and PostHog key.
-- **Build:** Always run the build from the monorepo root via Turborepo so upstream packages are built first. Do not run `cd apps/clients/[slug] && next build` from the app directory alone.
+- **Build:** Always run the build from the monorepo root via Turborepo so upstream packages are built first. Do not run `cd apps/prospective-clients/[slug] && next build` (or `apps/clients/[slug]` for production) from the app directory alone.
 
 This is the recommended model for a solo developer and for the first 8–9 clients. Switch to the single-project middleware model (or negotiate Vercel Enterprise) when approaching the cost cliff below.
 
@@ -45,8 +45,8 @@ When you adopt the single-project model, use hostname-based rewriting so one dep
 import { NextRequest, NextResponse } from 'next/server'
 
 const TENANT_ROUTES: Record<string, string> = {
-  'riverside-hotel.com': '/tenants/riverside-hotel',
-  'acme-health.com':     '/tenants/acme-health',
+  'rileydaycare.com':    '/tenants/riley-day-care',
+  'thebarbercave.com':   '/tenants/the-barber-cave',
   // Add each client's domain here
 }
 
@@ -74,20 +74,20 @@ See the main Agency Platform Guide §14 for full context and the recommended app
 
 ### Vercel project configuration (project-per-client)
 
-For each app (`riverside-hotel`, `agency-admin`), create a Vercel project linked to the monorepo and set:
+For each app (`riley-day-care`, `the-barber-cave`, `agency-admin`), create a Vercel project linked to the monorepo and set:
 
 | Setting | Value |
 |--------|--------|
-| **Root Directory** | `apps/clients/riverside-hotel` or `apps/agency-admin` |
-| **Build Command** | `cd ../../../ && pnpm turbo run build --filter=@agency/riverside-hotel` (or `--filter=@agency/agency-admin`) |
-| **Output Directory** | `apps/clients/riverside-hotel/.next` or `apps/agency-admin/.next` |
+| **Root Directory** | `apps/prospective-clients/riley-day-care` (or `the-barber-cave`) or `apps/agency-admin` |
+| **Build Command** | `cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care` (or `--filter=@agency/the-barber-cave`, `--filter=@agency/agency-admin`) |
+| **Output Directory** | `apps/prospective-clients/riley-day-care/.next` (or same for `the-barber-cave`) or `apps/agency-admin/.next` |
 | **Install Command** | `pnpm install` |
 
 ### Environment variables per project
 
 Add the variables from `.env.local.example` to each Vercel project. Each project must have its own values; never share env vars between projects. Required set:
 
-- `NEXT_PUBLIC_TENANT_SLUG` — tenant slug for that app (e.g. `riverside-hotel`)
+- `NEXT_PUBLIC_TENANT_SLUG` — tenant slug for that app (e.g. `riley-day-care`)
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 - `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`
 - `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY` (or use the Inngest Vercel Marketplace integration to inject these)

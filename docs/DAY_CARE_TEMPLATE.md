@@ -2,10 +2,10 @@
 
 ## Option A layout
 
-- **Real clients** live under `apps/clients/` (e.g. `riley-day-care`).
-- **Prospective (demo) clients** live under `apps/prospective-clients/` (e.g. `acme-health`).
+- **Production clients** live under `apps/clients/` (empty until first go-live).
+- **Prospective (demo) clients** live under `apps/prospective-clients/` (e.g. `riley-day-care`, `the-barber-cave`).
 
-The first real client in this repo is **Riley Day Care** at `apps/clients/riley-day-care`.
+The **Day Care Template** in this repo is **Riley Day Care** at `apps/prospective-clients/riley-day-care`.
 
 ## Creating a new day-care-style client
 
@@ -18,8 +18,8 @@ The first real client in this repo is **Riley Day Care** at `apps/clients/riley-
    - **Client slug:** e.g. `sunshine-day-care` (kebab-case)
    - **Industry:** e.g. `general` or a future "daycare" option if added
    - **Production domain:** e.g. `sunshinedaycare.com`
-   - **Prospective (demo) or real client?** Answer **r** for real (so the app is created under `apps/clients/`).
-3. The script uses **Riley Day Care** as the template (see `scripts/scaffold-client.ts`). It copies from `apps/clients/riley-day-care/` and substitutes the new slug and name in `package.json`, layout, and token references.
+   - **Prospective (demo) or real client?** Answer **p** for prospective (demo) or **r** for real (production under `apps/clients/`).
+3. The script uses **Riley Day Care** as the template (see `scripts/scaffold-client.ts`). It copies from `apps/prospective-clients/riley-day-care/` and substitutes the new slug and name in `package.json`, layout, and token references.
 4. After scaffolding:
    - Add a token file: `packages/design-tokens/tokens/clients/[slug].json` (copy from `riley-day-care.json` and adjust brand colours).
    - Run `pnpm install` and `pnpm tokens:build`.

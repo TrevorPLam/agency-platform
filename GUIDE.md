@@ -54,7 +54,7 @@ A **monorepo** is a single Git repository containing multiple independent applic
 
 Your platform simultaneously manages three overlapping concerns.
 
-**Multi-industry** means one codebase serves healthcare intake forms, day-care sites, and other verticals without treating each as a custom project. You achieve this through configuration and content — design tokens, CMS schemas — rather than code branching. The prospective (demo) `acme-health` app and the real client `riley-day-care` app consume identical shared components; they look completely different because they load different token files.
+**Multi-industry** means one codebase serves healthcare intake forms, day-care sites, and other verticals without treating each as a custom project. You achieve this through configuration and content — design tokens, CMS schemas — rather than code branching. The prospective (demo) apps `riley-day-care` and `the-barber-cave` consume identical shared components; they look completely different because they load different token files. Both live under `apps/prospective-clients/`. Production clients will go in `apps/clients/`.
 
 **Multi-client** means dozens of clients share infrastructure while remaining completely isolated from each other's data, branding, and domains. You achieve this through Row-Level Security (RLS) at the database layer and per-client deployment stamps at the Vercel layer. A user of one client's portal cannot — even in principle — read data belonging to another client, regardless of how they manipulate their session.
 
@@ -64,7 +64,7 @@ Your platform simultaneously manages three overlapping concerns.
 
 The most common failure mode in agency codebases is **shared-everything spaghetti**. It starts when you copy-paste one client's code to start a new client, then make local modifications to both. Three months later you have two completely different codebases masquerading as a shared platform. Fixing a bug requires touching both. Onboarding a third client means copying from whichever version looks cleaner.
 
-The monorepo architecture makes this structurally impossible: shared code lives in `packages/`, client-specific code lives in `apps/clients/[slug]/`, and the boundary between them is enforced by pnpm workspace references. If you try to import from one client app into another, your linter stops the build.
+The monorepo architecture makes this structurally impossible: shared code lives in `packages/`, client-specific code lives in `apps/prospective-clients/[slug]/` or `apps/clients/[slug]/` (production), and the boundary between them is enforced by pnpm workspace references. If you try to import from one client app into another, your linter stops the build.
 
 ### A note on learning by trial and error
 
@@ -206,19 +206,20 @@ agency-platform/
 │   │   ├── package.json
 │   │   └── next.config.ts
 │   ├── firm/                            # Agency marketing site (broad: form, blogs, etc.)
-│   ├── prospective-clients/             # Demo/test only
-│   │   └── acme-health/                # Prospective (demo) client (slug: acme-health)
-│   │       ├── app/
-│   │       ├── tokens/
-│   │       ├── package.json
-│   │       └── next.config.ts
-│   └── clients/                        # Real clients only
-│       ├── riley-day-care/             # First real client (Day Care Template)
-│       │   ├── app/
-│       │   ├── tokens/
-│       │   ├── package.json
-│       │   └── next.config.ts
-│       └── [slug]/                     # Pattern for every new real client
+│   ├── prospective-clients/             # Demo/test only (all current client apps)
+│   │   ├── riley-day-care/             # Day Care Template (slug: riley-day-care)
+│   │   │   ├── app/
+│   │   │   ├── tokens/
+│   │   │   ├── package.json
+│   │   │   └── next.config.ts
+│   │   ├── the-barber-cave/            # Barber shop demo (slug: the-barber-cave)
+│   │   │   ├── app/
+│   │   │   ├── tokens/
+│   │   │   ├── package.json
+│   │   │   └── next.config.ts
+│   │   └── [slug]/
+│   └── clients/                        # Production clients only (empty until first go-live)
+│       └── [slug]/                     # Pattern for every new production client
 ├── packages/
 │   ├── ui/                             # Shared shadcn/ui component library
 │   │   ├── src/
@@ -236,8 +237,8 @@ agency-platform/
 │   │   │   ├── component/
 │   │   │   │   └── button.json         # Component-level tokens (→ semantic)
 │   │   │   ├── clients/
-│   │   │   │   ├── acme-health.json    # Prospective client (apps/prospective-clients/)
-│   │   │   │   └── riley-day-care.json # Real client (apps/clients/)
+│   │   │   │   ├── riley-day-care.json  # Day Care Template (apps/prospective-clients/)
+│   │   │   │   └── the-barber-cave.json # Barber demo (apps/prospective-clients/)
 │   │   │   └── _base.json              # Primitive palette (shared)
 │   │   ├── sd.config.ts                # Style Dictionary v4 config
 │   │   └── package.json
@@ -294,8 +295,8 @@ agency-platform/
 
 ### Template and client layout (Option A)
 
-- **Real clients** live under `apps/clients/` (e.g. `riley-day-care`). **Prospective (demo) clients** live under `apps/prospective-clients/` (e.g. `acme-health`). The scaffold script (`pnpm scaffold`) asks whether the new app is prospective or real and creates the app in the correct directory.
-- The **first real client** is Riley Day Care (`apps/clients/riley-day-care`). It serves as the **Day Care Template**: the scaffold uses it as the source when creating new client apps. Future day-care-style clients are created by running `pnpm scaffold` and choosing "real" client; the script copies from `riley-day-care` and substitutes slug/name. A dedicated "day care" scaffold variant can be added later if needed.
+- **Production clients** live under `apps/clients/` (empty until first go-live). **Prospective (demo) clients** live under `apps/prospective-clients/` (e.g. `riley-day-care`, `the-barber-cave`). The scaffold script (`pnpm scaffold`) asks whether the new app is prospective or real and creates the app in the correct directory.
+- The **Day Care Template** is Riley Day Care (`apps/prospective-clients/riley-day-care`). The scaffold uses it as the source when creating new client apps. Run `pnpm scaffold` and choose prospective or real; the script copies from `riley-day-care` and substitutes slug/name.
 - See `docs/DAY_CARE_TEMPLATE.md` for how to create new day-care-style clients.
 
 ---
@@ -494,7 +495,7 @@ out/
 .turbo/
 
 # Generated token CSS files
-apps/clients/*/tokens/*.css
+apps/prospective-clients/*/tokens/*.css
 
 # Supabase
 supabase/.branches/
@@ -1025,13 +1026,13 @@ From the repository root, use the scaffold script (recommended) or create manual
 
 ```bash
 pnpm scaffold
-# Choose real client → template is apps/clients/riley-day-care
-# Or for a demo: choose prospective → creates under apps/prospective-clients/[slug]
+# Choose prospective → creates under apps/prospective-clients/[slug] (template: riley-day-care)
+# Or choose real → creates under apps/clients/[slug] (for production go-live)
 ```
 
 To create a client app manually (or run `pnpm scaffold` which does this automatically):
 
-**`apps/clients/riley-day-care/next.config.ts`** (or `apps/clients/[slug]/` for a new real client)
+**`apps/prospective-clients/riley-day-care/next.config.ts`** (or `apps/prospective-clients/[slug]/` / `apps/clients/[slug]/` for a new client)
 ```ts
 import type { NextConfig } from 'next'
 
@@ -1048,7 +1049,7 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-**`apps/clients/riley-day-care/src/app/globals.css`** (or `[slug].css` for a new client)
+**`apps/prospective-clients/riley-day-care/src/app/globals.css`** (or `[slug].css` for a new client)
 ```css
 /* 1. Import Tailwind v4 — this replaces the three @tailwind directives from v3 */
 @import "tailwindcss";
@@ -1060,7 +1061,7 @@ export default nextConfig
 @import "../../tokens/riley-day-care.css";
 ```
 
-**`apps/clients/riley-day-care/src/middleware.ts`** (or `apps/clients/[slug]/` for a new client)
+**`apps/prospective-clients/riley-day-care/src/middleware.ts`** (or same path for a new client)
 ```ts
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
@@ -1365,7 +1366,7 @@ Add `tokens:build` to your `packages/design-tokens/package.json`:
 ### Dark mode pattern
 
 ```css
-/* apps/clients/riley-day-care/src/app/globals.css */
+/* apps/prospective-clients/riley-day-care/src/app/globals.css */
 @import "tailwindcss";
 @import "../../tokens/riley-day-care.css";
 
@@ -1760,7 +1761,7 @@ Inngest was designed for serverless from day one. Your functions live at an `/ap
 
 Install and configure the Inngest client. The Vercel Marketplace integration auto-injects `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` environment variables.
 
-**`apps/clients/riley-day-care/src/inngest/client.ts`**
+**`apps/prospective-clients/riley-day-care/src/inngest/client.ts`** (or agency-admin for Inngest)
 ```typescript
 import { Inngest } from 'inngest'
 
@@ -1776,7 +1777,7 @@ export const inngest = new Inngest({
 })
 ```
 
-**`apps/clients/riley-day-care/src/app/api/inngest/route.ts`**
+**`apps/agency-admin/src/app/api/inngest/route.ts`** (Inngest lives in agency-admin)
 ```typescript
 import { serve } from 'inngest/next'
 import { inngest } from '../../../inngest/client'
@@ -2080,7 +2081,7 @@ Keep this file under 6,000 tokens (approximately 4,500 words) to stay within Cas
 ## Project purpose
 Multi-client marketing agency monorepo. Each client is isolated by tenant_id at the
 database layer (Row-Level Security). Shared code lives in packages/. Client-specific
-code lives in apps/clients/[slug]/.
+code lives in apps/prospective-clients/[slug]/ or apps/clients/[slug]/.
 
 ## Stack
 - Next.js 16.1 with Turbopack (default, no flags needed)
@@ -2144,9 +2145,9 @@ For a solo developer starting out, use project-per-client. Switch to middleware 
 In the Vercel dashboard, create a new project, connect it to your GitHub repository, and configure:
 
 ```
-Root Directory: apps/clients/riley-day-care
+Root Directory: apps/prospective-clients/riley-day-care
 Build Command:  cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care
-Output Directory: apps/clients/riley-day-care/.next
+Output Directory: apps/prospective-clients/riley-day-care/.next
 Install Command: pnpm install
 ```
 
@@ -2198,7 +2199,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // Tenant manifest — at 50 clients, replace with Redis lookup (see §19)
 const TENANT_ROUTES: Record<string, string> = {
   'rileydaycare.com':    '/tenants/riley-day-care',
-  'acme-health.com':     '/tenants/acme-health',
+  'thebarbercave.com':   '/tenants/the-barber-cave',
   // Add each client's domain here
 }
 
@@ -2541,7 +2542,7 @@ If you build a portal where your agency's own employees need to log in to multip
 
 // The aliasEmail approach:
 // alice@example.com at Riley Day Care → alice+riley-day-care@example.com in auth
-// alice@example.com at Acme Health   → alice+acme-health@example.com in auth
+// alice@example.com at The Barber Cave → alice+the-barber-cave@example.com in auth
 // Both auth records store real_email: 'alice@example.com' in app_metadata
 // Your login flow looks up the auth_email from customer_auth_mappings before signing in
 ```
@@ -2647,9 +2648,9 @@ Run this checklist for every new client. It takes approximately 2 hours for a st
 **Phase 1: Scaffold**
 
 - [ ] Run `pnpm scaffold` and provide: name, slug, industry, domain
-- [ ] Verify `apps/clients/[slug]/` was created with correct `package.json`
+- [ ] Verify `apps/prospective-clients/[slug]/` (or `apps/clients/[slug]/`) was created with correct `package.json`
 - [ ] Edit `packages/design-tokens/tokens/clients/[slug].json` with client brand colours and fonts
-- [ ] Run `pnpm tokens:build` and verify `apps/clients/[slug]/tokens/[slug].css` compiles without errors
+- [ ] Run `pnpm tokens:build` and verify the app's `tokens/[slug].css` compiles without errors
 
 **Phase 2: Database**
 
@@ -2668,7 +2669,7 @@ Run this checklist for every new client. It takes approximately 2 hours for a st
 **Phase 4: Deployment**
 
 - [ ] Create new Vercel project connected to monorepo GitHub repo
-- [ ] Set root directory to `apps/clients/[slug]`
+- [ ] Set root directory to `apps/prospective-clients/[slug]` or `apps/clients/[slug]`
 - [ ] Set all required environment variables (see §14)
 - [ ] Configure custom domain in Vercel
 - [ ] Add CNAME in DNS pointing to Vercel

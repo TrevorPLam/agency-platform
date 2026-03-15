@@ -1,7 +1,7 @@
 /**
  * Client scaffolding script (T-19). Run with: pnpm scaffold
  * Creates under apps/prospective-clients (demo) or apps/clients (real).
- * Template: apps/clients/riley-day-care.
+ * Template: apps/prospective-clients/riley-day-care.
  */
 import { execSync } from 'child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
@@ -54,7 +54,7 @@ async function main() {
 
   if (!validateSlug(slug)) {
     console.error(
-      '\n❌ Invalid slug. Use kebab-case only: lowercase letters, digits, single hyphens (e.g. acme-health). No spaces or special characters.\n'
+      '\n❌ Invalid slug. Use kebab-case only: lowercase letters, digits, single hyphens (e.g. the-barber-cave, riley-day-care). No spaces or special characters.\n'
     )
     process.exit(1)
   }
@@ -63,7 +63,7 @@ async function main() {
   const appSubdir = isProspective ? 'prospective-clients' : 'clients'
   const appDir = join(root, 'apps', appSubdir, slug)
   const tokenDir = join(root, 'packages', 'design-tokens', 'tokens', 'clients')
-  const templateRoot = join(root, 'apps', 'clients', 'riley-day-care')
+  const templateRoot = join(root, 'apps', 'prospective-clients', 'riley-day-care')
 
   if (existsSync(appDir)) {
     console.error(`\n❌ Directory already exists: apps/${appSubdir}/${slug}. Aborting to avoid overwriting.\n`)
