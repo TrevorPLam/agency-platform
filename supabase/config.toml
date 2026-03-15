@@ -25,6 +25,7 @@ enabled = false
 # key_path = "../certs/my-key.pem"
 
 [db]
+# pgTAP is enabled via SQL in T-14 test setup (supabase/tests/database/000-setup-test-hooks.sql), not here.
 # Port to use for the local database URL.
 port = 54322
 # Port used by db diff command to initialize the shadow database.
@@ -149,6 +150,7 @@ max_indexes = 5
 
 [auth]
 enabled = true
+# Note: email_confirm_if_verified is not in CLI config schema (v2.78); set in Dashboard for production if needed.
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
 site_url = "http://127.0.0.1:3000"

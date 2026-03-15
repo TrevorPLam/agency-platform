@@ -1,0 +1,3 @@
+-- Seed data for local development (optional).
+-- Add INSERT statements here for local-only test data.
+-- This file is run after migrations during `supabase db reset`.

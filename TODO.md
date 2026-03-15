@@ -844,6 +844,8 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
 
 **Gitignore Verification:** Confirmed `.gitignore` properly excludes `supabase/.branches/` and `supabase/.temp/` directories as required for clean version control.
 
+**Config and local stack (latest):** `config.toml` updated with a `[db]` comment that pgTAP is enabled via SQL in T-14 (no `extensions` key in CLI config). The `[auth]` key `email_confirm_if_verified` is not in the Supabase CLI config schema (v2.78) and was removed to allow `supabase start` to parse; it can be set in the Dashboard for production if needed. Added `supabase/seed.sql` (minimal placeholder) so `db reset` does not fail. Created `docs/SUPABASE_LOCAL.md` with steps to run local Supabase when Docker Desktop is available: `npx supabase start`, then use printed local URL/keys in `.env.local`. Updated `.env.local.example` with a note for local vs production Supabase URL. **T-11.03 and T-11.09** remain to be verified when Docker is running (run `npx supabase start`, then `npx supabase status` and open Studio at http://localhost:54323).
+
 ---
 
 ## T-12: Database Schema & Migrations
