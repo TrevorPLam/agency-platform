@@ -34,7 +34,8 @@ When not using local Supabase, point these to the production project (current se
 ## Verify
 
 - **Status:** `npx supabase status` — lists all services and keys.
-- **Studio:** open http://localhost:54323 to inspect DB, Auth, etc.
+- **Studio:** open http://localhost:54323 (or http://127.0.0.1:54323) to inspect DB, Auth, etc.
+- **Verified:** Local stack runs successfully with Docker Desktop; first `supabase start` may take several minutes while images are pulled.
 
 ## CI (T-21)
 
