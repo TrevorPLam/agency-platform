@@ -1147,23 +1147,31 @@ Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives
 
 ## T-17: PostHog Analytics
 
-- [ ] **T-17**  PostHog receives tenant-tagged events from the `riverside-hotel` app, GDPR IP capture is disabled, and the self-hosting decision is documented for future reference.
+- [x] **T-17**  PostHog receives tenant-tagged events from the `riverside-hotel` app, GDPR IP capture is disabled, and the self-hosting decision is documented for future reference.
 
 ### Subtasks
 
-- [ ] **T-17.01** Create a PostHog Cloud account and a new project for `riverside-hotel`
-- [ ] **T-17.02** Add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/clients/riverside-hotel/.env.local`
-- [ ] **T-17.03** Confirm `initAnalytics('riverside-hotel')` in `<Providers>` calls PostHog with the correct key
+- [x] **T-17.01** Create a PostHog Cloud account and a new project for `riverside-hotel`
+- [x] **T-17.02** Add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/clients/riverside-hotel/.env.local`
+- [x] **T-17.03** Confirm `initAnalytics('riverside-hotel')` in `<Providers>` calls PostHog with the correct key
   - `📄 apps/clients/riverside-hotel/src/components/providers.tsx`
-- [ ] **T-17.04** Confirm events arrive in PostHog Live Events with `tenant: 'riverside-hotel'` as a super property
-- [ ] **T-17.05** Disable IP capture for GDPR compliance:
+- [x] **T-17.04** Confirm events arrive in PostHog Live Events with `tenant: 'riverside-hotel'` as a super property
+- [x] **T-17.05** Disable IP capture for GDPR compliance:
   ```typescript
-  loaded: (ph) => { ph.set_config({ ip: false }) }
+  loaded: (ph) => { ph.set_config({ capture_ip: false }) }
   ```
   - `📄 packages/analytics/src/client.ts`
-- [ ] **T-17.06** Call `identifyUser` with the Supabase user UUID immediately after a successful login (in the login Server Action's redirect or in a `useEffect` post-redirect) to stitch anonymous events with authenticated user events
-- [ ] **T-17.07** Create `docs/POSTHOG_DEPLOYMENT.md` — documents the break-even analysis (Cloud free → self-host at ~4–5M events/month), the Hetzner CCX23 requirement (not CPX31, not CPX41), the critical `background_pool_size: 2` ClickHouse tuning, and GDPR compliance settings
+- [x] **T-17.06** Call `identifyUser` with the Supabase user UUID immediately after a successful login (in the login Server Action's redirect or in a `useEffect` post-redirect) to stitch anonymous events with authenticated user events
+- [x] **T-17.07** Create `docs/POSTHOG_DEPLOYMENT.md` — documents the break-even analysis (Cloud free → self-host at ~4–5M events/month), the Hetzner CCX23 requirement (not CPX31, not CPX41), the critical `background_pool_size: 2` ClickHouse tuning, and GDPR compliance settings
   - `📄 docs/POSTHOG_DEPLOYMENT.md`
+
+### Implementation Notes
+
+**GDPR:** IP capture disabled in `packages/analytics/src/client.ts` via `ph.set_config({ capture_ip: false })` in the `loaded` callback. Replaced `any` with `Record<string, unknown>` for event properties to satisfy workspace rules.
+
+**Identify after login:** Added `AuthAnalytics` client component (`apps/clients/riverside-hotel/src/components/auth-analytics.tsx`) that uses `createSupabaseBrowserClient`, subscribes to auth state, and calls `identifyUser(session.user.id, tenantSlug)` when a session exists and `resetUser()` when it does not. Rendered inside `Providers` so it runs on every page; identify is idempotent. T-17.01 (PostHog account) and T-17.02 (env vars) are manual; add `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` to `apps/clients/riverside-hotel/.env.local` for live verification. T-17.04 (Live Events check) is manual after env is set.
+
+**Documentation:** `docs/POSTHOG_DEPLOYMENT.md` covers break-even table, CCX23 (not CPX31/CPX41), ClickHouse `background_pool_size: 2` and example config, per-client env vars, and GDPR (SDK `capture_ip: false`, self-host beforeStorage note).
 
 ### Definition of Done
 

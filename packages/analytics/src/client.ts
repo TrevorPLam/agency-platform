@@ -17,9 +17,14 @@ export function initAnalytics(tenantSlug: string): void {
   if (!isInitialized && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      loaded: (posthog) => {
+      loaded: (ph) => {
+        // GDPR: do not capture IP address (EU and privacy-conscious clients).
+        // capture_ip is supported at runtime; PostHogConfig types may not include it.
+        ;(ph as { set_config: (c: Record<string, unknown>) => void }).set_config({
+          capture_ip: false,
+        })
         if (process.env.NODE_ENV === 'development') {
-          posthog.debug()
+          ph.debug()
         }
       },
     })
@@ -39,7 +44,7 @@ export function initAnalytics(tenantSlug: string): void {
  */
 export function captureEvent(
   event: string,
-  properties?: Record<string, any>
+  properties?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined' || !isInitialized) {
     return
@@ -55,7 +60,7 @@ export function captureEvent(
 export function identifyUser(
   userId: string,
   tenantSlug: string,
-  properties?: Record<string, any>
+  properties?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined' || !isInitialized) {
     return
