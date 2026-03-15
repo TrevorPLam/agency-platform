@@ -1252,34 +1252,38 @@ Include concrete before/after examples in the rules files — AI tools respond s
 
 ## T-19: Client Scaffolding Script
 
-- [ ] **T-19** AGENT  `pnpm scaffold` creates a fully wired new client app in under 2 minutes with zero manual file editing required for structural setup.
+- [x] **T-19** AGENT  `pnpm scaffold` creates a fully wired new client app in under 2 minutes with zero manual file editing required for structural setup.
 
 ### Subtasks
 
-- [ ] **T-19.01** AGENT Create `scripts/scaffold-client.ts` — interactive CLI: collects display name, slug (validated: kebab-case, no spaces, no special chars beyond hyphens), industry, domain; aborts if slug directory already exists
+- [x] **T-19.01** AGENT Create `scripts/scaffold-client.ts` — interactive CLI: collects display name, slug (validated: kebab-case, no spaces, no special chars beyond hyphens), industry, domain; aborts if slug directory already exists
   - `📄 scripts/scaffold-client.ts`
-- [ ] **T-19.02** AGENT Script creates `apps/clients/[slug]/package.json` using workspace/catalog protocols (no hardcoded versions)
+- [x] **T-19.02** AGENT Script creates `apps/clients/[slug]/package.json` using workspace/catalog protocols (no hardcoded versions)
   - `📄 apps/clients/[slug]/package.json`
-- [ ] **T-19.03** Script creates `apps/clients/[slug]/tsconfig.json`, `next.config.ts`, `postcss.config.mjs` — using the riverside-hotel files as exact templates
+- [x] **T-19.03** Script creates `apps/clients/[slug]/tsconfig.json`, `next.config.ts`, `postcss.config.mjs` — using the riverside-hotel files as exact templates
   - `📄 apps/clients/[slug]/tsconfig.json`
   - `📄 apps/clients/[slug]/next.config.ts`
   - `📄 apps/clients/[slug]/postcss.config.mjs`
-- [ ] **T-19.04** AGENT Script creates the App Router skeleton: `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css` — globals.css includes the `@import "tailwindcss"`, `@import "tw-animate-css"`, token import, and `@source` directive (with correct relative path for the slug)
+- [x] **T-19.04** AGENT Script creates the App Router skeleton: `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/globals.css` — globals.css includes the `@import "tailwindcss"`, `@import "tw-animate-css"`, token import, and `@source` directive (with correct relative path for the slug)
   - `📄 apps/clients/[slug]/src/app/layout.tsx`
   - `📄 apps/clients/[slug]/src/app/page.tsx`
   - `📄 apps/clients/[slug]/src/app/globals.css`
-- [ ] **T-19.05** AGENT Script creates `src/middleware.ts` for Supabase session refresh
+- [x] **T-19.05** AGENT Script creates `src/middleware.ts` for Supabase session refresh
   - `📄 apps/clients/[slug]/src/middleware.ts`
-- [ ] **T-19.06** AGENT Script creates `src/components/providers.tsx`
+- [x] **T-19.06** AGENT Script creates `src/components/providers.tsx`
   - `📄 apps/clients/[slug]/src/components/providers.tsx`
-- [ ] **T-19.07** AGENT Script creates `packages/design-tokens/tokens/clients/[slug].json` with placeholder brand colors
+- [x] **T-19.07** AGENT Script creates `packages/design-tokens/tokens/clients/[slug].json` with placeholder brand colors
   - `📄 packages/design-tokens/tokens/clients/[slug].json`
-- [ ] **T-19.08** AGENT Script creates the `apps/clients/[slug]/tokens/` output directory
+- [x] **T-19.08** AGENT Script creates the `apps/clients/[slug]/tokens/` output directory
   - `📁 apps/clients/[slug]/tokens/`
-- [ ] **T-19.09** AGENT After scaffolding, script prints explicit next steps: edit token JSON → `pnpm tokens:build` → insert DB tenant row → create Vercel project → set env vars
-- [ ] **T-19.10** AGENT Run `pnpm scaffold` for `acme-health` (industry: healthcare) as the test
-- [ ] **T-19.11** AGENT Run `pnpm turbo run build --filter=@agency/acme-health` after scaffolding — must succeed with zero code changes
-- [ ] **T-19.12** AGENT Run `pnpm tokens:build` after scaffolding — verify `apps/clients/acme-health/tokens/acme-health.css` generates
+- [x] **T-19.09** AGENT After scaffolding, script prints explicit next steps: edit token JSON → `pnpm tokens:build` → insert DB tenant row → create Vercel project → set env vars
+- [x] **T-19.10** AGENT Run `pnpm scaffold` for `acme-health` (industry: healthcare) as the test
+- [x] **T-19.11** AGENT Run `pnpm turbo run build --filter=@agency/acme-health` after scaffolding — must succeed with zero code changes
+- [x] **T-19.12** AGENT Run `pnpm tokens:build` after scaffolding — verify `apps/clients/acme-health/tokens/acme-health.css` generates
+
+### Implementation Notes
+
+**Script:** `scripts/scaffold-client.ts` reads templates from `apps/clients/riverside-hotel/` (package.json, tsconfig, next.config, postcss, globals.css, layout, page, middleware, providers, auth-analytics, eslint.config) and writes to `apps/clients/[slug]/` with slug/name substitution. Token JSON uses riverside-hotel structure with placeholder colors (#000000). Slug validation: kebab-case regex; aborts if `apps/clients/[slug]` exists. Post-scaffold: `pnpm install`, `pnpm tokens:build`, then `tsc --noEmit` in app dir; non-interactive mode via `SCAFFOLD_SLUG`, `SCAFFOLD_NAME`, `SCAFFOLD_INDUSTRY`, `SCAFFOLD_DOMAIN`. Verified with acme-health: scaffold → build succeeds with zero code changes.
 
 ### Definition of Done
 

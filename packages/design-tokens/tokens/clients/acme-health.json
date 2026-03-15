@@ -1,0 +1,98 @@
+{
+  "brand": {
+    "primary": {
+      "$type": "color",
+      "$value": "#000000"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "#666666"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "#000000"
+    }
+  },
+  "font": {
+    "primary": {
+      "$type": "fontFamily",
+      "$value": [
+        "Inter",
+        "system-ui",
+        "sans-serif"
+      ]
+    },
+    "secondary": {
+      "$type": "fontFamily",
+      "$value": [
+        "Playfair Display",
+        "Georgia",
+        "serif"
+      ]
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": [
+        "JetBrains Mono",
+        "Consolas",
+        "monospace"
+      ]
+    }
+  },
+  "color": {
+    "semantic": {
+      "background": {
+        "primary": {
+          "$type": "color",
+          "$value": "{brand.primary}"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.02 198.41)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 198.41)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.89 0.02 198.41)"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 198.41)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "interactive": {
+        "primary": {
+          "default": {
+            "$type": "color",
+            "$value": "{brand.primary}"
+          },
+          "hover": {
+            "$type": "color",
+            "$value": "oklch(0.25 0.02 198.41)"
+          },
+          "active": {
+            "$type": "color",
+            "$value": "oklch(0.20 0.02 198.41)"
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "oklch(0.89 0.02 198.41)"
+          }
+        }
+      }
+    }
+  }
+}
