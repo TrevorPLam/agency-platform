@@ -60,7 +60,8 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
   }
 
   return {
-    ...tenant,
+    tenantId: tenant.id,
+    tenantSlug: tenant.slug,
     source: 'hostname'
   }
 }

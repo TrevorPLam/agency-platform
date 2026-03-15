@@ -1,24 +1,28 @@
 # Agency Platform — Toolchain Documentation
 
 **Last Updated:** 2026-03-14  
-**Purpose:** Records all development tool versions and verification commands for reproducible builds.
+**Purpose:** Records development tool version requirements and verification commands for reproducible builds.
+
+**Multiple development environments:** This repo is intended for use across multiple machines (e.g. desktop, laptop, CI). Run the verification checklist below **on each environment** where you develop. Installed versions may differ per machine as long as they meet the required version range. Each machine has its own `.env.local` (never committed); sync secrets via a password manager or team vault, not via git.
 
 ## Core Development Tools
 
-| Tool | Required Version | Installed Version | Verification Command | Status |
-|------|------------------|-------------------|---------------------|--------|
-| Node.js | 22.x.x | v25.8.1 | `node --version` | ✅ Installed (newer OK) |
-| pnpm | 10.x.x | 10.32.1 | `pnpm --version` | ✅ Installed |
-| Turborepo | 2.7.x | 2.8.17 | `turbo --version` | ✅ Installed (newer OK) |
-| Supabase CLI | Latest | 2.78.1 | `npx supabase --version` | ✅ Installed (via npx) |
+| Tool | Required Version | Example / Verified | Verification Command |
+|------|------------------|--------------------|----------------------|
+| Node.js | 22.x or newer | v22.x / v25.x | `node --version` |
+| pnpm | 10.x.x | 10.32.1 | `pnpm --version` |
+| Turborepo | 2.7.x or newer | 2.8.17 | `turbo --version` or `pnpm exec turbo --version` |
+| Supabase CLI | Latest | 2.78.1 | `npx supabase --version` |
 
-## Development Environment
+## Per-Environment Checklist
 
-| Tool | Status | Notes |
-|------|--------|-------|
-| Docker Desktop | ⚠️ Installed but not running | Docker v29.2.1 - **Action Required**: Start Docker Desktop manually from Start Menu |
-| Git Identity | ✅ Configured | trevo <trevo@users.noreply.github.com> |
-| Windsurf | ✅ Installed | v1.108.2 - AI IDE for development |
+On **each** machine (PC, laptop, etc.) where you code, ensure:
+
+| Item | Notes |
+|------|-------|
+| Docker Desktop | Required for local Supabase (`supabase start`). Start Docker on that machine before running Supabase. |
+| Git Identity | Configure once per machine: `git config --global user.name` / `user.email` |
+| IDE | Cursor, Windsurf, or VS Code — install on each environment as needed. |
 
 ## SaaS Accounts Setup Instructions
 
@@ -66,16 +70,17 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
-## Verification Checklist
+## Verification Checklist (run on each dev machine)
 
-- [x] `node --version` returns 22.x.x or newer (v25.8.1)
-- [x] `pnpm --version` returns 10.x.x (10.32.1)
-- [x] `turbo --version` returns 2.7.x or newer (2.8.17)
-- [x] `npx supabase --version` returns a valid version (2.78.1)
-- [ ] Docker Desktop is running (⚠️ Manual start required)
-- [x] Windsurf/Cursor is installed and accessible (v1.108.2)
-- [ ] All SaaS accounts are accessible (Setup instructions provided)
-- [x] This file exists and is committed to git
+- [ ] `node --version` returns 22.x or newer
+- [ ] `pnpm --version` returns 10.x.x
+- [ ] `turbo --version` or `pnpm exec turbo --version` returns 2.7.x or newer
+- [ ] `npx supabase --version` returns a valid version
+- [ ] Docker Desktop is running (when using local Supabase on this machine)
+- [ ] Git identity configured: `git config --global user.name` and `user.email`
+- [ ] `.env.local` created from `.env.local.example` (per machine; not in git)
+- [ ] All SaaS accounts accessible when needed (see setup instructions above)
+- [ ] This file exists and is committed to git
 
 ---
-*This file is automatically updated during T-01 execution. Keep it in version control.*
+*Run this checklist on every new environment (new PC, laptop, CI agent). Keep this file in version control.*

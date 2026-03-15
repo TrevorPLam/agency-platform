@@ -31,8 +31,9 @@ catalog:
   turbo: ^2.7.0
   tsup: ^8.0.0
   radix-ui: 1.4.3
-  'class-variance-authority': ^0.7.0
-  'lucide-react': ^0.454.0
+  class-variance-authority: ^0.7.0
+  lucide-react: ^0.454.0
+  tsx: ^4.21.0
 
 catalogMode: strict
 

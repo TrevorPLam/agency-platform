@@ -11,11 +11,21 @@
     "test": "turbo run test",
     "type-check": "turbo run type-check",
     "tokens:build": "turbo run tokens:build",
-    "scaffold": "turbo run scaffold",
+    "scaffold": "tsx scripts/scaffold-client.ts",
     "db:generate-types": "turbo run db:generate-types",
     "preinstall": "npx only-allow pnpm"
   },
-  "keywords": ["monorepo", "agency", "nextjs", "turborepo", "pnpm"],
+  "keywords": [
+    "monorepo",
+    "agency",
+    "nextjs",
+    "turborepo",
+    "pnpm"
+  ],
   "author": "trevo",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "tsx": "catalog:",
+    "turbo": "catalog:"
+  }
 }

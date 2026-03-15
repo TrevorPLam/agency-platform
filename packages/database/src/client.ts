@@ -1,134 +1,72 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createServerClient, createBrowserClient } from '@supabase/ssr'
 import { Database } from './types'
-import type { cookies } from 'next/headers'
 
 /**
- * Cookie store interface for decoupled testing.
- * 
- * This interface allows the Supabase client factories to be tested
- * with plain objects instead of requiring Next.js runtime mocks.
- * 
+ * Cookie store interface for server-side Supabase session.
+ * Use with Next.js: pass an adapter that reads from request cookies
+ * and writes to the response (e.g. in middleware or route handlers).
+ *
  * @example
  * ```typescript
- * // In production
- * const supabase = createSupabaseServerClient(await cookies())
- * 
- * // In tests
- * const mockCookieStore = { 
- *   get: () => undefined, 
- *   getAll: () => [] 
- * }
- * const supabase = createSupabaseServerClient(mockCookieStore)
+ * const cookieStore = await cookies()
+ * const supabase = createSupabaseServerClient({
+ *   getAll: () => cookieStore.getAll().map(c => ({ name: c.name, value: c.value })),
+ *   setAll: (cookiesToSet) => {
+ *     cookiesToSet.forEach(({ name, value, options }) =>
+ *       cookieStore.set(name, value, options)
+ *     )
+ *   }
+ * })
  * ```
  */
 export interface CookieStore {
-  get: (name: string) => { value: string } | undefined
   getAll: () => Array<{ name: string; value: string }>
+  setAll: (cookies: Array<{ name: string; value: string; options?: object }>) => void
 }
 
 /**
  * Creates a Supabase client for server-side usage.
- * 
- * This factory uses the Supabase SSR package which automatically
- * handles the correct Supavisor URL (Port 6543) for connection
- * pooling in serverless environments.
- * 
- * @param cookieStore - Next.js cookies() result or mock for testing
+ * Uses @supabase/ssr for correct Supavisor (port 6543) connection pooling
+ * and session cookie handling in serverless environments.
+ *
+ * @param cookieStore - Adapter with getAll/setAll for request/response cookies
  * @returns Typed Supabase client instance
- * 
- * @example
- * ```typescript
- * import { createSupabaseServerClient } from '@agency/database'
- * 
- * async function getServerData() {
- *   const supabase = createSupabaseServerClient(await cookies())
- *   const { data } = await supabase.from('users').select()
- *   return data
- * }
- * ```
  */
-export function createSupabaseServerClient(cookieStore: Promise<ReturnType<typeof cookies>>) {
-  return createSupabaseClient<Database>(
+export function createSupabaseServerClient(cookieStore: CookieStore) {
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      },
       cookies: {
-        get(name: string) {
-          return cookieStore.then(store => store.get(name))
-        },
         getAll() {
-          return cookieStore.then(store => store.getAll())
+          return cookieStore.getAll()
         },
-        set() {
-          // Server-side client doesn't set cookies
+        setAll(cookiesToSet: Array<{ name: string; value: string; options?: object }>) {
+          cookieStore.setAll(cookiesToSet)
         },
-        remove() {
-          // Server-side client doesn't remove cookies
-        }
-      }
+      },
     }
   )
 }
 
 /**
  * Creates a Supabase client for browser-side usage.
- * 
- * This factory is intended for client components and browser
- * environments. It handles automatic token refresh and session
- * persistence.
- * 
+ * Use in client components and browser environments.
+ *
  * @returns Typed Supabase client instance
- * 
- * @example
- * ```typescript
- * 'use client'
- * 
- * import { createSupabaseBrowserClient } from '@agency/database'
- * import { useEffect, useState } from 'react'
- * 
- * function UserProfile() {
- *   const [user, setUser] = useState(null)
- *   const supabase = createSupabaseBrowserClient()
- *   
- *   useEffect(() => {
- *     supabase.auth.getUser().then(({ data }) => {
- *       setUser(data.user)
- *     })
- *   }, [])
- *   
- *   return <div>{user?.email}</div>
- * }
- * ```
  */
 export function createSupabaseBrowserClient() {
   if (typeof window === 'undefined') {
     throw new Error('createSupabaseBrowserClient can only be called in browser environment')
   }
 
-  return createSupabaseClient<Database>(
+  return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        storageKey: 'agency-auth-token'
-      }
-    }
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
 /**
- * ⚠️ SECURITY WARNING ⚠️
- * 
- * DO NOT export service role client from this file.
- * Service role access is restricted to admin.ts and requires
- * explicit import to prevent accidental client-side usage.
- * 
- * Use getAdminClient() from '@agency/database/admin' for elevated
- * access in secure server-side contexts only.
+ * SECURITY: Do not export service role client from this file.
+ * Use getAdminClient() from '@agency/database/admin' in server-side code only.
  */

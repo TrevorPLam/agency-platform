@@ -12,11 +12,6 @@ StyleDictionary.registerFormat({
 @theme inline {
 ${formattedTokens}
 }
-
-/* Import base tokens */
-@import "./primitives.css";
-@import "./semantic.css";
-@import "./component.css";
 `;
   }
 });

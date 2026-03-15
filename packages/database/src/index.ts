@@ -7,11 +7,18 @@
  * 
  * @example
  * ```typescript
- * // Server-side usage
+ * // Server-side usage (Next.js App Router)
  * import { createSupabaseServerClient } from '@agency/database'
- * 
+ * import { cookies } from 'next/headers'
+ *
  * async function getServerData() {
- *   const supabase = createSupabaseServerClient(await cookies())
+ *   const cookieStore = await cookies()
+ *   const supabase = createSupabaseServerClient({
+ *     getAll: () => cookieStore.getAll().map(c => ({ name: c.name, value: c.value })),
+ *     setAll: (cookiesToSet) => {
+ *       cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+ *     }
+ *   })
  *   const { data } = await supabase.from('users').select()
  *   return data
  * }

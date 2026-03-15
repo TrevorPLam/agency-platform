@@ -6,7 +6,7 @@
 @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 /* Import client-specific design tokens */
-@import "../../../tokens/riverside-hotel.css";
+@import "../../tokens/riverside-hotel.css";
 
 /* Dark mode configuration */
 @custom-variant dark (&:is(.dark *));
