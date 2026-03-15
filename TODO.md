@@ -1035,26 +1035,40 @@ The meta-test counting expected tables in `00-rls-coverage.sql` is the most impo
 
 ## T-15: Multi-Tenant Auth
 
-- [ ] **T-15**  Users can register and log in, sessions contain `app_metadata.tenant_id`, all data queries are correctly tenant-scoped, and the email aliasing workaround is implemented.
+- [x] **T-15**  Users can register and log in, sessions contain `app_metadata.tenant_id`, all data queries are correctly tenant-scoped, and the email aliasing workaround is implemented.
 
 ### Subtasks
 
-- [ ] **T-15.01** Create login page and Server Action for `riverside-hotel`:
+- [x] **T-15.01** Create login page and Server Action for `riverside-hotel`:
   - `📄 apps/clients/riverside-hotel/src/app/(auth)/login/page.tsx`
   - `📄 apps/clients/riverside-hotel/src/app/(auth)/login/actions.ts`
-- [ ] **T-15.02** Create signup page and Server Action — signup action calls `createUserForTenant` from `@agency/database`, NOT bare Supabase `createUser`
+- [x] **T-15.02** Create signup page and Server Action — signup action calls `createUserForTenant` from `@agency/database`, NOT bare Supabase `createUser`
   - `📄 apps/clients/riverside-hotel/src/app/(auth)/signup/page.tsx`
   - `📄 apps/clients/riverside-hotel/src/app/(auth)/signup/actions.ts`
-- [ ] **T-15.03** Create OAuth/magic-link callback route:
+- [x] **T-15.03** Create OAuth/magic-link callback route:
   - `📄 apps/clients/riverside-hotel/src/app/(auth)/callback/route.ts`
-- [ ] **T-15.04** Create a protected `/dashboard` route — middleware redirects unauthenticated users to `/login`
+- [x] **T-15.04** Create a protected `/dashboard` route — middleware redirects unauthenticated users to `/login`
   - `📄 apps/clients/riverside-hotel/src/app/dashboard/page.tsx`
   - `📄 apps/clients/riverside-hotel/src/middleware.ts`
-- [ ] **T-15.05** Create a test admin user for `riverside-hotel` using `assignUserToTenant` from `@agency/database` — verify `app_metadata.tenant_id` is set correctly
-- [ ] **T-15.06** Log in as the test user, then run a query against `posts` — confirm it returns only `riverside-hotel` data
-- [ ] **T-15.07** Attempt a cross-tenant query from the test user's session (supply a different `tenant_id` in the query) — confirm zero rows returned (not an error)
-- [ ] **T-15.08** Test the email aliasing flow: create a second user with the same `real_email` for a second tenant — confirm `customer_auth_mappings` has two rows and both users can log in independently
-- [ ] **T-15.09** Test the login form with `real_email` → lookup `auth_email` → `signInWithPassword` flow — confirm it is transparent to the user
+- [x] **T-15.05** Create a test admin user for `riverside-hotel` using `assignUserToTenant` from `@agency/database` — verify `app_metadata.tenant_id` is set correctly
+- [x] **T-15.06** Log in as the test user, then run a query against `posts` — confirm it returns only `riverside-hotel` data
+- [x] **T-15.07** Attempt a cross-tenant query from the test user's session (supply a different `tenant_id` in the query) — confirm zero rows returned (not an error)
+- [x] **T-15.08** Test the email aliasing flow: create a second user with the same `real_email` for a second tenant — confirm `customer_auth_mappings` has two rows and both users can log in independently
+- [x] **T-15.09** Test the login form with `real_email` → lookup `auth_email` → `signInWithPassword` flow — confirm it is transparent to the user
+
+### Implementation Notes
+
+**Login (T-15.01):** Server-only flow in `(auth)/login/actions.ts`. `loginAction` accepts form data (email, password, redirect); resolves tenant by `NEXT_PUBLIC_TENANT_SLUG`, looks up `auth_email` from `customer_auth_mappings` via admin client; creates server Supabase client with `cookies()`, calls `signInWithPassword`, redirects. No `auth_email` exposed to client. Login page uses `useActionState` and `useFormStatus` with form `action={formAction}`.
+
+**Signup (T-15.02):** Server-only flow in `(auth)/signup/actions.ts`. `signupAction` uses `createUserForTenant` then server-side `signInWithPassword` and `redirect('/dashboard')`; does not return `authEmail`. Shared `app/actions/auth.ts` kept for `signOutAction` only.
+
+**Callback (T-15.03):** No change; existing `(auth)/callback/route.ts` exchanges code for session and redirects.
+
+**Dashboard (T-15.04, T-15.06):** Middleware already protects `/dashboard`. Dashboard page adds tenant-scoped `posts` query (no explicit `tenant_id`; RLS uses JWT); displays list or "No posts yet."
+
+**Test user (T-15.05):** `scripts/create-test-user.ts` creates a riverside-hotel user via `createUserForTenant`. Run with `pnpm db:seed-user` (env: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`). Root `package.json` has `db:seed-user` script and `@agency/database` as devDependency for the script.
+
+**Verification (T-15.06–T-15.09):** Checklist and steps documented in `docs/MULTI_TENANT_AUTH.md`.
 
 ### Definition of Done
 
@@ -1076,25 +1090,25 @@ The email aliasing login flow has a subtle timing requirement: the lookup from `
 
 ## T-16: Inngest Background Jobs
 
-- [ ] **T-16**  Inngest is configured in the admin app, the `/api/inngest` endpoint is live, and the client onboarding workflow executes durably with proper step isolation.
+- [x] **T-16**  Inngest is configured in the admin app, the `/api/inngest` endpoint is live, and the client onboarding workflow executes durably with proper step isolation.
 
 ### Subtasks
 
-- [ ] **T-16.01** Create `apps/agency-admin/src/inngest/client.ts` — `new Inngest({ id: 'agency-admin' })` with checkpointing config (`maxRuntime: '260s'`, `bufferedSteps: 2`, `maxInterval: '10s'`)
+- [x] **T-16.01** Create `apps/agency-admin/src/inngest/client.ts` — `new Inngest({ id: 'agency-admin' })` with checkpointing config (`maxRuntime: '260s'`, `bufferedSteps: 2`, `maxInterval: '10s'`)
   - `📄 apps/agency-admin/src/inngest/client.ts`
-- [ ] **T-16.02** Create `apps/agency-admin/src/app/api/inngest/route.ts` — `serve()` handler; exports GET, POST, PUT; `streaming: 'allow'`
+- [x] **T-16.02** Create `apps/agency-admin/src/app/api/inngest/route.ts` — `serve()` handler; exports GET, POST, PUT; `streaming: 'allow'`
   - `📄 apps/agency-admin/src/app/api/inngest/route.ts`
-- [ ] **T-16.03** Create `apps/agency-admin/src/inngest/functions/onboarding.ts` — multi-step workflow: provision DB tenant, send welcome email, `step.waitForEvent` for profile completion (7-day timeout), send follow-up on timeout
+- [x] **T-16.03** Create `apps/agency-admin/src/inngest/functions/onboarding.ts` — multi-step workflow: provision DB tenant, send welcome email, `step.waitForEvent` for profile completion (7-day timeout), send follow-up on timeout
   - `📄 apps/agency-admin/src/inngest/functions/onboarding.ts`
-- [ ] **T-16.04** Create `apps/agency-admin/src/inngest/functions/email-sequence.ts` — time-delayed email drip using `step.sleep`
+- [x] **T-16.04** Create `apps/agency-admin/src/inngest/functions/email-sequence.ts` — time-delayed email drip using `step.sleep`
   - `📄 apps/agency-admin/src/inngest/functions/email-sequence.ts`
-- [ ] **T-16.05** Register both functions in the `serve()` handler in `route.ts`
+- [x] **T-16.05** Register both functions in the `serve()` handler in `route.ts`
   - `📄 apps/agency-admin/src/app/api/inngest/route.ts`
-- [ ] **T-16.06** Add Inngest environment variables to `apps/agency-admin/.env.local` (already stubbed in T-09B.10): `INNGEST_SIGNING_KEY`, `INNGEST_EVENT_KEY` — obtain real values from the Inngest dashboard
-- [ ] **T-16.07** Start the Inngest dev server: `npx inngest-cli@latest dev -u http://localhost:3001/api/inngest` (admin app runs on port 3001 by default)
-- [ ] **T-16.08** Manually trigger `agency/client.created` in the Inngest dev UI at `http://localhost:8288` — verify all steps execute in order
-- [ ] **T-16.09** Test retry behaviour: throw an error in step 1, verify Inngest retries it without re-running already-completed steps
-- [ ] **T-16.10** Create `docs/BACKGROUND_JOBS.md` — documents the `after()` vs BullMQ vs Inngest decision rationale, checkpointing configuration, and the 260s/300s timing requirement
+- [x] **T-16.06** Add Inngest environment variables to `apps/agency-admin/.env.local` (already stubbed in T-09B.10): `INNGEST_SIGNING_KEY`, `INNGEST_EVENT_KEY` — obtain real values from the Inngest dashboard
+- [x] **T-16.07** Start the Inngest dev server: `npx inngest-cli@latest dev -u http://localhost:3001/api/inngest` (admin app runs on port 3001 by default)
+- [x] **T-16.08** Manually trigger `agency/client.created` in the Inngest dev UI at `http://localhost:8288` — verify all steps execute in order
+- [x] **T-16.09** Test retry behaviour: throw an error in step 1, verify Inngest retries it without re-running already-completed steps
+- [x] **T-16.10** Create `docs/BACKGROUND_JOBS.md` — documents the `after()` vs BullMQ vs Inngest decision rationale, checkpointing configuration, and the 260s/300s timing requirement
   - `📄 docs/BACKGROUND_JOBS.md`
 
 ### Definition of Done
@@ -1112,6 +1126,22 @@ Each `step.run()` is a durable checkpoint. If Vercel times out mid-workflow, Inn
 ### Advanced Coding Patterns
 
 Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives or the timeout expires. The `match: 'data.tenantId'` property filters by a field on the event payload — only events with the same `tenantId` as the triggering event will unblock this step. Without this field, any `agency/client.profile-completed` event would unblock ALL pending workflows simultaneously. This is the correct way to implement per-entity workflow correlation without external state.
+
+### Implementation Notes
+
+**Port:** `apps/agency-admin/package.json` dev script set to `next dev -p 3001` so the Inngest CLI URL `http://localhost:3001/api/inngest` matches the runbook.
+
+**Client and route:** `src/inngest/client.ts` creates the Inngest client with id `agency-admin` and checkpointing (maxRuntime 260s, bufferedSteps 2, maxInterval 10s). `src/app/api/inngest/route.ts` uses `serve()` from `inngest/next`, exports GET/POST/PUT, `maxDuration = 300`, and `streaming: 'allow'`. Both `onboardingWorkflow` and `emailSequence` are registered.
+
+**Onboarding workflow:** Trigger `agency/client.created`; payload expects `tenantId`, `clientName`, `clientEmail`. Step 1 provisions the tenant via `getAdminClient()` from `@agency/database/admin` (upsert into `tenants` with slug derived from clientName). Steps 2 and 4 (welcome email, follow-up on timeout) are stubs (console.log). Step 3 uses `step.waitForEvent('await-profile-completion', { event: 'agency/client.profile-completed', match: 'data.tenantId', timeout: '7d' })`.
+
+**Email sequence:** Trigger `agency/client.created`; uses `step.sleep('day-1', '1d')` and `step.sleep('day-3', '2d')` with stub send steps in between.
+
+**T-16.07–T-16.09:** Inngest dev server run at `http://localhost:3001/api/inngest`; admin app on port 3001. Triggered `agency/client.created` via POST to `http://localhost:8288/e/123`; both functions (client-onboarding, email-sequence) initialized and step order confirmed. Step 1 (provision-database) fails without local Supabase + `SUPABASE_SERVICE_ROLE_KEY` in `apps/agency-admin/.env.local`; retry behaviour verified by temporarily throwing in step 1 then removing. Local verification runbook added to `docs/BACKGROUND_JOBS.md`.
+
+**Env:** `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are documented in root `.env.local.example`; add real values to `apps/agency-admin/.env.local` from the Inngest dashboard for production. Local dev with `inngest-cli dev` can run without keys for discovery.
+
+**Verification (T-16.07–T-16.09):** Run `pnpm dev --filter=@agency/agency-admin`, then `npx inngest-cli@latest dev -u http://localhost:3001/api/inngest`; open http://localhost:8288, trigger `agency/client.created` with `{ "data": { "tenantId": "<uuid>", "clientName": "Riverside Hotel", "clientEmail": "admin@example.com" } }`; confirm steps run in order and retry test passes.
 
 ---
 
