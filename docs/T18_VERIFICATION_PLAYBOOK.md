@@ -4,12 +4,12 @@ Use this playbook to run the four Cursor behavior tests (T-18.08–T-18.11) and 
 
 ## Step-by-step
 
-| Step | File to open | Prompt (paste as-is) |
-|------|--------------|----------------------|
-| **T-18.08** | `supabase/migrations/003_posts.sql` (or any file under `supabase/migrations/`) | Add a new table `bookings` with tenant_id and created_at. |
-| **T-18.09** | `apps/agency-admin/src/app/page.tsx` or `apps/clients/riley-day-care/src/app/dashboard/page.tsx` | Fetch the list of posts from Supabase and display them. |
-| **T-18.10** | Any `apps/**` file that has a button or card (e.g. `apps/clients/riley-day-care/src/app/(auth)/login/page.tsx`) | Style this button with our brand colors. |
-| **T-18.11** | Any `apps/**` component file (e.g. `apps/agency-admin/src/app/page.tsx`) | Add a fade-in animation when this mounts. |
+| Step        | File to open                                                                                                    | Prompt (paste as-is)                                      |
+| ----------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **T-18.08** | `supabase/migrations/003_posts.sql` (or any file under `supabase/migrations/`)                                  | Add a new table `bookings` with tenant_id and created_at. |
+| **T-18.09** | `apps/agency-admin/src/app/page.tsx` or `apps/clients/riley-day-care/src/app/dashboard/page.tsx`                | Fetch the list of posts from Supabase and display them.   |
+| **T-18.10** | Any `apps/**` file that has a button or card (e.g. `apps/clients/riley-day-care/src/app/(auth)/login/page.tsx`) | Style this button with our brand colors.                  |
+| **T-18.11** | Any `apps/**` component file (e.g. `apps/agency-admin/src/app/page.tsx`)                                        | Add a fade-in animation when this mounts.                 |
 
 **How to run:** Focus the editor on the file in the second column, then in Cursor Chat or Composer paste the prompt from the third column. Compare the model’s suggestion to the pass criteria in [AI_PROMPTING.md](AI_PROMPTING.md) (table under “T-18 Cursor verification checklist”). If the output matches, check the box for that step in TODO.md (T-18.08–T-18.11 at lines 1214–1217). When all four are checked, mark T-18 complete (line 1196).
 
@@ -77,9 +77,7 @@ export default async function Page() {
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) =>
-        cookieStore.set(name, value, options)
-      )
+      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
     },
   })
 
@@ -105,10 +103,7 @@ export default async function Page() {
 
 ```tsx
 import { Button, cn } from '@agency/ui'
-
-<Button
-  className={cn('bg-brand-primary text-text-inverse hover:bg-brand-primary/90')}
->
+;<Button className={cn('bg-brand-primary text-text-inverse hover:bg-brand-primary/90')}>
   Submit
 </Button>
 ```
@@ -120,16 +115,14 @@ import { Button, cn } from '@agency/ui'
 - No `tailwindcss-animate` package. No custom `@keyframes` for the fade.
 
 ```tsx
-<div className="animate-in fade-in duration-300">
-  {/* content */}
-</div>
+<div className="animate-in fade-in duration-300">{/* content */}</div>
 ```
 
 In `apps/*/src/app/globals.css` the app should already have:
 
 ```css
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 ```
 
 If Cursor suggests adding `@import "tw-animate-css"` when it’s missing, that’s correct. It should not suggest installing `tailwindcss-animate` or defining custom keyframes.

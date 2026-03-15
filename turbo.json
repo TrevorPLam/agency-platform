@@ -26,7 +26,11 @@
     },
     "tokens:build": {
       "inputs": ["tokens/**/*.json"],
-      "outputs": ["dist/**/*.css", "../../apps/clients/*/tokens/*.css", "../../apps/prospective-clients/*/tokens/*.css"]
+      "outputs": [
+        "dist/**/*.css",
+        "../../apps/clients/*/tokens/*.css",
+        "../../apps/prospective-clients/*/tokens/*.css"
+      ]
     }
   }
 }

@@ -7,9 +7,7 @@ export default async function AdminDashboard() {
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) =>
-        cookieStore.set(name, value, options)
-      )
+      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
     },
   })
 
@@ -19,15 +17,16 @@ export default async function AdminDashboard() {
     .order('created_at', { ascending: false })
     .limit(20)
 
-  const postsList = posts ?? []
+  type PostRow = { id: string; title: string; slug: string; created_at: string }
+  const postsList: PostRow[] = (posts ?? []) as PostRow[]
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="bg-background min-h-screen">
+      <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-border-default rounded-lg min-h-96 flex items-center justify-center p-8">
-            <div className="text-center animate-in fade-in duration-300">
-              <h1 className={cn('text-2xl font-bold text-text-primary mb-4')}>
+          <div className="border-border-default flex min-h-96 items-center justify-center rounded-lg border-4 border-dashed p-8">
+            <div className="animate-in fade-in text-center duration-300">
+              <h1 className={cn('text-text-primary mb-4 text-2xl font-bold')}>
                 Agency Admin Dashboard
               </h1>
               <p className={cn('text-text-secondary mb-6')}>
@@ -41,11 +40,9 @@ export default async function AdminDashboard() {
                 Get Started
               </Button>
               {postsList.length > 0 && (
-                <div className="mt-8 text-left max-w-md mx-auto">
-                  <h2 className={cn('font-semibold text-text-primary mb-2')}>
-                    Recent posts
-                  </h2>
-                  <ul className="list-disc list-inside space-y-1 text-sm text-text-secondary">
+                <div className="mx-auto mt-8 max-w-md text-left">
+                  <h2 className={cn('text-text-primary mb-2 font-semibold')}>Recent posts</h2>
+                  <ul className="text-text-secondary list-inside list-disc space-y-1 text-sm">
                     {postsList.map((p) => (
                       <li key={p.id}>
                         {p.title} <span className="text-muted-foreground">/{p.slug}</span>

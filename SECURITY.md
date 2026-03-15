@@ -9,9 +9,11 @@ This document describes the five attack vectors the agency platform hardens agai
 **What it is:** A user modifies `user_metadata.tenant_id` to a different tenant's UUID, and the application reads from `user_metadata` instead of `app_metadata` to set the database session context.
 
 **Detection:**
+
 ```bash
 grep -r "user_metadata" --include="*.ts" --include="*.tsx" packages/database/ apps/
 ```
+
 Any result that feeds into `set_config` or a database query is a critical vulnerability.
 
 **Fix:** Always extract tenant from `app_metadata`, never `user_metadata`. RLS uses `current_setting('request.jwt.claims', ...) -> 'app_metadata'`.
@@ -27,9 +29,11 @@ Any result that feeds into `set_config` or a database query is a critical vulner
 **Detection:** Audit all cache keys. Every key must be prefixed with `tenant:{id}:`.
 
 **Fix:** Always prefix cache keys with the verified tenant ID:
+
 ```ts
 const cached = await redis.get(`tenant:${tenantId}:posts:${slug}`)
 ```
+
 Rule is documented in `.cursor/rules/database.mdc`.
 
 ---
@@ -39,6 +43,7 @@ Rule is documented in `.cursor/rules/database.mdc`.
 **What it is:** The `SUPABASE_SERVICE_ROLE_KEY` appears in client-side code or in `NEXT_PUBLIC_` environment variables. The service role key bypasses all RLS.
 
 **Detection:**
+
 ```bash
 # Zero results in app source (exclude node_modules, .next)
 grep -r "SERVICE_ROLE\|service_role" --include="*.tsx" --include="*.ts" apps/
@@ -60,6 +65,7 @@ grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" --include="*.
 **Fix:** When using the admin client, always scope by tenant: `.eq('tenant_id', verifiedTenantId)`.
 
 **Baseline review (T-22.06):**
+
 - `apps/agency-admin/src/inngest/functions/onboarding.ts` — Uses `event.data.tenantId` (trusted Inngest payload) for tenants upsert; no user-supplied tenant.
 - `apps/clients/riley-day-care/src/app/(auth)/signup/actions.ts` — Tenant from `NEXT_PUBLIC_TENANT_SLUG` + `.eq('slug', slug)`; then `tenant.id` for createUserForTenant. Tenant verified before use.
 - `apps/clients/riley-day-care/src/app/(auth)/login/actions.ts` — Same tenant resolution; `.eq('tenant_id', tenant.id)` and `.eq('real_email', realEmail)` on `customer_auth_mappings`.
@@ -71,23 +77,23 @@ grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" --include="*.
 
 **What it is:** A healthcare client with PHI shares a database with other tenants. Connection saturation or misconfiguration can expose PHI or violate BAA requirements.
 
-**Architecture decision:** Any client with a signed Business Associate Agreement (BAA) for HIPAA must be on a **dedicated Supabase project**. The shared RLS model is not appropriate for HIPAA workloads.
+**Architecture decision:** Any client with a signed Business Associate Agreement (BAA) for HIPAA must be on a **dedicated Supabase project**. The shared RLS model is not appropriate for HIPAA workloads. Prospective and demo clients (e.g. under `apps/prospective-clients/`) share the platform for validation only; no PHI is stored for them.
 
 **How to identify:** If a client mentions patient records, medical history, appointment scheduling involving health information, or any PHI, they require a dedicated Supabase project and the HIPAA compliance add-on.
 
-**Onboarding:** When `docs/ONBOARDING_CHECKLIST.md` exists (see T-23), it must state: healthcare clients with PHI require a dedicated Supabase project and signed BAA before go-live. Until then, this requirement is documented here.
+**Onboarding:** See `docs/ONBOARDING_CHECKLIST.md`. Healthcare clients with PHI require a dedicated Supabase project and signed BAA before go-live.
 
 ---
 
 ## Baseline Audit
 
-| Date     | Vector | Command / Check | Result |
-| -------- | ------ | ----------------- | ------ |
-| 2026-03-15 | 1 | `grep -r "user_metadata" ... packages/database/ apps/` | Only `packages/database/src/auth.ts` (allowed createUser payload). Zero in apps/. |
-| 2026-03-15 | 2 | Cache key audit | No Redis in use; rule added to `.cursor/rules/database.mdc`. |
-| 2026-03-15 | 3 | SERVICE_ROLE in apps/; NEXT_PUBLIC_.*SERVICE_ROLE | Zero in app source (only node_modules). Zero NEXT_PUBLIC_ service role in apps/ packages/. |
-| 2026-03-15 | 4 | Admin client review | See Vector 4 baseline review above. All usages tenant- or event-scoped. |
-| 2026-03-15 | 5 | HIPAA doc + checklist | Documented in this file; onboarding checklist to reference when created (T-23). |
+| Date       | Vector | Command / Check                                        | Result                                                                                     |
+| ---------- | ------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| 2026-03-15 | 1      | `grep -r "user_metadata" ... packages/database/ apps/` | Only `packages/database/src/auth.ts` (allowed createUser payload). Zero in apps/.          |
+| 2026-03-15 | 2      | Cache key audit                                        | No Redis in use; rule added to `.cursor/rules/database.mdc`.                               |
+| 2026-03-15 | 3      | SERVICE*ROLE in apps/; NEXT_PUBLIC*.\*SERVICE_ROLE     | Zero in app source (only node*modules). Zero NEXT_PUBLIC* service role in apps/ packages/. |
+| 2026-03-15 | 4      | Admin client review                                    | See Vector 4 baseline review above. All usages tenant- or event-scoped.                    |
+| 2026-03-15 | 5      | HIPAA doc + checklist                                  | Documented in this file; onboarding checklist to reference when created (T-23).            |
 
 ---
 

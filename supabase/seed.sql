@@ -4,3 +4,7 @@
 INSERT INTO public.tenants (slug, domain, name, industry)
 VALUES ('riley-day-care', 'localhost', 'Riley Day Care', 'general')
 ON CONFLICT (slug) DO NOTHING;
+-- The Barber Cave: prospective (demo) client for onboarding validation (T-23).
+INSERT INTO public.tenants (slug, domain, name, industry)
+VALUES ('the-barber-cave', 'thebarbercave.com', 'The Barber Cave', 'general')
+ON CONFLICT (slug) DO NOTHING;

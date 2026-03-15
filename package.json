@@ -14,6 +14,8 @@
     "scaffold": "tsx scripts/scaffold-client.ts",
     "db:generate-types": "npx supabase gen types typescript --local > packages/database/src/types.ts",
     "db:seed-user": "tsx scripts/create-test-user.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [
@@ -27,6 +29,8 @@
   "license": "ISC",
   "devDependencies": {
     "@agency/database": "workspace:*",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:",
     "tsx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"

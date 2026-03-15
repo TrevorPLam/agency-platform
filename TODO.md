@@ -10,40 +10,40 @@
 
 ## Task Index
 
-| ID | Task | Phase |
-|---|---|---|
-| [T-01](#t-01-prerequisites--toolchain) | Prerequisites & Toolchain | Foundation |
-| [T-02](#t-02-repository-initialisation) | Repository Initialisation | Foundation |
-| [T-03](#t-03-workspace-configuration) | Workspace Configuration | Foundation |
-| [T-04](#t-04-shared-typescript--eslint-packages) | Shared TypeScript & ESLint Packages | Packages |
-| [T-05](#t-05-shared-ui-package-shadcnui) | Shared UI Package (shadcn/ui) | Packages |
-| [T-06](#t-06-database-package) | Database Package | Packages |
-| [T-07](#t-07-analytics-package) | Analytics Package | Packages |
-| [T-08](#t-08-design-tokens-package) | Design Tokens Package | Packages |
-| [T-09](#t-09-agency-website-scaffold) | Agency Website (Firm) Scaffold | Client Apps |
-| [T-09B](#t-09b-agency-admin-app-scaffold) | Agency Admin App Scaffold | Admin App |
-| [T-10](#t-10-tailwind-v4-integration) | Tailwind v4 Integration | Styling |
-| [T-11](#t-11-supabase-local-environment) | Supabase Local Environment | Database |
-| [T-12](#t-12-database-schema--migrations) | Database Schema & Migrations | Database |
-| [T-13](#t-13-row-level-security-policies) | Row-Level Security Policies | Database |
-| [T-14](#t-14-rls-automated-testing) | RLS Automated Testing | Database |
-| [T-15](#t-15-multi-tenant-auth) | Multi-Tenant Auth | Auth |
-| [T-16](#t-16-inngest-background-jobs) | Inngest Background Jobs | Jobs |
-| [T-17](#t-17-posthog-analytics) | PostHog Analytics | Analytics |
-| [T-18](#t-18-ai-tool-configuration-cursor--windsurf) | AI Tool Configuration | DX |
-| [T-19](#t-19-client-scaffolding-script) | Client Scaffolding Script | DX |
-| [T-20](#t-20-vercel-deployment) | Vercel Deployment | Deployment |
-| [T-21](#t-21-cicd--github-actions) | CI/CD — GitHub Actions | CI/CD |
-| [T-22](#t-22-security-hardening) | Security Hardening | Security |
-| [T-23](#t-23-second-client-app--onboarding-validation) | Second Client App & Onboarding Validation | Validation |
-| [T-24](#t-24-prettier--code-formatting) | Prettier & Code Formatting | DX |
-| [T-25](#t-25-contributingmd--local-dev-runbook) | CONTRIBUTING.md & Local Dev Runbook | DX |
+| ID                                                     | Task                                      | Phase       |
+| ------------------------------------------------------ | ----------------------------------------- | ----------- |
+| [T-01](#t-01-prerequisites--toolchain)                 | Prerequisites & Toolchain                 | Foundation  |
+| [T-02](#t-02-repository-initialisation)                | Repository Initialisation                 | Foundation  |
+| [T-03](#t-03-workspace-configuration)                  | Workspace Configuration                   | Foundation  |
+| [T-04](#t-04-shared-typescript--eslint-packages)       | Shared TypeScript & ESLint Packages       | Packages    |
+| [T-05](#t-05-shared-ui-package-shadcnui)               | Shared UI Package (shadcn/ui)             | Packages    |
+| [T-06](#t-06-database-package)                         | Database Package                          | Packages    |
+| [T-07](#t-07-analytics-package)                        | Analytics Package                         | Packages    |
+| [T-08](#t-08-design-tokens-package)                    | Design Tokens Package                     | Packages    |
+| [T-09](#t-09-agency-website-scaffold)                  | Agency Website (Firm) Scaffold            | Client Apps |
+| [T-09B](#t-09b-agency-admin-app-scaffold)              | Agency Admin App Scaffold                 | Admin App   |
+| [T-10](#t-10-tailwind-v4-integration)                  | Tailwind v4 Integration                   | Styling     |
+| [T-11](#t-11-supabase-local-environment)               | Supabase Local Environment                | Database    |
+| [T-12](#t-12-database-schema--migrations)              | Database Schema & Migrations              | Database    |
+| [T-13](#t-13-row-level-security-policies)              | Row-Level Security Policies               | Database    |
+| [T-14](#t-14-rls-automated-testing)                    | RLS Automated Testing                     | Database    |
+| [T-15](#t-15-multi-tenant-auth)                        | Multi-Tenant Auth                         | Auth        |
+| [T-16](#t-16-inngest-background-jobs)                  | Inngest Background Jobs                   | Jobs        |
+| [T-17](#t-17-posthog-analytics)                        | PostHog Analytics                         | Analytics   |
+| [T-18](#t-18-ai-tool-configuration-cursor--windsurf)   | AI Tool Configuration                     | DX          |
+| [T-19](#t-19-client-scaffolding-script)                | Client Scaffolding Script                 | DX          |
+| [T-20](#t-20-vercel-deployment)                        | Vercel Deployment                         | Deployment  |
+| [T-21](#t-21-cicd--github-actions)                     | CI/CD — GitHub Actions                    | CI/CD       |
+| [T-22](#t-22-security-hardening)                       | Security Hardening                        | Security    |
+| [T-23](#t-23-second-client-app--onboarding-validation) | Second Client App & Onboarding Validation | Validation  |
+| [T-24](#t-24-prettier--code-formatting)                | Prettier & Code Formatting                | DX          |
+| [T-25](#t-25-contributingmd--local-dev-runbook)        | CONTRIBUTING.md & Local Dev Runbook       | DX          |
 
 ---
 
 ## T-01: Prerequisites & Toolchain
 
-- [x] **T-01** HUMAN  All required tools are installed at the correct versions and verified.
+- [x] **T-01** HUMAN All required tools are installed at the correct versions and verified.
 
 ### Subtasks
 
@@ -81,7 +81,7 @@ Pin `.nvmrc` at the repo root to `22` so `nvm use` is automatic. Add a `preinsta
 
 ## T-02: Repository Initialisation
 
-- [x] **T-02** AGENT  The repository exists on disk and on GitHub with correct root structure, supporting files, and branch protection committed.
+- [x] **T-02** AGENT The repository exists on disk and on GitHub with correct root structure, supporting files, and branch protection committed.
 
 ### Subtasks
 
@@ -89,6 +89,7 @@ Pin `.nvmrc` at the repo root to `22` so `nvm use` is automatic. Add a `preinsta
 - [x] **T-02.02** AGENT Initialise git: `git init`
 - [x] **T-02.03** AGENT Run `pnpm init` to create a bare `package.json`
 - [x] **T-02.04** AGENT Create the complete top-level directory skeleton in one command:
+
   ```bash
   mkdir -p \
     apps/clients \
@@ -102,6 +103,7 @@ Pin `.nvmrc` at the repo root to `22` so `nvm use` is automatic. Add a `preinsta
     .windsurf/rules \
     .github/workflows
   ```
+
   - `📁 apps/clients/`
   - `📁 apps/agency-admin/`
   - `📁 packages/`
@@ -112,6 +114,7 @@ Pin `.nvmrc` at the repo root to `22` so `nvm use` is automatic. Add a `preinsta
   - `📁 .cursor/rules/`
   - `📁 .windsurf/rules/`
   - `📁 .github/workflows/`
+
 - [x] **T-02.05** AGENT Create `.nvmrc` at repo root containing `22`
   - `📄 .nvmrc`
 - [x] **T-02.06** AGENT Create `.editorconfig` enforcing: `indent_style=space`, `indent_size=2`, `charset=utf-8`, `end_of_line=lf`, `insert_final_newline=true`, `trim_trailing_whitespace=true`
@@ -153,8 +156,9 @@ Package dependencies (T-03). Application code. Supabase project creation (T-11).
 **Branch Management:** Renamed default branch from `master` to `main` using `git branch -m master main` to align with modern conventions and task requirements.
 
 **CODEOWNERS Configuration:** Created comprehensive CODEOWNERS file following monorepo best practices from Satellytes blog research. Assigns ownership for:
+
 - Core packages (`/packages/*`) to @trevo
-- Database migrations (`/supabase/migrations/`) to @trevo  
+- Database migrations (`/supabase/migrations/`) to @trevo
 - Client applications (`/apps/clients/*`) to @trevo
 - Build configuration and workflows to @trevo
 
@@ -176,7 +180,7 @@ The `docs/` directory is a first-class workspace member. Every significant archi
 
 ## T-03: Workspace Configuration
 
-- [x] **T-03** AGENT  `pnpm-workspace.yaml`, root `package.json`, `turbo.json`, and root `tsconfig.json` are in place, valid, and `pnpm install` succeeds.
+- [x] **T-03** AGENT `pnpm-workspace.yaml`, root `package.json`, `turbo.json`, and root `tsconfig.json` are in place, valid, and `pnpm install` succeeds.
 
 ### Subtasks
 
@@ -264,7 +268,7 @@ The `tokens:build` task uses `inputs: ["tokens/**/*.json"]` — Turborepo's cach
 
 ## T-04: Shared TypeScript & ESLint Packages
 
-- [x] **T-04** AGENT  `@agency/typescript-config` and `@agency/eslint-config` are installed and usable by all other packages and apps.
+- [x] **T-04** AGENT `@agency/typescript-config` and `@agency/eslint-config` are installed and usable by all other packages and apps.
 
 ### Subtasks
 
@@ -313,7 +317,7 @@ The `isolatedModules: true` flag is critical in this monorepo — it ensures eac
 
 ## T-05: Shared UI Package (shadcn/ui)
 
-- [x] **T-05** AGENT  `@agency/ui` exports `cn()`, all initial shadcn components, and is correctly configured for Turborepo's shared CSS scanning requirements.
+- [x] **T-05** AGENT `@agency/ui` exports `cn()`, all initial shadcn components, and is correctly configured for Turborepo's shared CSS scanning requirements.
 
 ### Subtasks
 
@@ -326,13 +330,20 @@ The `isolatedModules: true` flag is critical in this monorepo — it ensures eac
 - [x] **T-05.04** AGENT Create `packages/ui/src/index.ts` barrel export — initially: `export { cn } from './lib/utils'`
   - `📄 packages/ui/src/index.ts`
 - [x] **T-05.05** AGENT Create `packages/ui/components.json` — required by the shadcn CLI to locate this package in a monorepo:
+
   ```json
   {
     "$schema": "https://ui.shadcn.com/schema.json",
     "style": "new-york",
     "rsc": true,
     "tsx": true,
-    "tailwind": { "config": "", "css": "src/styles/globals.css", "baseColor": "neutral", "cssVariables": true, "prefix": "" },
+    "tailwind": {
+      "config": "",
+      "css": "src/styles/globals.css",
+      "baseColor": "neutral",
+      "cssVariables": true,
+      "prefix": ""
+    },
     "aliases": {
       "components": "@agency/ui/components",
       "ui": "@agency/ui/components",
@@ -343,13 +354,18 @@ The `isolatedModules: true` flag is critical in this monorepo — it ensures eac
     "iconLibrary": "lucide"
   }
   ```
+
   - `📄 packages/ui/components.json`
+
 - [x] **T-05.06** AGENT Create `packages/ui/src/styles/globals.css` — this file is NOT imported by apps. It exists so the shadcn CLI has a CSS entry point for the package itself:
+
   ```css
-  @import "tailwindcss";
-  @import "tw-animate-css";
+  @import 'tailwindcss';
+  @import 'tw-animate-css';
   ```
+
   - `📄 packages/ui/src/styles/globals.css`
+
 - [x] **T-05.07** AGENT Run `pnpm dlx shadcn@latest init` from `packages/ui/` — select `new-york` style, `neutral` base, confirm CSS variables enabled, OKLCH colour output
 - [x] **T-05.08** AGENT Install initial shadcn components from `packages/ui/`:
   ```bash
@@ -396,7 +412,7 @@ When running `pnpm dlx shadcn@latest add <component>` in a monorepo, the CLI rea
 
 ## T-06: Database Package
 
-- [x] **T-06** AGENT  `@agency/database` exports type-safe Supabase client factories, middleware utilities, and auth helpers — with zero direct Supabase calls permitted in any app code.
+- [x] **T-06** AGENT `@agency/database` exports type-safe Supabase client factories, middleware utilities, and auth helpers — with zero direct Supabase calls permitted in any app code.
 
 ### Subtasks
 
@@ -455,7 +471,7 @@ Always use Port 6543 (Supavisor transaction pooler) — never Port 5432 (direct 
 
 ## T-07: Analytics Package
 
-- [x] **T-07** AGENT  `@agency/analytics` wraps PostHog with mandatory tenant-aware event tagging for both browser and server contexts.
+- [x] **T-07** AGENT `@agency/analytics` wraps PostHog with mandatory tenant-aware event tagging for both browser and server contexts.
 
 ### Subtasks
 
@@ -506,7 +522,7 @@ Initialize the `posthog-node` server client lazily (on first call to `captureSer
 
 ## T-08: Design Tokens Package
 
-- [x] **T-08** AGENT  `@agency/design-tokens` compiles W3C DTCG token sources into per-client CSS files consumable by Tailwind v4, with the three-tier hierarchy correctly enforced.
+- [x] **T-08** AGENT `@agency/design-tokens` compiles W3C DTCG token sources into per-client CSS files consumable by Tailwind v4, with the three-tier hierarchy correctly enforced.
 
 ### Subtasks
 
@@ -564,7 +580,8 @@ Style Dictionary v4 silently drops group transforms when you specify both `trans
 
 **Client Compilation System:** Built automated client token compilation that reads all `tokens/clients/*.json` files and generates per-client CSS in `apps/prospective-clients/[slug]/tokens/` or `apps/clients/[slug]/tokens/` per PROSPECTIVE_SLUGS. Each client file includes brand-specific overrides and imports base token files.
 
-**Three-Tier Hierarchy:** 
+**Three-Tier Hierarchy:**
+
 - **Primitives:** Raw values (colors, spacing) in `:root {}` blocks
 - **Semantic:** Contextual aliases in `@theme inline {}` blocks with `outputReferences: true` for cascade support
 - **Component:** Component-specific tokens in `:root {}` blocks
@@ -575,12 +592,11 @@ Style Dictionary v4 silently drops group transforms when you specify both `trans
 
 **Generated Output Verification:** Successfully generates `apps/prospective-clients/riley-day-care/tokens/riley-day-care.css` (and the-barber-cave) with proper `@theme inline {}` blocks for semantic tokens and import statements for base tokens. Component tokens generated in `packages/design-tokens/dist/component.css` with `:root {}` structure.
 
-**Known Issues:** TypeScript errors about missing dependencies resolve when workspace is properly built. Token collisions detected during build are expected due to overlapping semantic token definitions between base and client-specific files.
----
+## **Known Issues:** TypeScript errors about missing dependencies resolve when workspace is properly built. Token collisions detected during build are expected due to overlapping semantic token definitions between base and client-specific files.
 
 ## T-09: Agency Website Scaffold
 
-- [x] **T-09** AGENT  `@agency/firm` is a working Next.js 16 app for the agency's own marketing website, connected to the monorepo with Tailwind v4, PostCSS, the `@source` directive, and the analytics provider wired up.
+- [x] **T-09** AGENT `@agency/firm` is a working Next.js 16 app for the agency's own marketing website, connected to the monorepo with Tailwind v4, PostCSS, the `@source` directive, and the analytics provider wired up.
 
 ### Subtasks
 
@@ -594,22 +610,28 @@ Style Dictionary v4 silently drops group transforms when you specify both `trans
 - [x] **T-09.04** AGENT Create `apps/firm/next.config.ts` — `transpilePackages: ['@agency/ui', '@agency/analytics']`
   - `📄 apps/firm/next.config.ts`
 - [x] **T-09.05** AGENT Create `apps/firm/postcss.config.mjs` — required by Tailwind v4 to hook into Next.js's PostCSS pipeline:
+
   ```js
   /** @type {import('postcss-load-config').Config} */
-  const config = { plugins: { '@tailwindcss/postcss': {} } };
-  export default config;
+  const config = { plugins: { '@tailwindcss/postcss': {} } }
+  export default config
   ```
+
   - `📄 apps/firm/postcss.config.mjs`
+
 - [x] **T-09.06** AGENT Create `apps/firm/src/app/globals.css`:
+
   ```css
-  @import "tailwindcss";
-  @import "tw-animate-css";
+  @import 'tailwindcss';
+  @import 'tw-animate-css';
 
   /* Tell Tailwind to scan the shared UI package for class names.
      Without this directive, production builds will purge all @agency/ui utility classes. */
   @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
   ```
+
   - `📄 apps/firm/src/app/globals.css`
+
 - [x] **T-09.07** AGENT Create `apps/firm/src/app/layout.tsx` — Server Component, imports globals.css, wraps children with `<Providers>`
   - `📄 apps/firm/src/app/layout.tsx`
 - [x] **T-09.08** Create `apps/firm/src/app/page.tsx` — agency homepage with marketing content
@@ -655,7 +677,7 @@ Pass `tenantSlug` to `<Providers>` from `process.env.NEXT_PUBLIC_TENANT_SLUG` in
 
 ## T-09B: Agency Admin App Scaffold
 
-- [x] **T-09B** AGENT  `@agency/agency-admin` is a working Next.js 16 app that serves as the internal control panel, with its own Supabase connection, Tailwind v4, and PostCSS configured.
+- [x] **T-09B** AGENT `@agency/agency-admin` is a working Next.js 16 app that serves as the internal control panel, with its own Supabase connection, Tailwind v4, and PostCSS configured.
 
 > **Why this task exists:** The agency admin app is the host for all Inngest background workflows (T-16), the client onboarding UI, and your internal dashboard. T-16 assumes this app exists. Scaffolding it here, immediately after the first client app, establishes the correct pattern before Inngest configuration begins.
 
@@ -700,13 +722,15 @@ The admin app is never deployed to a public domain. It runs on a protected Verce
 ### Advanced Coding Patterns
 
 Create an `apps/agency-admin/src/lib/invariant-admin.ts` that checks at the top of every Server Action that the current session has the `agency_admin` role in `app_metadata`. This is the admin-equivalent of RLS — a programmatic guard that prevents client users who somehow receive the admin URL from accessing admin functions:
+
 ```typescript
 export function requireAdminSession(role: string) {
   if (role !== 'agency_admin') {
-    throw new Error('Unauthorized: agency admin role required');
+    throw new Error('Unauthorized: agency admin role required')
   }
 }
 ```
+
 Call this at the top of every admin Server Action before any database write.
 
 ### Implementation Notes
@@ -725,7 +749,7 @@ Call this at the top of every admin Server Action before any database write.
 
 ## T-10: Tailwind v4 Integration
 
-- [x] **T-10** AGENT  Tailwind v4 is fully configured with the three-tier token architecture, dark mode, `tw-animate-css`, and all v3→v4 migration pitfalls explicitly verified absent.
+- [x] **T-10** AGENT Tailwind v4 is fully configured with the three-tier token architecture, dark mode, `tw-animate-css`, and all v3→v4 migration pitfalls explicitly verified absent.
 
 ### Subtasks
 
@@ -779,8 +803,9 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
 **Dark Mode Implementation:** Configured dark mode using `@custom-variant dark (&:is(.dark *))` pattern with `:root .dark` overrides for semantic tokens. The implementation follows shadcn's recommended approach for consistent specificity.
 
 **Three-Tier Token Architecture:** Verified correct implementation of the token hierarchy:
+
 - **Primitives:** Raw values in `:root {}` blocks (no utility generation)
-- **Semantic:** Contextual aliases in `@theme inline {}` blocks (cascade-overridable)  
+- **Semantic:** Contextual aliases in `@theme inline {}` blocks (cascade-overridable)
 - **Component:** Component-specific tokens in `:root {}` blocks
 
 **Brand Utility Generation:** Confirmed that `bg-brand-primary`, `text-brand-primary`, and `border-brand-primary` utility classes are properly generated from client-specific design tokens. The riley-day-care app uses OKLCH color format for better perceptual uniformity.
@@ -793,13 +818,13 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
 
 ## T-11: Supabase Local Environment
 
-- [x] **T-11** HUMAN  Supabase runs locally via Docker with correct `config.toml`, and the remote production project is created and linked.
+- [x] **T-11** HUMAN Supabase runs locally via Docker with correct `config.toml`, and the remote production project is created and linked.
 
 - [x] **T-11.01** AGENT Run `supabase init` from the repo root — generates `supabase/config.toml`
   - `📄 supabase/config.toml`
 - [x] **T-11.02** AGENT Configure `supabase/config.toml`:
   - Set `project_id` to a unique slug (e.g. `agency-platform-dev`)
-  - Enable pgTAP: under `[db]`, add `extensions = ["pgTAP"]` (required for T-14) - *Note: pgTAP will be enabled via SQL after startup*
+  - Enable pgTAP: under `[db]`, add `extensions = ["pgTAP"]` (required for T-14) - _Note: pgTAP will be enabled via SQL after startup_
   - Set `[auth] email_confirm_if_verified = true`
   - Set `[auth.email] minimum_password_length = 12`
   - `📄 supabase/config.toml`
@@ -816,7 +841,7 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
 - [x] **T-11.07** HUMAN Run `supabase link --project-ref [ref]` to connect the CLI to the production project
   - **Linked:** febgsamiulzlkkwehsfd
 - [x] **T-11.08** AGENT Confirm `supabase/.branches/` and `supabase/.temp/` are in `.gitignore`
-  - `📄 .gitignore` 
+  - `📄 .gitignore`
 - [x] **T-11.09** HUMAN Verify `supabase status` shows all local services running and Studio accessible at `http://localhost:54323` — deferred due to startup timeout
 
 ### Definition of Done
@@ -828,6 +853,7 @@ When using `@custom-variant dark (&:is(.dark *))` versus `(&:where(.dark, .dark 
 Schema creation (T-12). Auth configuration beyond `config.toml`. Storage buckets. Edge Functions. The production database is intentionally blank at this stage.
 
 ### Existing Patterns
+
 In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) rather than `supabase start` — it takes ~90 seconds less to boot and is sufficient for running pgTAP migration tests. Reserve `supabase start` for local development where you need the Studio UI and Auth emulation. This distinction matters as your CI job count grows: saving 90 seconds per RLS test run across dozens of PRs per month adds up to significant build minute savings.
 
 ### Implementation Notes
@@ -852,7 +878,7 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
 
 ## T-12: Database Schema & Migrations
 
-- [x] **T-12** AGENT  The `tenants`, `posts`, `audit_log`, and `customer_auth_mappings` tables are created via tracked migrations; TypeScript types are generated and committed.
+- [x] **T-12** AGENT The `tenants`, `posts`, `audit_log`, and `customer_auth_mappings` tables are created via tracked migrations; TypeScript types are generated and committed.
 
 ### Subtasks
 
@@ -865,6 +891,7 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
 - [x] **T-12.04** AGENT Create `supabase/migrations/004_customer_auth_mappings.sql` — `customer_auth_mappings` table: maps real_email → auth_email per tenant; RLS enabled; service-role-write/own-read policy
   - `📄 supabase/migrations/006_customer_auth_mappings.sql`
 - [x] **T-12.05** AGENT Create `supabase/migrations/005_auth_tenant_id_helper.sql` — the `auth.tenant_id()` helper function (declared `STABLE PARALLEL SAFE`) used in all RLS policies:
+
   ```sql
   CREATE OR REPLACE FUNCTION auth.tenant_id() RETURNS uuid
   LANGUAGE sql STABLE PARALLEL SAFE
@@ -873,7 +900,9 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
       -> 'app_metadata' ->> 'tenant_id')::uuid
   $$;
   ```
+
   - `📄 supabase/migrations/005_auth_tenant_id_helper.sql` (implements `public.tenant_id()` — migrations cannot create in auth schema)
+
 - [x] **T-12.06** AGENT Apply migrations: `supabase db reset` (replays all migrations from scratch)
 - [x] **T-12.07** AGENT Generate TypeScript types: `supabase gen types typescript --local > packages/database/src/types.ts`
   - `📄 packages/database/src/types.ts`
@@ -882,11 +911,14 @@ In CI (T-21), use `supabase db start` (Postgres only, no Auth/Storage/Studio) ra
   - `📄 package.json`
 - [x] **T-12.10** AGENT Run `pnpm turbo run build --filter=@agency/database` with real types — verify no regressions
 - [x] **T-12.11** HUMAN Insert a test tenant row locally via Studio SQL editor:
+
   ```sql
   INSERT INTO public.tenants (slug, domain, name, industry)
   VALUES ('riley-day-care', 'localhost', 'Riley Day Care', 'general');
   ```
+
   - Test tenant inserted via `supabase/seed.sql` on `db reset`; UUID available in Studio: `SELECT id FROM public.tenants WHERE slug = 'riley-day-care';`
+
 - [x] **T-12.12** HUMAN Copy the generated UUID into the local `.env.local` files for use in T-15 auth testing
 
 ### Definition of Done
@@ -919,7 +951,7 @@ Add a CI step (T-21) that runs `supabase gen types typescript --local` and diffs
 
 ## T-13: Row-Level Security Policies
 
-- [x] **T-13** AGENT  Every table has RLS enabled, all four policy types, the `auth.tenant_id()` helper, and the required indexes — verified by both manual inspection and `EXPLAIN ANALYZE`.
+- [x] **T-13** AGENT Every table has RLS enabled, all four policy types, the `auth.tenant_id()` helper, and the required indexes — verified by both manual inspection and `EXPLAIN ANALYZE`.
 
 ### Subtasks
 
@@ -966,13 +998,14 @@ After adding any new policy, always run `EXPLAIN (ANALYZE, BUFFERS) SELECT * FRO
 
 ## T-14: RLS Automated Testing
 
-- [x] **T-14** AGENT  The pgTAP test suite runs locally and in CI, covering RLS coverage for all tables, cross-tenant isolation attacks, role hierarchy, and positive access confirmation.
+- [x] **T-14** AGENT The pgTAP test suite runs locally and in CI, covering RLS coverage for all tables, cross-tenant isolation attacks, role hierarchy, and positive access confirmation.
 
 ### Subtasks
 
 - [x] **T-14.01** AGENT Create `supabase/tests/database/000-setup-test-hooks.sql` — installs pgTAP, http extension, and Basejump test helpers
   - `📄 supabase/tests/database/000-setup-test-hooks.sql`
 - [x] **T-14.02** AGENT Create `supabase/tests/database/00-rls-coverage.sql` — asserts RLS is enabled on ALL public tables; asserts the expected table count (update this number every time a new migration adds a table):
+
   ```sql
   BEGIN;
   SELECT plan(2);
@@ -985,7 +1018,9 @@ After adding any new policy, always run `EXPLAIN (ANALYZE, BUFFERS) SELECT * FRO
   SELECT * FROM finish();
   ROLLBACK;
   ```
+
   - `📄 supabase/tests/database/00-rls-coverage.sql`
+
 - [x] **T-14.03** AGENT Create `supabase/tests/database/01-tenant-isolation.sql` — simulates all four attack types for every tenant-scoped table: cross-tenant SELECT (`is_empty`), UPDATE (`is_empty`), DELETE (`is_empty`), INSERT with foreign tenant_id (`throws_ok` with error code `42501`)
   - `📄 supabase/tests/database/01-tenant-isolation.sql`
 - [x] **T-14.04** AGENT Create `supabase/tests/database/02-role-hierarchy.sql` — tests admin vs regular user access within the same tenant
@@ -1035,7 +1070,7 @@ The meta-test counting expected tables in `00-rls-coverage.sql` is the most impo
 
 ## T-15: Multi-Tenant Auth
 
-- [x] **T-15** AGENT  Users can register and log in, sessions contain `app_metadata.tenant_id`, all data queries are correctly tenant-scoped, and the email aliasing workaround is implemented.
+- [x] **T-15** AGENT Users can register and log in, sessions contain `app_metadata.tenant_id`, all data queries are correctly tenant-scoped, and the email aliasing workaround is implemented.
 
 ### Subtasks
 
@@ -1090,7 +1125,7 @@ The email aliasing login flow has a subtle timing requirement: the lookup from `
 
 ## T-16: Inngest Background Jobs
 
-- [x] **T-16** AGENT  Inngest is configured in the admin app, the `/api/inngest` endpoint is live, and the client onboarding workflow executes durably with proper step isolation.
+- [x] **T-16** AGENT Inngest is configured in the admin app, the `/api/inngest` endpoint is live, and the client onboarding workflow executes durably with proper step isolation.
 
 ### Subtasks
 
@@ -1147,7 +1182,7 @@ Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives
 
 ## T-17: PostHog Analytics
 
-- [x] **T-17** HUMAN  PostHog receives tenant-tagged events from the `riley-day-care` app, GDPR IP capture is disabled, and the self-hosting decision is documented for future reference.
+- [x] **T-17** HUMAN PostHog receives tenant-tagged events from the `riley-day-care` app, GDPR IP capture is disabled, and the self-hosting decision is documented for future reference.
 
 ### Subtasks
 
@@ -1157,10 +1192,15 @@ Inngest's `step.waitForEvent` blocks the workflow until a matching event arrives
   - `📄 apps/prospective-clients/riley-day-care/src/components/providers.tsx`
 - [x] **T-17.04** HUMAN Confirm events arrive in PostHog Live Events with `tenant: 'riley-day-care'` as a super property
 - [x] **T-17.05** AGENT Disable IP capture for GDPR compliance:
+
   ```typescript
-  loaded: (ph) => { ph.set_config({ capture_ip: false }) }
+  loaded: (ph) => {
+    ph.set_config({ capture_ip: false })
+  }
   ```
+
   - `📄 packages/analytics/src/client.ts`
+
 - [x] **T-17.06** AGENT Call `identifyUser` with the Supabase user UUID immediately after a successful login (in the login Server Action's redirect or in a `useEffect` post-redirect) to stitch anonymous events with authenticated user events
 - [x] **T-17.07** AGENT Create `docs/POSTHOG_DEPLOYMENT.md` — documents the break-even analysis (Cloud free → self-host at ~4–5M events/month), the Hetzner CCX23 requirement (not CPX31, not CPX41), the critical `background_pool_size: 2` ClickHouse tuning, and GDPR compliance settings
   - `📄 docs/POSTHOG_DEPLOYMENT.md`
@@ -1193,7 +1233,7 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 
 ## T-18: AI Tool Configuration (Cursor & Windsurf)
 
-- [x] **T-18** AGENT  All Cursor and Windsurf rules files are in place, tested, and producing stack-correct code suggestions without manual correction.
+- [x] **T-18** AGENT All Cursor and Windsurf rules files are in place, tested, and producing stack-correct code suggestions without manual correction.
 
 ### Subtasks
 
@@ -1230,7 +1270,7 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 
 **T-18 verification checklist:** In docs/AI_PROMPTING.md (section "T-18 Cursor verification checklist"); step-by-step playbook and reference snippets in docs/T18_VERIFICATION_PLAYBOOK.md.
 
-**Agent validation (execute PROMPT.md):** All .cursor/rules/*.mdc, .windsurf/rules/monorepo.md, and .windsurfrules validated against GUIDE §13 and the T-18 checklist. frontend.mdc augmented with WRONG/CORRECT examples. All four scenarios (T-18.08–T-18.11) executed and pass criteria met.
+**Agent validation (execute PROMPT.md):** All .cursor/rules/\*.mdc, .windsurf/rules/monorepo.md, and .windsurfrules validated against GUIDE §13 and the T-18 checklist. frontend.mdc augmented with WRONG/CORRECT examples. All four scenarios (T-18.08–T-18.11) executed and pass criteria met.
 
 ### Definition of Done
 
@@ -1252,7 +1292,7 @@ Include concrete before/after examples in the rules files — AI tools respond s
 
 ## T-19: Client Scaffolding Script
 
-- [x] **T-19** AGENT  `pnpm scaffold` creates a fully wired new client app in under 2 minutes with zero manual file editing required for structural setup.
+- [x] **T-19** AGENT `pnpm scaffold` creates a fully wired new client app in under 2 minutes with zero manual file editing required for structural setup.
 
 ### Subtasks
 
@@ -1305,7 +1345,7 @@ Add a post-scaffold validation step to the script: after creating all files, run
 
 ## T-20: Vercel Deployment
 
-- [ ] **T-20** HUMAN  `riley-day-care` is deployed to Vercel with a custom domain, correct environment variables, Turborepo remote cache enabled, and cost cliff documentation committed.
+- [ ] **T-20** HUMAN `riley-day-care` is deployed to Vercel with a custom domain, correct environment variables, Turborepo remote cache enabled, and cost cliff documentation committed.
 
 ### Subtasks
 
@@ -1349,7 +1389,7 @@ Set `VERCEL_REMOTE_CACHE_TIMEOUT=30` in Vercel environment variables. The defaul
 
 ## T-21: CI/CD — GitHub Actions
 
-- [ ] **T-21** AGENT  CI runs on every PR (affected builds + RLS tests + types drift check), database migrations deploy on merge to `main`, and build minutes are optimised to extend the free tier to 25+ clients.
+- [ ] **T-21** AGENT CI runs on every PR (affected builds + RLS tests + types drift check), database migrations deploy on merge to `main`, and build minutes are optimised to extend the free tier to 25+ clients.
 
 ### Subtasks
 
@@ -1405,16 +1445,19 @@ The `types-drift-check` step requires local Supabase to be running to generate t
 
 ## T-22: Security Hardening
 
-- [x] **T-22** AGENT  All five documented attack vectors are explicitly tested and confirmed blocked via automated checks, with `SECURITY.md` maintained as the reference.
+- [x] **T-22** AGENT All five documented attack vectors are explicitly tested and confirmed blocked via automated checks, with `SECURITY.md` maintained as the reference.
 
 ### Subtasks
 
 - [x] **T-22.01** AGENT **Vector 1 — JWT Claim Injection:** Run: `grep -r "user_metadata" --include="*.ts" --include="*.tsx" packages/database/ apps/` — zero results that feed into database queries
 - [x] **T-22.02** AGENT Add a CI grep (already added in T-21.08 pattern — extend it) to also catch `user_metadata` in database-layer files:
+
   ```bash
   grep -r "user_metadata" --include="*.ts" packages/database/ && exit 1 || true
   ```
+
   - `📄 .github/workflows/ci.yml`
+
 - [x] **T-22.03** AGENT **Vector 2 — Redis Cache Key Collision:** Audit all cache keys — confirm every key is prefixed with `tenant:{id}:`; add this rule to `.cursor/rules/database.mdc`
   - `📄 .cursor/rules/database.mdc`
 - [x] **T-22.04** AGENT **Vector 3 — Service Role Key Exposure:** Run: `grep -r "SERVICE_ROLE\|service_role" --include="*.tsx" --include="*.ts" apps/` — zero results in any client-side code
@@ -1422,19 +1465,28 @@ The `types-drift-check` step requires local Supabase to be running to generate t
 - [x] **T-22.06** AGENT **Vector 4 — API Endpoint Auth Gaps:** Review every Route Handler and Server Action using the admin client — verify each has an explicit `.eq('tenant_id', verifiedTenantId)` clause
 - [x] **T-22.07** AGENT **Vector 5 — HIPAA Isolation:** Document in `SECURITY.md` and the onboarding checklist: any healthcare client with PHI requires a dedicated Supabase project and a signed BAA
 - [x] **T-22.08** AGENT Set HTTP security headers in `next.config.ts` for `riley-day-care`:
+
   ```typescript
-  headers: async () => [{
-    source: '/(.*)',
-    headers: [
-      { key: 'X-Frame-Options', value: 'DENY' },
-      { key: 'X-Content-Type-Options', value: 'nosniff' },
-      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-      { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';" },
-    ]
-  }]
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'X-Frame-Options', value: 'DENY' },
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        {
+          key: 'Content-Security-Policy',
+          value:
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        },
+      ],
+    },
+  ]
   ```
+
   - `📄 apps/prospective-clients/riley-day-care/next.config.ts`
+
 - [x] **T-22.09** AGENT Replicate security headers in `apps/agency-admin/next.config.ts`
   - `📄 apps/agency-admin/next.config.ts`
 - [x] **T-22.10** AGENT Enable `leaked_password_protection` and `minimum_password_length = 12` in `supabase/config.toml` (already noted in T-11.02 — verify it was done)
@@ -1477,24 +1529,24 @@ Use `next-safe-action` for all Server Actions to create a consistent, auditable 
 
 ## T-23: Second Client App & Onboarding Validation
 
-- [ ] **T-23** AGENT  A prospective (demo) client is onboarded via the full checklist, validating the platform end-to-end in under 2 hours with zero code changes required. Both **riley-day-care** and **the-barber-cave** live under `apps/prospective-clients/`. Run `pnpm scaffold` and choose prospective to create new demo apps under `apps/prospective-clients/[slug]`. `apps/clients/` is empty until first production go-live.
+- [ ] **T-23** AGENT A prospective (demo) client is onboarded via the full checklist, validating the platform end-to-end in under 2 hours with zero code changes required. Both **riley-day-care** and **the-barber-cave** live under `apps/prospective-clients/`. Run `pnpm scaffold` and choose prospective to create new demo apps under `apps/prospective-clients/[slug]`. `apps/clients/` is empty until first production go-live.
 
 ### Subtasks
 
-- [ ] **T-23.01** AGENT Run `pnpm scaffold` for the prospective client (e.g. `the-barber-cave`: name="The Barber Cave", slug="the-barber-cave", industry="general", domain="thebarbercave.com") — or use existing scaffolded app if already created
-- [ ] **T-23.02** AGENT Edit `packages/design-tokens/tokens/clients/the-barber-cave.json` (or the chosen slug) with a visually distinct palette — clearly different from riley-day-care's colours
+- [x] **T-23.01** AGENT Run `pnpm scaffold` for the prospective client (e.g. `the-barber-cave`: name="The Barber Cave", slug="the-barber-cave", industry="general", domain="thebarbercave.com") — or use existing scaffolded app if already created
+- [x] **T-23.02** AGENT Edit `packages/design-tokens/tokens/clients/the-barber-cave.json` (or the chosen slug) with a visually distinct palette — clearly different from riley-day-care's colours
   - `📄 packages/design-tokens/tokens/clients/the-barber-cave.json`
-- [ ] **T-23.03** AGENT Run `pnpm tokens:build` — verify client CSS files generate correctly for both riley-day-care and the prospective client(s)
-- [ ] **T-23.04** AGENT Document the HIPAA isolation decision: any healthcare client with PHI would require a dedicated Supabase project and BAA; prospective/demo clients share the platform for validation only
-- [ ] **T-23.05** AGENT Insert the prospective client tenant row into the local database (e.g. slug `the-barber-cave`)
-- [ ] **T-23.06** AGENT Create an admin user for the prospective client with `app_metadata: { tenant_id: '[tenant-uuid]', role: 'admin' }`
-- [ ] **T-23.07** AGENT Run `supabase test db` — all RLS tests pass with two tenants in the database
-- [ ] **T-23.08** AGENT Run `pnpm turbo run build --affected` — only the prospective client (and changed shared packages) rebuild; `riley-day-care` is a cache hit
+- [x] **T-23.03** AGENT Run `pnpm tokens:build` — verify client CSS files generate correctly for both riley-day-care and the prospective client(s)
+- [x] **T-23.04** AGENT Document the HIPAA isolation decision: any healthcare client with PHI would require a dedicated Supabase project and BAA; prospective/demo clients share the platform for validation only
+- [x] **T-23.05** AGENT Insert the prospective client tenant row into the local database (e.g. slug `the-barber-cave`)
+- [x] **T-23.06** AGENT Create an admin user for the prospective client with `app_metadata: { tenant_id: '[tenant-uuid]', role: 'admin' }`
+- [x] **T-23.07** AGENT Run `supabase test db` — all RLS tests pass with two tenants in the database
+- [x] **T-23.08** AGENT Run `pnpm turbo run build --affected` — only the prospective client (and changed shared packages) rebuild; `riley-day-care` is a cache hit
 - [ ] **T-23.09** HUMAN Create the prospective client's Vercel project and deploy (e.g. the-barber-cave)
 - [ ] **T-23.10** HUMAN Cross-tenant isolation test: log in as a `riley-day-care` user in one browser, as the prospective client's user in another — confirm neither can see the other's data
 - [ ] **T-23.11** HUMAN Record the wall-clock time for this onboarding — target: under 2 hours; document bottlenecks in `docs/ONBOARDING_CHECKLIST.md`
   - `📄 docs/ONBOARDING_CHECKLIST.md`
-- [ ] **T-23.12** AGENT Update `docs/ONBOARDING_CHECKLIST.md` with the complete, validated step-by-step process reflecting any deviations from the planned process
+- [x] **T-23.12** AGENT Update `docs/ONBOARDING_CHECKLIST.md` with the complete, validated step-by-step process reflecting any deviations from the planned process
 
 ### Definition of Done
 
@@ -1516,15 +1568,18 @@ After completing T-23, the scaffold script (T-19) is a testable artifact. Add a 
 
 **Prospective clients only; no production clients yet:** Both **riley-day-care** (Day Care Template) and **the-barber-cave** (The Barber Cave, Dallas TX) live under `apps/prospective-clients/`. `apps/clients/` is empty until first production go-live. **acme-health** has been removed from the repo. Scaffold template: `apps/prospective-clients/riley-day-care`. Token build: `PROSPECTIVE_SLUGS = ['riley-day-care', 'the-barber-cave']`; outputs to `apps/prospective-clients/[slug]/tokens/[slug].css`. See GUIDE.md, README.md, docs/DAY_CARE_TEMPLATE.md, docs/PLAN_AGENCY_DIRECTION.md, and docs/DEPLOYMENT.md.
 
+**T-23 agent subtasks complete (2026-03-15):** Used existing the-barber-cave app; palette already distinct (brown/amber vs riley green/teal/blue). Added the-barber-cave to supabase/seed.sql; documented HIPAA in SECURITY.md (prospective/demo share platform for validation only). Extended createUserForTenant with optional `role` (app_metadata.role + tenant_users.role); create-test-user.ts now creates admin by default (ROLE=admin, TENANT_SLUG=the-barber-cave). RLS tests pass (npx supabase test db). docs/ONBOARDING_CHECKLIST.md created with full step-by-step (agent + human). Human steps (T-23.09–T-23.11) pending: Vercel deploy, cross-tenant isolation test, wall-clock timing.
+
 ---
 
 ## T-24: Prettier & Code Formatting
 
-- [ ] **T-24** AGENT  Prettier is configured, integrated into the ESLint pipeline, and enforced in CI — consistent formatting across the entire repository.
+- [x] **T-24** AGENT Prettier is configured, integrated into the ESLint pipeline, and enforced in CI — consistent formatting across the entire repository.
 
 ### Subtasks
 
-- [ ] **T-24.01** AGENT Create `prettier.config.mjs` at the repo root:
+- [x] **T-24.01** AGENT Create `prettier.config.mjs` at the repo root:
+
   ```js
   /** @type {import("prettier").Config} */
   const config = {
@@ -1534,27 +1589,33 @@ After completing T-23, the scaffold script (T-19) is a testable artifact. Add a 
     tabWidth: 2,
     printWidth: 100,
     plugins: ['prettier-plugin-tailwindcss'],
-  };
-  export default config;
+  }
+  export default config
   ```
+
   - `📄 prettier.config.mjs`
-- [ ] **T-24.02** AGENT Add `prettier-plugin-tailwindcss` to the catalog in `pnpm-workspace.yaml` (this plugin auto-sorts Tailwind class names in the correct order)
+
+- [x] **T-24.02** AGENT Add `prettier-plugin-tailwindcss` to the catalog in `pnpm-workspace.yaml` (this plugin auto-sorts Tailwind class names in the correct order)
   - `📄 pnpm-workspace.yaml`
-- [ ] **T-24.03** AGENT Add `prettier` and `prettier-plugin-tailwindcss` to root `devDependencies` using `catalog:`
+- [x] **T-24.03** AGENT Add `prettier` and `prettier-plugin-tailwindcss` to root `devDependencies` using `catalog:`
   - `📄 package.json`
-- [ ] **T-24.04** AGENT Add `format` and `format:check` scripts to root `package.json`:
+- [x] **T-24.04** AGENT Add `format` and `format:check` scripts to root `package.json`:
   - `"format": "prettier --write \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore"`
   - `"format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore"`
   - `📄 package.json`
-- [ ] **T-24.05** AGENT Create `.prettierignore` at the repo root — exclude: `node_modules/`, `.next/`, `dist/`, `apps/prospective-clients/*/tokens/`, `apps/clients/*/tokens/`, `pnpm-lock.yaml`, `supabase/.temp/`
+- [x] **T-24.05** AGENT Create `.prettierignore` at the repo root — exclude: `node_modules/`, `.next/`, `dist/`, `apps/prospective-clients/*/tokens/`, `apps/clients/*/tokens/`, `pnpm-lock.yaml`, `supabase/.temp/`
   - `📄 .prettierignore`
-- [ ] **T-24.06** AGENT Add `eslint-config-prettier` to `packages/eslint-config` to disable ESLint rules that conflict with Prettier
+- [x] **T-24.06** AGENT Add `eslint-config-prettier` to `packages/eslint-config` to disable ESLint rules that conflict with Prettier
   - `📄 packages/eslint-config/package.json`
   - `📄 packages/eslint-config/index.js`
-- [ ] **T-24.07** AGENT Add a `format:check` step to `.github/workflows/ci.yml` — fails if any file is not Prettier-formatted
+- [x] **T-24.07** AGENT Add a `format:check` step to `.github/workflows/ci.yml` — fails if any file is not Prettier-formatted
   - `📄 .github/workflows/ci.yml`
-- [ ] **T-24.08** AGENT Run `pnpm format` once on the entire codebase and commit the resulting changes
-- [ ] **T-24.09** HUMAN Configure Cursor/Windsurf to format on save using the repo's Prettier config — document in `docs/AI_PROMPTING.md`
+- [x] **T-24.08** AGENT Run `pnpm format` once on the entire codebase and commit the resulting changes
+- [ ] **T-24.09** HUMAN Configure Cursor/Windsurf to format on save using the repo's Prettier config — document in `docs/AI_PROMPTING.md` (skipped per request)
+
+### Implementation Notes
+
+**T-24 agent subtasks complete (2026-03-15):** Added `prettier-plugin-tailwindcss` and `eslint-config-prettier` to pnpm catalog. Created `prettier.config.mjs` (semi: false, singleQuote: true, trailingComma: 'es5', tabWidth: 2, printWidth: 100) and `.prettierignore`. Root package.json: `format` and `format:check` scripts, prettier + prettier-plugin-tailwindcss in devDependencies. ESLint config extends `prettier` last. CI job includes Format check step before security scans. One-time `pnpm format` applied. T-24.09 (HUMAN) skipped per request.
 
 ### Definition of Done
 
@@ -1576,7 +1637,7 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
 
 ## T-25: CONTRIBUTING.md & Local Dev Runbook
 
-- [ ] **T-25** AGENT  `CONTRIBUTING.md` documents everything a future contributor needs to get running locally and contribute correctly; the local dev runbook covers the day-to-day workflow.
+- [ ] **T-25** AGENT `CONTRIBUTING.md` documents everything a future contributor needs to get running locally and contribute correctly; the local dev runbook covers the day-to-day workflow.
 
 ### Subtasks
 
@@ -1592,6 +1653,7 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
   - The `pnpm format` workflow
   - `📄 CONTRIBUTING.md`
 - [ ] **T-25.02** AGENT Document the full local stack startup sequence in `CONTRIBUTING.md`:
+
   ```bash
   # Step 1: Start Supabase (requires Docker)
   supabase start
@@ -1608,6 +1670,7 @@ Add a `lint-staged` pre-commit hook that runs `prettier --write` on staged files
   # Step 5: Compile design tokens (if token JSON changed)
   pnpm tokens:build
   ```
+
 - [ ] **T-25.03** AGENT Document the exact port assignments in `CONTRIBUTING.md`:
   - `localhost:3000` → riley-day-care client app
   - `localhost:3001` → agency-admin app
@@ -1634,9 +1697,11 @@ Video walkthroughs. Onboarding scripts that install tools automatically (develop
 ### Advanced Coding Patterns
 
 Add a root-level `dev:all` script to `package.json` that starts Supabase, runs token build, and starts all apps in the correct order using a tool like `concurrently`. This eliminates the 5-step startup sequence for local development:
+
 ```json
 "dev:all": "concurrently --names 'tokens,apps' 'pnpm tokens:build --watch' 'pnpm dev'"
 ```
+
 Note: Supabase and Inngest still require separate terminal windows since they have interactive output. Document this distinction explicitly.
 
 ---
@@ -1809,14 +1874,14 @@ agency-platform/
 
 Monitor these thresholds. Act 30 days in advance.
 
-| Cliff | Threshold | Action Required |
-|---|---|---|
-| Vercel Pro → Enterprise | **8 clients** | Contact Vercel for Enterprise, OR implement middleware routing (see `docs/DEPLOYMENT.md`) — saves ~$1,607/month at 50 clients |
-| GitHub Actions free quota | **5 clients** (full builds) / **25 clients** (`--affected`) | Enable Turborepo remote cache to extend to ~50 clients at no cost |
-| Inngest free → Pro | **~20 clients** (5,000 steps/client/month) | Budget $75/month for Pro tier |
-| Supabase MAU overflow | **100,000 MAU total** across all tenants | Upgrade compute add-on or shard across projects |
-| Sanity document limit | **~125 clients** (200 docs/client) | Purchase 50K document add-on ($299/month) |
-| Supabase free tier pausing | **7 days inactivity** | Upgrade staging to Pro ($25/month) or add a cron job that pings the Supabase health endpoint every 6 days |
+| Cliff                      | Threshold                                                   | Action Required                                                                                                               |
+| -------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Vercel Pro → Enterprise    | **8 clients**                                               | Contact Vercel for Enterprise, OR implement middleware routing (see `docs/DEPLOYMENT.md`) — saves ~$1,607/month at 50 clients |
+| GitHub Actions free quota  | **5 clients** (full builds) / **25 clients** (`--affected`) | Enable Turborepo remote cache to extend to ~50 clients at no cost                                                             |
+| Inngest free → Pro         | **~20 clients** (5,000 steps/client/month)                  | Budget $75/month for Pro tier                                                                                                 |
+| Supabase MAU overflow      | **100,000 MAU total** across all tenants                    | Upgrade compute add-on or shard across projects                                                                               |
+| Sanity document limit      | **~125 clients** (200 docs/client)                          | Purchase 50K document add-on ($299/month)                                                                                     |
+| Supabase free tier pausing | **7 days inactivity**                                       | Upgrade staging to Pro ($25/month) or add a cron job that pings the Supabase health endpoint every 6 days                     |
 
 ---
 
@@ -1824,22 +1889,22 @@ Monitor these thresholds. Act 30 days in advance.
 
 Set these in every Vercel project before a client goes live.
 
-| Variable | Scope | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase dashboard → Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Safe to expose; RLS protects the data |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | Bypasses all RLS — never `NEXT_PUBLIC_` |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Public | Per-client PostHog project key |
-| `NEXT_PUBLIC_POSTHOG_HOST` | Public | Self-hosted URL or `https://app.posthog.com` |
-| `NEXT_PUBLIC_TENANT_SLUG` | Public | Matches `slug` in the `tenants` table |
-| `INNGEST_SIGNING_KEY` | **Server only** | Signs webhook requests from Inngest |
-| `INNGEST_EVENT_KEY` | **Server only** | Sends events to Inngest |
-| `SUPABASE_ACCESS_TOKEN` | CI/CD only | For Supabase CLI in GitHub Actions |
-| `SUPABASE_PROJECT_REF` | CI/CD only | Project reference for `supabase link` |
-| `SUPABASE_LOCAL_SERVICE_ROLE` | CI/CD only | From `supabase start` output — for Supashield in CI |
-| `TURBO_TOKEN` | CI/CD + Vercel | Remote cache authentication |
-| `TURBO_TEAM` | CI/CD + Vercel | Remote cache team identifier |
-| `TURBO_REMOTE_CACHE_SIGNATURE_KEY` | CI/CD + Vercel | Cryptographic signing of cache artifacts |
+| Variable                           | Scope           | Notes                                               |
+| ---------------------------------- | --------------- | --------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`         | Public          | Supabase dashboard → Settings → API                 |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`    | Public          | Safe to expose; RLS protects the data               |
+| `SUPABASE_SERVICE_ROLE_KEY`        | **Server only** | Bypasses all RLS — never `NEXT_PUBLIC_`             |
+| `NEXT_PUBLIC_POSTHOG_KEY`          | Public          | Per-client PostHog project key                      |
+| `NEXT_PUBLIC_POSTHOG_HOST`         | Public          | Self-hosted URL or `https://app.posthog.com`        |
+| `NEXT_PUBLIC_TENANT_SLUG`          | Public          | Matches `slug` in the `tenants` table               |
+| `INNGEST_SIGNING_KEY`              | **Server only** | Signs webhook requests from Inngest                 |
+| `INNGEST_EVENT_KEY`                | **Server only** | Sends events to Inngest                             |
+| `SUPABASE_ACCESS_TOKEN`            | CI/CD only      | For Supabase CLI in GitHub Actions                  |
+| `SUPABASE_PROJECT_REF`             | CI/CD only      | Project reference for `supabase link`               |
+| `SUPABASE_LOCAL_SERVICE_ROLE`      | CI/CD only      | From `supabase start` output — for Supashield in CI |
+| `TURBO_TOKEN`                      | CI/CD + Vercel  | Remote cache authentication                         |
+| `TURBO_TEAM`                       | CI/CD + Vercel  | Remote cache team identifier                        |
+| `TURBO_REMOTE_CACHE_SIGNATURE_KEY` | CI/CD + Vercel  | Cryptographic signing of cache artifacts            |
 
 ---
 
@@ -1886,17 +1951,17 @@ pnpm turbo run build lint type-check --affected   # Full CI check locally
 
 ## Appendix E: Design Token Naming Conventions
 
-| Tier | Pattern | CSS Location | Tailwind Utilities Generated |
-|---|---|---|---|
-| Primitive | `--color-{palette}-{scale}` | `:root {}` | None |
-| Semantic | `--color-{role}` | `@theme inline {}` | Yes (cascade-overridable) |
-| Component | `--component-{name}-{property}` | `:root {}` | None (consumed via `var()`) |
-| Font family | `--font-{role}` | `@theme inline {}` | Yes |
-| Spacing | `--spacing-{scale}` | `@theme inline {}` | Yes |
-| Radius | `--radius-{scale}` | `@theme inline {}` | Yes |
+| Tier        | Pattern                         | CSS Location       | Tailwind Utilities Generated |
+| ----------- | ------------------------------- | ------------------ | ---------------------------- |
+| Primitive   | `--color-{palette}-{scale}`     | `:root {}`         | None                         |
+| Semantic    | `--color-{role}`                | `@theme inline {}` | Yes (cascade-overridable)    |
+| Component   | `--component-{name}-{property}` | `:root {}`         | None (consumed via `var()`)  |
+| Font family | `--font-{role}`                 | `@theme inline {}` | Yes                          |
+| Spacing     | `--spacing-{scale}`             | `@theme inline {}` | Yes                          |
+| Radius      | `--radius-{scale}`              | `@theme inline {}` | Yes                          |
 
 ---
 
-*Document version 2.0 — Gap-audited against v1.0 with 12 structural corrections. Research confirmed: `postcss.config.mjs` format, `tw-animate-css` shadcn deprecation of `tailwindcss-animate` (March 2025), `@source` directive requirement for Turborepo monorepo packages, `catalogMode: strict` pnpm bug workaround, shadcn `new-york` + OKLCH as current defaults. All 25 tasks and 3 appendices verified against source guide.*
+_Document version 2.0 — Gap-audited against v1.0 with 12 structural corrections. Research confirmed: `postcss.config.mjs` format, `tw-animate-css` shadcn deprecation of `tailwindcss-animate` (March 2025), `@source` directive requirement for Turborepo monorepo packages, `catalogMode: strict` pnpm bug workaround, shadcn `new-york` + OKLCH as current defaults. All 25 tasks and 3 appendices verified against source guide._
 
-*Reference task IDs in commits: `feat(T-09): add Providers component to riley-day-care`*
+_Reference task IDs in commits: `feat(T-09): add Providers component to riley-day-care`_

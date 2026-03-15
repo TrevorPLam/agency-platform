@@ -76,24 +76,24 @@ This guide is written for someone who learns by doing, not by reading theory. Ev
 
 These are the verified, production-stable versions as of March 2026. Do not use versions older than these; several have critical security patches.
 
-| Layer | Tool | Version | Notes |
-|---|---|---|---|
-| **Monorepo Build** | Turborepo | 2.7.x | Composable config in `turbo.json` (December 2025) |
-| **Package Manager** | pnpm | 10.x | `catalogMode: strict` requires v10.12.1+ |
-| **Frontend Framework** | Next.js | 16.1.x | Turbopack stable for dev and build by default |
-| **UI Library** | React | 19.x | Stable since December 2024 |
-| **Language** | TypeScript | 5.x (strict) | Always use strict mode |
-| **Styling** | Tailwind CSS | v4.x | CSS-first config; no `tailwind.config.js` |
-| **Design Tokens** | Style Dictionary | v4.x | ESM-only; async API; W3C DTCG format |
-| **Components** | shadcn/ui | Latest | Installed into `packages/ui` |
-| **Database** | Supabase (PostgreSQL) | Latest | RLS-first; use Port 6543 (Supavisor) |
-| **Auth** | Supabase Auth | Latest | `app_metadata` for tenant_id only |
-| **CMS** | Sanity v3 | Latest | Shared project, tenant-aware datasets |
-| **Background Jobs** | Inngest | v3.51+ | Checkpointing released December 2025 |
-| **Analytics** | PostHog (self-hosted) | Latest | Hetzner CCX23 for GDPR compliance |
-| **Error Tracking** | Sentry | Latest | Tagged per tenant |
-| **Deployment** | Vercel | — | One project per client app (or single project with middleware — see §14) |
-| **Node.js** | 22.x LTS | 22.x | Required for Next.js 16 and Turborepo 2.7 |
+| Layer                  | Tool                  | Version      | Notes                                                                    |
+| ---------------------- | --------------------- | ------------ | ------------------------------------------------------------------------ |
+| **Monorepo Build**     | Turborepo             | 2.7.x        | Composable config in `turbo.json` (December 2025)                        |
+| **Package Manager**    | pnpm                  | 10.x         | `catalogMode: strict` requires v10.12.1+                                 |
+| **Frontend Framework** | Next.js               | 16.1.x       | Turbopack stable for dev and build by default                            |
+| **UI Library**         | React                 | 19.x         | Stable since December 2024                                               |
+| **Language**           | TypeScript            | 5.x (strict) | Always use strict mode                                                   |
+| **Styling**            | Tailwind CSS          | v4.x         | CSS-first config; no `tailwind.config.js`                                |
+| **Design Tokens**      | Style Dictionary      | v4.x         | ESM-only; async API; W3C DTCG format                                     |
+| **Components**         | shadcn/ui             | Latest       | Installed into `packages/ui`                                             |
+| **Database**           | Supabase (PostgreSQL) | Latest       | RLS-first; use Port 6543 (Supavisor)                                     |
+| **Auth**               | Supabase Auth         | Latest       | `app_metadata` for tenant_id only                                        |
+| **CMS**                | Sanity v3             | Latest       | Shared project, tenant-aware datasets                                    |
+| **Background Jobs**    | Inngest               | v3.51+       | Checkpointing released December 2025                                     |
+| **Analytics**          | PostHog (self-hosted) | Latest       | Hetzner CCX23 for GDPR compliance                                        |
+| **Error Tracking**     | Sentry                | Latest       | Tagged per tenant                                                        |
+| **Deployment**         | Vercel                | —            | One project per client app (or single project with middleware — see §14) |
+| **Node.js**            | 22.x LTS              | 22.x         | Required for Next.js 16 and Turborepo 2.7                                |
 
 ### What changed from 2025 documentation
 
@@ -125,23 +125,23 @@ The Supabase free tier pauses projects after 7 days of inactivity. For staging t
 
 ### First client live (approximately $45/month)
 
-| Service | Monthly Cost | When You Need It |
-|---|---|---|
-| Supabase Pro (1 project) | $25 | First client live |
-| Vercel Pro | $20 | Custom domains, analytics, team access |
-| Sentry Developer | $0 | Error monitoring (free tier) |
-| GitHub Free | $0 | Source control |
-| **Total: first client** | **~$45/month** | |
+| Service                  | Monthly Cost   | When You Need It                       |
+| ------------------------ | -------------- | -------------------------------------- |
+| Supabase Pro (1 project) | $25            | First client live                      |
+| Vercel Pro               | $20            | Custom domains, analytics, team access |
+| Sentry Developer         | $0             | Error monitoring (free tier)           |
+| GitHub Free              | $0             | Source control                         |
+| **Total: first client**  | **~$45/month** |                                        |
 
 ### Five to ten clients (approximately $60–100/month)
 
-| Service | Monthly Cost | Notes |
-|---|---|---|
-| Supabase Pro | $25 | Still one project; all clients on shared RLS |
-| Vercel Pro | $20 | Shared across all client projects |
-| PostHog (self-hosted Hetzner CCX23) | ~$34 | Post-April 2026 pricing; EU data residency |
-| Sentry Team | $0–$26 | Upgrade when free tier is insufficient |
-| **Total: 5–10 clients** | **~$60–$105/month** | |
+| Service                             | Monthly Cost        | Notes                                        |
+| ----------------------------------- | ------------------- | -------------------------------------------- |
+| Supabase Pro                        | $25                 | Still one project; all clients on shared RLS |
+| Vercel Pro                          | $20                 | Shared across all client projects            |
+| PostHog (self-hosted Hetzner CCX23) | ~$34                | Post-April 2026 pricing; EU data residency   |
+| Sentry Team                         | $0–$26              | Upgrade when free tier is insufficient       |
+| **Total: 5–10 clients**             | **~$60–$105/month** |                                              |
 
 ### HIPAA healthcare clients (additional $100+/month per client)
 
@@ -167,12 +167,12 @@ These are the specific thresholds where costs jump non-linearly. Understanding t
 
 ### Per-client marginal cost at scale
 
-| Scenario | 1 client | 10 clients | 50 clients | 200 clients |
-|---|---|---|---|---|
-| 1K page views/client — Total/month | $141 | $1,760 | $1,940 | $2,686 |
-| 1K page views/client — per-client cost | $141 | $176 | **$39** | **$13** |
-| 100K page views/client — Total/month | $141 | $1,764 | $2,477 | $6,057 |
-| 100K page views/client — per-client cost | $141 | $176 | **$50** | **$30** |
+| Scenario                                 | 1 client | 10 clients | 50 clients | 200 clients |
+| ---------------------------------------- | -------- | ---------- | ---------- | ----------- |
+| 1K page views/client — Total/month       | $141     | $1,760     | $1,940     | $2,686      |
+| 1K page views/client — per-client cost   | $141     | $176       | **$39**    | **$13**     |
+| 100K page views/client — Total/month     | $141     | $1,764     | $2,477     | $6,057      |
+| 100K page views/client — per-client cost | $141     | $176       | **$50**    | **$30**     |
 
 The dramatic per-client cost drop from $176 → $39 (1K PV, 10→50 clients) happens because fixed Vercel and Sanity seat costs amortize across more clients. At high traffic, Supabase MAU overages dominate beyond 50 clients and re-inflate the per-client cost.
 
@@ -552,8 +552,7 @@ import { createInterface } from 'readline'
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-const ask = (question: string) =>
-  new Promise<string>((resolve) => rl.question(question, resolve))
+const ask = (question: string) => new Promise<string>((resolve) => rl.question(question, resolve))
 
 async function main() {
   console.log('\n🏗  Agency Platform — Client Scaffolder\n')
@@ -573,76 +572,100 @@ async function main() {
   mkdirSync(join(appDir, 'tokens'), { recursive: true })
 
   // package.json
-  writeFileSync(join(appDir, 'package.json'), JSON.stringify({
-    name: `@agency/${slug}`,
-    version: '0.0.0',
-    private: true,
-    scripts: {
-      dev: 'next dev --turbopack',
-      build: 'next build',
-      start: 'next start',
-      lint: 'next lint',
-      'type-check': 'tsc --noEmit',
-    },
-    dependencies: {
-      '@agency/ui': 'workspace:*',
-      '@agency/database': 'workspace:*',
-      '@agency/analytics': 'workspace:*',
-      next: 'catalog:',
-      react: 'catalog:',
-      'react-dom': 'catalog:',
-    },
-    devDependencies: {
-      '@agency/typescript-config': 'workspace:*',
-      '@agency/eslint-config': 'workspace:*',
-      typescript: 'catalog:',
-      '@types/react': 'catalog:',
-      '@types/node': 'catalog:',
-      tailwindcss: 'catalog:',
-      '@tailwindcss/postcss': 'catalog:',
-    },
-  }, null, 2))
+  writeFileSync(
+    join(appDir, 'package.json'),
+    JSON.stringify(
+      {
+        name: `@agency/${slug}`,
+        version: '0.0.0',
+        private: true,
+        scripts: {
+          dev: 'next dev --turbopack',
+          build: 'next build',
+          start: 'next start',
+          lint: 'next lint',
+          'type-check': 'tsc --noEmit',
+        },
+        dependencies: {
+          '@agency/ui': 'workspace:*',
+          '@agency/database': 'workspace:*',
+          '@agency/analytics': 'workspace:*',
+          next: 'catalog:',
+          react: 'catalog:',
+          'react-dom': 'catalog:',
+        },
+        devDependencies: {
+          '@agency/typescript-config': 'workspace:*',
+          '@agency/eslint-config': 'workspace:*',
+          typescript: 'catalog:',
+          '@types/react': 'catalog:',
+          '@types/node': 'catalog:',
+          tailwindcss: 'catalog:',
+          '@tailwindcss/postcss': 'catalog:',
+        },
+      },
+      null,
+      2
+    )
+  )
 
   // tsconfig.json
-  writeFileSync(join(appDir, 'tsconfig.json'), JSON.stringify({
-    extends: '@agency/typescript-config/nextjs.json',
-    compilerOptions: {
-      baseUrl: '.',
-      paths: { '@/*': ['./src/*'] },
-    },
-    include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
-    exclude: ['node_modules'],
-  }, null, 2))
+  writeFileSync(
+    join(appDir, 'tsconfig.json'),
+    JSON.stringify(
+      {
+        extends: '@agency/typescript-config/nextjs.json',
+        compilerOptions: {
+          baseUrl: '.',
+          paths: { '@/*': ['./src/*'] },
+        },
+        include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
+        exclude: ['node_modules'],
+      },
+      null,
+      2
+    )
+  )
 
   // next.config.ts
-  writeFileSync(join(appDir, 'next.config.ts'), `import type { NextConfig } from 'next'
+  writeFileSync(
+    join(appDir, 'next.config.ts'),
+    `import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@agency/ui', '@agency/database', '@agency/analytics'],
 }
 
 export default nextConfig
-`)
+`
+  )
 
   // Token file
-  writeFileSync(join(tokenDir, `${slug}.json`), JSON.stringify({
-    client: slug,
-    name,
-    domain,
-    industry,
-    color: {
-      'brand-primary': '#000000',
-      'brand-secondary': '#666666',
-      'text-default': '#1a1a1a',
-      'text-muted': '#6b7280',
-      background: '#ffffff',
-      surface: '#f9fafb',
-    },
-    font: {
-      sans: '"Inter", sans-serif',
-      display: '"Inter", sans-serif',
-    },
-  }, null, 2))
+  writeFileSync(
+    join(tokenDir, `${slug}.json`),
+    JSON.stringify(
+      {
+        client: slug,
+        name,
+        domain,
+        industry,
+        color: {
+          'brand-primary': '#000000',
+          'brand-secondary': '#666666',
+          'text-default': '#1a1a1a',
+          'text-muted': '#6b7280',
+          background: '#ffffff',
+          surface: '#f9fafb',
+        },
+        font: {
+          sans: '"Inter", sans-serif',
+          display: '"Inter", sans-serif',
+        },
+      },
+      null,
+      2
+    )
+  )
 
   console.log(`\n✅ Scaffolded @agency/${slug}`)
   console.log(`\nNext steps:`)
@@ -664,6 +687,7 @@ main().catch(console.error)
 Every other package extends one of these configs. Create this first; everything else depends on it.
 
 **`packages/typescript-config/package.json`**
+
 ```json
 {
   "name": "@agency/typescript-config",
@@ -674,6 +698,7 @@ Every other package extends one of these configs. Create this first; everything 
 ```
 
 **`packages/typescript-config/base.json`**
+
 ```json
 {
   "$schema": "https://json.schemastore.org/tsconfig",
@@ -695,6 +720,7 @@ Every other package extends one of these configs. Create this first; everything 
 ```
 
 **`packages/typescript-config/nextjs.json`**
+
 ```json
 {
   "$schema": "https://json.schemastore.org/tsconfig",
@@ -714,24 +740,25 @@ Every other package extends one of these configs. Create this first; everything 
 ### `packages/eslint-config`
 
 **`packages/eslint-config/index.js`**
+
 ```js
 module.exports = {
-  extends: [
-    'next/core-web-vitals',
-    'plugin:@typescript-eslint/recommended',
-  ],
+  extends: ['next/core-web-vitals', 'plugin:@typescript-eslint/recommended'],
   rules: {
     // Prevents accidental imports from the wrong package boundary.
     // Packages must never import from apps — it reverses the dependency graph.
-    'no-restricted-imports': ['error', {
-      patterns: [
-        {
-          group: ['../apps/**'],
-          message: 'Packages must not import from apps. Invert the dependency.'
-        }
-      ]
-    }]
-  }
+    'no-restricted-imports': [
+      'error',
+      {
+        patterns: [
+          {
+            group: ['../apps/**'],
+            message: 'Packages must not import from apps. Invert the dependency.',
+          },
+        ],
+      },
+    ],
+  },
 }
 ```
 
@@ -740,6 +767,7 @@ module.exports = {
 This package is where all shared UI components live. shadcn/ui components are copied — not installed as a dependency — into this package, not into individual apps. Every client app gets the same component code; appearance is customised via design tokens.
 
 **`packages/ui/package.json`**
+
 ```json
 {
   "name": "@agency/ui",
@@ -770,6 +798,7 @@ This package is where all shared UI components live. shadcn/ui components are co
 ```
 
 **`packages/ui/src/lib/utils.ts`**
+
 ```ts
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -782,6 +811,7 @@ export function cn(...inputs: ClassValue[]) {
 ```
 
 To initialise shadcn components into this package:
+
 ```bash
 cd packages/ui
 pnpm dlx shadcn@latest init
@@ -793,6 +823,7 @@ pnpm dlx shadcn@latest init
 This package wraps Supabase and makes it type-safe. Nothing outside this package ever calls Supabase directly. This makes testing and migration significantly easier.
 
 **`packages/database/src/client.ts`**
+
 ```ts
 import { createServerClient } from '@supabase/ssr'
 import type { Database } from './types'
@@ -809,7 +840,7 @@ export function createSupabaseServerClient(cookieStore: {
       cookies: {
         getAll() {
           // Returns cookies for the server-side session
-          return Object.keys(cookieStore).map(name => ({
+          return Object.keys(cookieStore).map((name) => ({
             name,
             value: cookieStore.get(name)?.value ?? '',
           }))
@@ -843,9 +874,7 @@ This module handles tenant resolution in your Next.js `middleware.ts` file. It m
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function resolveTenantFromRequest(
-  request: NextRequest
-): Promise<string | null> {
+export async function resolveTenantFromRequest(request: NextRequest): Promise<string | null> {
   // In production: resolve by domain
   // In development: resolve by NEXT_PUBLIC_TENANT_SLUG env var
   if (process.env.NODE_ENV === 'development') {
@@ -862,34 +891,28 @@ export async function resolveTenantFromRequest(
     { cookies: { getAll: () => [], setAll: () => {} } }
   )
 
-  const { data } = await supabase
-    .from('tenants')
-    .select('slug')
-    .eq('domain', hostname)
-    .single()
+  const { data } = await supabase.from('tenants').select('slug').eq('domain', hostname).single()
 
   return data?.slug ?? null
 }
 ```
 
 **`packages/database/src/auth.ts`**
+
 ```ts
 import { createClient } from '@supabase/supabase-js'
 
 // Creates the admin (service role) client.
 // This bypasses RLS entirely — only use server-side for admin operations.
 function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 }
 
 export async function assignUserToTenant(userId: string, tenantId: string) {
   const supabaseAdmin = getAdminClient()
 
   const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-    app_metadata: { tenant_id: tenantId }
+    app_metadata: { tenant_id: tenantId },
   })
 
   if (error) {
@@ -941,6 +964,7 @@ export async function createUserForTenant({
 A tenant-aware PostHog abstraction. Every event is automatically tagged with the tenant identifier, preventing cross-tenant data pollution in your analytics.
 
 **`packages/analytics/src/client.ts`**
+
 ```ts
 'use client'
 
@@ -969,10 +993,7 @@ export function initAnalytics(tenantSlug: string) {
   })
 }
 
-export function captureEvent(
-  event: string,
-  properties?: Record<string, unknown>
-) {
+export function captureEvent(event: string, properties?: Record<string, unknown>) {
   if (typeof window !== 'undefined') {
     posthog.capture(event, properties)
   }
@@ -986,6 +1007,7 @@ export function identifyUser(userId: string, traits?: Record<string, unknown>) {
 ```
 
 **`packages/analytics/src/server.ts`**
+
 ```ts
 // Server-side PostHog event capture for Server Actions and Route Handlers.
 // Uses PostHog's Node.js client to capture events without a browser.
@@ -995,14 +1017,11 @@ let serverClient: PostHog | null = null
 
 function getServerClient(): PostHog {
   if (!serverClient) {
-    serverClient = new PostHog(
-      process.env.NEXT_PUBLIC_POSTHOG_KEY!,
-      {
-        host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://app.posthog.com',
-        flushAt: 20,
-        flushInterval: 10000,
-      }
-    )
+    serverClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://app.posthog.com',
+      flushAt: 20,
+      flushInterval: 10000,
+    })
   }
   return serverClient
 }
@@ -1033,6 +1052,7 @@ pnpm scaffold
 To create a client app manually (or run `pnpm scaffold` which does this automatically):
 
 **`apps/prospective-clients/riley-day-care/next.config.ts`** (or `apps/prospective-clients/[slug]/` / `apps/clients/[slug]/` for a new client)
+
 ```ts
 import type { NextConfig } from 'next'
 
@@ -1050,18 +1070,20 @@ export default nextConfig
 ```
 
 **`apps/prospective-clients/riley-day-care/src/app/globals.css`** (or `[slug].css` for a new client)
+
 ```css
 /* 1. Import Tailwind v4 — this replaces the three @tailwind directives from v3 */
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* 2. Import the compiled token file for this client.
       This file is generated by `pnpm tokens:build` from the JSON source in
       packages/design-tokens/tokens/clients/riley-day-care.json
       It defines @theme {} blocks that Tailwind uses to generate utility classes. */
-@import "../../tokens/riley-day-care.css";
+@import '../../tokens/riley-day-care.css';
 ```
 
 **`apps/prospective-clients/riley-day-care/src/middleware.ts`** (or same path for a new client)
+
 ```ts
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
@@ -1084,9 +1106,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
@@ -1117,7 +1137,7 @@ Tailwind v4 eliminated the JavaScript configuration file entirely. Your design d
 In v3: `tailwind.config.js` → JavaScript object → Tailwind utilities  
 In v4: `@theme {}` in CSS → CSS custom properties → Tailwind utilities
 
-When you write `--color-brand-primary: #2d6a4f` inside `@theme {}`, Tailwind automatically generates `bg-brand-primary`, `text-brand-primary`, `border-brand-primary`, and every other colour utility class. Your design tokens *are* your Tailwind customisation — there is nothing else to configure.
+When you write `--color-brand-primary: #2d6a4f` inside `@theme {}`, Tailwind automatically generates `bg-brand-primary`, `text-brand-primary`, `border-brand-primary`, and every other colour utility class. Your design tokens _are_ your Tailwind customisation — there is nothing else to configure.
 
 ### Three @theme modes and when to use each
 
@@ -1142,6 +1162,7 @@ Tokens follow a three-tier hierarchy. This prevents accidental coupling between 
 Style Dictionary v4 auto-detects the W3C Design Token Community Group format (using `$value` and `$type` prefixes). Always set `usesDtcg: true` in your config.
 
 **`packages/design-tokens/tokens/primitive/color.json`**
+
 ```json
 {
   "color": {
@@ -1152,7 +1173,7 @@ Style Dictionary v4 auto-detects the W3C Design Token Community Group format (us
         "200": { "$type": "color", "$value": "#5B8DC9" }
       },
       "neutral": {
-        "0":   { "$type": "color", "$value": "#FFFFFF" },
+        "0": { "$type": "color", "$value": "#FFFFFF" },
         "100": { "$type": "color", "$value": "#F5F7FA" },
         "900": { "$type": "color", "$value": "#111827" }
       }
@@ -1162,17 +1183,18 @@ Style Dictionary v4 auto-detects the W3C Design Token Community Group format (us
 ```
 
 **`packages/design-tokens/tokens/semantic/color.json`**
+
 ```json
 {
   "color": {
     "semantic": {
       "action": {
-        "primary":   { "$type": "color", "$value": "{color.primitive.navy.500}" },
+        "primary": { "$type": "color", "$value": "{color.primitive.navy.500}" },
         "secondary": { "$type": "color", "$value": "{color.primitive.navy.300}" }
       },
       "text": {
         "default": { "$type": "color", "$value": "{color.primitive.neutral.900}" },
-        "muted":   { "$type": "color", "$value": "{color.primitive.neutral.100}" }
+        "muted": { "$type": "color", "$value": "{color.primitive.neutral.100}" }
       },
       "background": {
         "surface": { "$type": "color", "$value": "{color.primitive.neutral.0}" }
@@ -1183,6 +1205,7 @@ Style Dictionary v4 auto-detects the W3C Design Token Community Group format (us
 ```
 
 **`packages/design-tokens/tokens/clients/riley-day-care.json`**
+
 ```json
 {
   "client": "riley-day-care",
@@ -1204,14 +1227,11 @@ Style Dictionary v4 auto-detects the W3C Design Token Community Group format (us
 ### Style Dictionary v4 configuration
 
 **`packages/design-tokens/sd.config.ts`**
+
 ```typescript
 import StyleDictionary from 'style-dictionary'
 import type { Config, FormatFnArguments } from 'style-dictionary/types'
-import {
-  usesReferences,
-  getReferences,
-  outputReferencesTransformed,
-} from 'style-dictionary/utils'
+import { usesReferences, getReferences, outputReferencesTransformed } from 'style-dictionary/utils'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Custom format: outputs three CSS blocks as Tailwind v4 expects them
@@ -1225,7 +1245,7 @@ StyleDictionary.registerFormat({
       .map((token) => {
         const value = usesReferences(token.original.$value ?? token.original.value)
           ? outputReferencesTransformed({ token, dictionary })
-          : token.$value ?? token.value
+          : (token.$value ?? token.value)
         return `  --${token.name}: ${value};`
       })
       .join('\n')
@@ -1246,40 +1266,46 @@ const config: Config = {
       // Primitives go into :root — Tailwind generates NO utility classes for these
       transformGroup: 'css',
       buildPath: 'dist/css/',
-      files: [{
-        destination: 'primitives.css',
-        format: 'css/tw-v4-theme',
-        options: { blockType: ':root' },
-        filter: (token) => token.path[0] === 'color' && token.path[1] === 'primitive',
-      }],
+      files: [
+        {
+          destination: 'primitives.css',
+          format: 'css/tw-v4-theme',
+          options: { blockType: ':root' },
+          filter: (token) => token.path[0] === 'color' && token.path[1] === 'primitive',
+        },
+      ],
     },
     'css/semantic': {
       // Semantic tokens go into @theme inline — generates cascade-overridable utilities
       transformGroup: 'css',
       buildPath: 'dist/css/',
-      files: [{
-        destination: 'semantic.css',
-        format: 'css/tw-v4-theme',
-        options: { blockType: '@theme inline', outputReferences: outputReferencesTransformed },
-        filter: (token) => token.path[0] === 'color' && token.path[1] === 'semantic',
-      }],
+      files: [
+        {
+          destination: 'semantic.css',
+          format: 'css/tw-v4-theme',
+          options: { blockType: '@theme inline', outputReferences: outputReferencesTransformed },
+          filter: (token) => token.path[0] === 'color' && token.path[1] === 'semantic',
+        },
+      ],
     },
     'css/component': {
       // Component tokens go into :root — consumed via var() in components
       transformGroup: 'css',
       buildPath: 'dist/css/',
-      files: [{
-        destination: 'component-vars.css',
-        format: 'css/tw-v4-theme',
-        options: { blockType: ':root' },
-        filter: (token) => token.path[0] === 'component',
-      }],
+      files: [
+        {
+          destination: 'component-vars.css',
+          format: 'css/tw-v4-theme',
+          options: { blockType: ':root' },
+          filter: (token) => token.path[0] === 'component',
+        },
+      ],
     },
   },
 }
 
 const sd = new StyleDictionary(config)
-await sd.hasInitialized  // v4: must await before accessing tokens
+await sd.hasInitialized // v4: must await before accessing tokens
 
 // Parallel builds — ~60% faster than sequential on 3+ platforms
 await Promise.all([
@@ -1296,6 +1322,7 @@ console.log('✅ Design tokens built')
 The `tokens/clients/*.json` files contain simple per-client overrides. The build script compiles them directly to CSS without going through the full Style Dictionary pipeline — they are brand-level overrides, not a complex token graph.
 
 **`packages/design-tokens/scripts/build-clients.ts`**
+
 ```typescript
 import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs'
 import { join } from 'path'
@@ -1335,12 +1362,10 @@ ${fontVars}
 `
 }
 
-const files = readdirSync(tokensDir).filter(f => f.endsWith('.json'))
+const files = readdirSync(tokensDir).filter((f) => f.endsWith('.json'))
 
 for (const file of files) {
-  const tokens: ClientTokenFile = JSON.parse(
-    readFileSync(join(tokensDir, file), 'utf-8')
-  )
+  const tokens: ClientTokenFile = JSON.parse(readFileSync(join(tokensDir, file), 'utf-8'))
   const slug = tokens.client
   const outputDir = join(outputBase, slug, 'tokens')
 
@@ -1367,8 +1392,8 @@ Add `tokens:build` to your `packages/design-tokens/package.json`:
 
 ```css
 /* apps/prospective-clients/riley-day-care/src/app/globals.css */
-@import "tailwindcss";
-@import "../../tokens/riley-day-care.css";
+@import 'tailwindcss';
+@import '../../tokens/riley-day-care.css';
 
 /* Dark mode: override semantic tokens with dark-appropriate values.
    Because semantic tokens use @theme inline, overriding the CSS variable
@@ -1420,6 +1445,7 @@ The connection string difference: `db.xxxx.supabase.co:5432/postgres` (direct �
 Always use migrations. Never edit the database directly through the Supabase dashboard. Migrations are version-controlled in `supabase/migrations/` and can be replayed on any environment.
 
 **`supabase/migrations/001_tenants.sql`**
+
 ```sql
 -- Create the tenants table. This is the source of truth for all tenant metadata.
 CREATE TABLE public.tenants (
@@ -1446,6 +1472,7 @@ CREATE POLICY "Tenants can read their own row"
 ```
 
 **`supabase/migrations/002_rls_policies.sql`**
+
 ```sql
 -- Example: a posts table for marketing content.
 -- Every content table follows this exact pattern.
@@ -1538,6 +1565,7 @@ CREATE POLICY "Tenants delete own posts"
 ```
 
 **`supabase/migrations/003_audit_log.sql`**
+
 ```sql
 -- Audit log: records every data modification with tenant context.
 -- Essential for debugging data issues and HIPAA compliance.
@@ -1600,6 +1628,7 @@ RLS is either fast or catastrophically slow depending entirely on whether you fo
 pgTAP is PostgreSQL's native TAP-compliant unit testing framework. Supabase ships it as a first-class feature accessible via `supabase test db`. These tests must pass before any migration touches production.
 
 **`supabase/tests/database/000-setup-test-hooks.sql`**
+
 ```sql
 -- Installs pgTAP and the Basejump test helpers.
 -- Runs first (alphabetical ordering).
@@ -1648,6 +1677,7 @@ ROLLBACK;
 ```
 
 **`supabase/tests/database/00-rls-coverage.sql`**
+
 ```sql
 -- Asserts that EVERY table in the public schema has RLS enabled.
 -- Any new migration that adds a table without ENABLE ROW LEVEL SECURITY
@@ -1664,6 +1694,7 @@ ROLLBACK;
 ```
 
 **`supabase/tests/database/01-tenant-isolation.sql`**
+
 ```sql
 -- Cross-tenant attack simulation.
 -- Every attack scenario must be blocked for the test to pass.
@@ -1729,6 +1760,7 @@ ROLLBACK;
 ```
 
 Run tests:
+
 ```bash
 supabase test db           # run all tests
 supabase test db supabase/tests/database/01-tenant-isolation.sql  # run one file
@@ -1762,6 +1794,7 @@ Inngest was designed for serverless from day one. Your functions live at an `/ap
 Install and configure the Inngest client. The Vercel Marketplace integration auto-injects `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` environment variables.
 
 **`apps/prospective-clients/riley-day-care/src/inngest/client.ts`** (or agency-admin for Inngest)
+
 ```typescript
 import { Inngest } from 'inngest'
 
@@ -1770,7 +1803,7 @@ export const inngest = new Inngest({
   // Checkpointing (December 2025): near-zero inter-step latency for AI workflows.
   // maxRuntime must be ~20% below your Vercel maxDuration to avoid mid-checkpoint timeouts.
   checkpointing: {
-    maxRuntime: '260s',  // below Vercel's 300s maxDuration
+    maxRuntime: '260s', // below Vercel's 300s maxDuration
     bufferedSteps: 2,
     maxInterval: '10s',
   },
@@ -1778,6 +1811,7 @@ export const inngest = new Inngest({
 ```
 
 **`apps/agency-admin/src/app/api/inngest/route.ts`** (Inngest lives in agency-admin)
+
 ```typescript
 import { serve } from 'inngest/next'
 import { inngest } from '../../../inngest/client'
@@ -1800,6 +1834,7 @@ export const { GET, POST, PUT } = serve({
 This workflow fires when a new client is added to the platform. It runs across multiple days with a human-approval step in between.
 
 **`apps/agency-admin/src/inngest/functions/onboarding.ts`**
+
 ```typescript
 import { inngest } from '../client'
 
@@ -1840,7 +1875,7 @@ export const onboardingWorkflow = inngest.createFunction(
     // If the 7-day window expires, the workflow continues with the timeout branch.
     const profileEvent = await step.waitForEvent('await-profile-completion', {
       event: 'agency/client.profile-completed',
-      match: 'data.tenantId',  // only matches events with the same tenantId
+      match: 'data.tenantId', // only matches events with the same tenantId
       timeout: '7d',
     })
 
@@ -1881,12 +1916,12 @@ The Inngest Hobby tier covers 50,000 steps/month free. The cliff to the Pro tier
 
 PostHog publishes a candid statement in their documentation: for most teams below ~5M events/month, the math on self-hosting never works out. Here is the accurate break-even analysis as of March 2026:
 
-| Monthly Event Volume | Cloud Cost | Hetzner CCX23 Infra | Ops Cost (@$50/hr, 2hr/mo) | Net Self-Hosted Cost | Net Saving |
-|---|---|---|---|---|---|
-| 1M | **$0** | ~$34 | ~$100 | ~$134 | Cloud wins by $134 |
-| 3M | ~$84 | ~$34 | ~$100 | ~$134 | Cloud wins by $50 |
-| **~4–5M** | ~$130–150 | ~$34 | ~$100 | ~$134 | **Break-even** |
-| 10M | ~$324 | ~$34 | ~$100 | ~$134 | Self-hosted saves ~$190 |
+| Monthly Event Volume | Cloud Cost | Hetzner CCX23 Infra | Ops Cost (@$50/hr, 2hr/mo) | Net Self-Hosted Cost | Net Saving              |
+| -------------------- | ---------- | ------------------- | -------------------------- | -------------------- | ----------------------- |
+| 1M                   | **$0**     | ~$34                | ~$100                      | ~$134                | Cloud wins by $134      |
+| 3M                   | ~$84       | ~$34                | ~$100                      | ~$134                | Cloud wins by $50       |
+| **~4–5M**            | ~$130–150  | ~$34                | ~$100                      | ~$134                | **Break-even**          |
+| 10M                  | ~$324      | ~$34                | ~$100                      | ~$134                | Self-hosted saves ~$190 |
 
 If most of your clients use identified-user tracking (logged-in users rather than anonymous), Cloud's identified-event pricing is 5× more expensive, pushing the break-even down to ~2–3M events/month.
 
@@ -1903,6 +1938,7 @@ The correct Hetzner instance is the **CCX23** (4 dedicated AMD vCPUs, 16 GB RAM,
 ClickHouse's default `background_pool_size` is 16. On a 4-vCPU node, this alone causes 300%+ CPU saturation even at modest event volumes. Setting it to 2 before first launch is mandatory.
 
 **`clickhouse/config.d/memory.xml`**
+
 ```xml
 <?xml version="1.0"?>
 <clickhouse>
@@ -1936,11 +1972,12 @@ In `packages/analytics/src/client.ts` (shown in §6), the `initAnalytics(tenantS
 ### GDPR compliance
 
 For EU clients, configure the PostHog SDK to disable raw IP capture:
+
 ```typescript
 posthog.init(key, {
   api_host: host,
   loaded: (ph) => {
-    ph.set_config({ capture_ip: false })  // disable IP capture
+    ph.set_config({ capture_ip: false }) // disable IP capture
   },
 })
 ```
@@ -1960,7 +1997,6 @@ Getting consistent, useful output from Cursor and Windsurf requires explicit rul
 description: Core project conventions and stack. Applied to every request.
 alwaysApply: true
 ---
-
 # Agency Platform — Core Conventions
 
 ## Stack
@@ -1999,13 +2035,12 @@ alwaysApply: true
 ---
 description: Supabase and database patterns
 globs:
-  - "packages/database/**"
-  - "supabase/**"
-  - "**/actions/**"
-  - "**/api/**"
+  - 'packages/database/**'
+  - 'supabase/**'
+  - '**/actions/**'
+  - '**/api/**'
 alwaysApply: false
 ---
-
 # Database Patterns
 
 ## Tenant isolation — non-negotiable
@@ -2181,6 +2216,7 @@ turbo link
 ```
 
 After linking, set these environment variables in GitHub Actions:
+
 ```
 TURBO_TOKEN: (from Vercel → Settings → Tokens)
 TURBO_TEAM:  (your Vercel team slug)
@@ -2193,13 +2229,14 @@ With remote caching enabled, a PR that only changes one client app will have eve
 If you choose the single-project model, this middleware routes all tenants through one deployment:
 
 **`apps/agency-platform/src/middleware.ts`**
+
 ```ts
 import { NextRequest, NextResponse } from 'next/server'
 
 // Tenant manifest — at 50 clients, replace with Redis lookup (see §19)
 const TENANT_ROUTES: Record<string, string> = {
-  'rileydaycare.com':    '/tenants/riley-day-care',
-  'thebarbercave.com':   '/tenants/the-barber-cave',
+  'rileydaycare.com': '/tenants/riley-day-care',
+  'thebarbercave.com': '/tenants/the-barber-cave',
   // Add each client's domain here
 }
 
@@ -2209,9 +2246,7 @@ export function middleware(request: NextRequest) {
 
   if (tenantPath) {
     // Rewrite the URL to the tenant's sub-path without changing the visible URL
-    return NextResponse.rewrite(
-      new URL(`${tenantPath}${request.nextUrl.pathname}`, request.url)
-    )
+    return NextResponse.rewrite(new URL(`${tenantPath}${request.nextUrl.pathname}`, request.url))
   }
 
   return NextResponse.next()
@@ -2248,7 +2283,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Required for --affected to compare against base branch
+          fetch-depth: 0 # Required for --affected to compare against base branch
 
       - uses: pnpm/action-setup@v4
         with:
@@ -2295,7 +2330,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pgtap-tap-results
-          path: "**/*.tap"
+          path: '**/*.tap'
           retention-days: 14
 
       - name: Stop Supabase
@@ -2305,7 +2340,7 @@ jobs:
   rls-supashield:
     name: Supashield RLS Audit
     runs-on: ubuntu-latest
-    needs: rls-tests    # runs after pgTAP confirms DB is healthy
+    needs: rls-tests # runs after pgTAP confirms DB is healthy
 
     steps:
       - uses: actions/checkout@v4
@@ -2390,6 +2425,7 @@ These are documented, real-world attack patterns against multi-tenant Supabase a
 **What it is:** A user modifies `user_metadata.tenant_id` to a different tenant's UUID, and your application reads from `user_metadata` instead of `app_metadata` to set the database session context.
 
 **How to detect:**
+
 ```bash
 # Search your codebase for any code reading from user_metadata for tenant context
 grep -r "user_metadata" --include="*.ts" --include="*.tsx" packages/database/ apps/
@@ -2404,6 +2440,7 @@ Any result that feeds into `set_config` or a database query is a critical vulner
 **What it is:** Two tenants' cached data shares the same Redis key because the cache key does not include the `tenant_id`. Tenant A receives Tenant B's cached response.
 
 **The fix:**
+
 ```ts
 // WRONG — no tenant scoping
 const cached = await redis.get(`posts:${slug}`)
@@ -2420,6 +2457,7 @@ Every cache key in your system must begin with `tenant:{id}:`. This is the cache
 **What it is:** The `SUPABASE_SERVICE_ROLE_KEY` appears in client-side code, browser network requests, or frontend build artefacts. The service role key bypasses all RLS policies completely.
 
 **How to detect:**
+
 ```bash
 # Should return zero results in app code
 grep -r "service_role\|SERVICE_ROLE" --include="*.tsx" --include="*.ts" apps/
@@ -2435,12 +2473,13 @@ grep "SUPABASE_SERVICE_ROLE_KEY" .env.local
 **What it is:** An API endpoint fetches data by ID without verifying that the requesting user's `tenant_id` matches the record's `tenant_id`. RLS in Supabase protects against this when you use the user's JWT, but the risk arises when you use the service role client in an API endpoint.
 
 **The fix:** Only use the anon key client for user-facing data operations. If you must use the service role client for a legitimate admin operation, add explicit tenant scoping:
+
 ```ts
 const post = await adminClient
   .from('posts')
   .select('*')
   .eq('id', postId)
-  .eq('tenant_id', verifiedTenantId)  // explicit tenant scope when using admin client
+  .eq('tenant_id', verifiedTenantId) // explicit tenant scope when using admin client
   .single()
 ```
 
@@ -2460,11 +2499,11 @@ const post = await adminClient
 
 RLS policies are implicit WHERE clauses appended to every query. Without an index on the column being filtered, PostgreSQL must scan every row in the table. The performance numbers are unambiguous:
 
-| Condition | Table Size | Execution Time |
-|---|---|---|
-| No index on policy column | 100,000 rows | **171ms** |
-| With index on policy column | 100,000 rows | **0.046ms** |
-| No index | 1,000,000 rows | **Timeout** |
+| Condition                   | Table Size     | Execution Time |
+| --------------------------- | -------------- | -------------- |
+| No index on policy column   | 100,000 rows   | **171ms**      |
+| With index on policy column | 100,000 rows   | **0.046ms**    |
+| No index                    | 1,000,000 rows | **Timeout**    |
 
 The index is not optional. It is the difference between a working application and a broken one.
 
@@ -2567,13 +2606,13 @@ The architecture in this guide handles the 0–50 client range without modificat
 
 ### Phase 1 → 2 transition triggers
 
-| Signal | Threshold | Try This First |
-|---|---|---|
-| p95 query time | >500ms for 10 consecutive days | Add `(tenant_id, lookup_col)` composite index |
-| Sequential scan rate | >15% of queries via `pg_stat_statements` | Add missing index on RLS policy column |
-| Turborepo CI cold build | >8 minutes consistently | Migrate to Nx independently of DB changes |
-| Supavisor pool saturation | >80% client connections used | Tune `pool_size` and `connection_timeout` first |
-| One tenant consuming >20% DB CPU | Persistent | Move that specific tenant to a dedicated project |
+| Signal                           | Threshold                                | Try This First                                   |
+| -------------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| p95 query time                   | >500ms for 10 consecutive days           | Add `(tenant_id, lookup_col)` composite index    |
+| Sequential scan rate             | >15% of queries via `pg_stat_statements` | Add missing index on RLS policy column           |
+| Turborepo CI cold build          | >8 minutes consistently                  | Migrate to Nx independently of DB changes        |
+| Supavisor pool saturation        | >80% client connections used             | Tune `pool_size` and `connection_timeout` first  |
+| One tenant consuming >20% DB CPU | Persistent                               | Move that specific tenant to a dedicated project |
 
 ### Phase 2: 50–200 clients (Nx + Redis caching)
 
@@ -2593,11 +2632,7 @@ async function getTenantByDomain(domain: string): Promise<Tenant | null> {
   if (cached) return JSON.parse(cached)
 
   // Fall through to Supabase
-  const { data } = await supabaseAdmin
-    .from('tenants')
-    .select('*')
-    .eq('domain', domain)
-    .single()
+  const { data } = await supabaseAdmin.from('tenants').select('*').eq('domain', domain).single()
 
   if (data) {
     await redis.setex(cacheKey, 300, JSON.stringify(data))
@@ -2611,11 +2646,11 @@ async function getTenantByDomain(domain: string): Promise<Tenant | null> {
 
 ### Phase 2 → 3 transition triggers
 
-| Signal | Threshold | Note |
-|---|---|---|
-| p95 query time post-Redis | >300ms for 10 days (after cache is warm) | Systemic bottleneck confirmed |
-| Any tenant requires HIPAA/SOC2 | Immediately | Do not wait; begin Phase 3 now |
-| One tenant >20% DB CPU | Persistent | Move that tenant first; full migration may not be needed |
+| Signal                         | Threshold                                | Note                                                     |
+| ------------------------------ | ---------------------------------------- | -------------------------------------------------------- |
+| p95 query time post-Redis      | >300ms for 10 days (after cache is warm) | Systemic bottleneck confirmed                            |
+| Any tenant requires HIPAA/SOC2 | Immediately                              | Do not wait; begin Phase 3 now                           |
+| One tenant >20% DB CPU         | Persistent                               | Move that tenant first; full migration may not be needed |
 
 **Staffing gate:** Schema-per-tenant migration without a second engineer is high-risk. During the dual-write phase, you need one person monitoring replication fidelity while another handles application routing changes. Block Phase 3 migration until a second engineer is available (full-time or contract).
 
@@ -2724,93 +2759,93 @@ npx inngest-cli@latest dev -u http://localhost:3000/api/inngest
 
 ### Environment variable reference
 
-| Variable | Scope | Notes |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Public | Safe to expose to browser |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Safe to expose; RLS protects data |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | Bypasses all RLS — never public |
-| `NEXT_PUBLIC_POSTHOG_KEY` | Public | Per-client PostHog project key |
-| `NEXT_PUBLIC_POSTHOG_HOST` | Public | Self-hosted PostHog URL |
-| `NEXT_PUBLIC_TENANT_SLUG` | Public | Identifies this deployment's client |
-| `INNGEST_SIGNING_KEY` | Server only | Signs webhook requests from Inngest |
-| `INNGEST_EVENT_KEY` | Server only | Sends events to Inngest |
-| `SUPABASE_ACCESS_TOKEN` | CI/CD only | For Supabase CLI operations in GitHub Actions |
-| `SUPABASE_PROJECT_REF` | CI/CD only | Project reference for `supabase link` |
-| `TURBO_TOKEN` | CI/CD only | Remote cache authentication |
-| `TURBO_TEAM` | CI/CD only | Remote cache team identifier |
+| Variable                        | Scope           | Notes                                         |
+| ------------------------------- | --------------- | --------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Public          | Safe to expose to browser                     |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public          | Safe to expose; RLS protects data             |
+| `SUPABASE_SERVICE_ROLE_KEY`     | **Server only** | Bypasses all RLS — never public               |
+| `NEXT_PUBLIC_POSTHOG_KEY`       | Public          | Per-client PostHog project key                |
+| `NEXT_PUBLIC_POSTHOG_HOST`      | Public          | Self-hosted PostHog URL                       |
+| `NEXT_PUBLIC_TENANT_SLUG`       | Public          | Identifies this deployment's client           |
+| `INNGEST_SIGNING_KEY`           | Server only     | Signs webhook requests from Inngest           |
+| `INNGEST_EVENT_KEY`             | Server only     | Sends events to Inngest                       |
+| `SUPABASE_ACCESS_TOKEN`         | CI/CD only      | For Supabase CLI operations in GitHub Actions |
+| `SUPABASE_PROJECT_REF`          | CI/CD only      | Project reference for `supabase link`         |
+| `TURBO_TOKEN`                   | CI/CD only      | Remote cache authentication                   |
+| `TURBO_TEAM`                    | CI/CD only      | Remote cache team identifier                  |
 
 ### Design token naming conventions
 
-| Tier | Pattern | Example |
-|---|---|---|
-| Primitive | `--color-{palette}-{scale}` | `--color-navy-500` |
-| Semantic | `--color-{role}` | `--color-brand-primary` |
-| Component | `--component-{name}-{property}` | `--component-button-color-background` |
-| Typography | `--font-{role}` | `--font-sans`, `--font-display` |
-| Font size | `--text-{name}` | `--text-2xl` |
-| Line height | `--text-{name}--line-height` | `--text-2xl--line-height` |
-| Spacing | `--spacing-{name}` | `--spacing-18` |
-| Radius | `--radius-{scale}` | `--radius-xl` |
+| Tier        | Pattern                         | Example                               |
+| ----------- | ------------------------------- | ------------------------------------- |
+| Primitive   | `--color-{palette}-{scale}`     | `--color-navy-500`                    |
+| Semantic    | `--color-{role}`                | `--color-brand-primary`               |
+| Component   | `--component-{name}-{property}` | `--component-button-color-background` |
+| Typography  | `--font-{role}`                 | `--font-sans`, `--font-display`       |
+| Font size   | `--text-{name}`                 | `--text-2xl`                          |
+| Line height | `--text-{name}--line-height`    | `--text-2xl--line-height`             |
+| Spacing     | `--spacing-{name}`              | `--spacing-18`                        |
+| Radius      | `--radius-{scale}`              | `--radius-xl`                         |
 
 ### Monthly cost by stage
 
-| Stage | Supabase | Vercel | Other | Total |
-|---|---|---|---|---|
-| Development | $0 | $0 | $0 | **$0** |
-| First client live | $25 | $20 | $0 | **~$45** |
-| 5–10 clients | $25 | $20 | $34 (PostHog) | **~$80** |
-| Per HIPAA client | +$100 | +$0 | — | **+$100** |
-| 9 clients (cliff) | $25 | **$1,667** (Enterprise) | — | **~$1,700** |
-| 50 clients (middleware) | $25 | $60 | $100 | **~$185** |
-| 50 clients (per-project) | $25 | $1,667 | $100 | **~$1,800** |
+| Stage                    | Supabase | Vercel                  | Other         | Total       |
+| ------------------------ | -------- | ----------------------- | ------------- | ----------- |
+| Development              | $0       | $0                      | $0            | **$0**      |
+| First client live        | $25      | $20                     | $0            | **~$45**    |
+| 5–10 clients             | $25      | $20                     | $34 (PostHog) | **~$80**    |
+| Per HIPAA client         | +$100    | +$0                     | —             | **+$100**   |
+| 9 clients (cliff)        | $25      | **$1,667** (Enterprise) | —             | **~$1,700** |
+| 50 clients (middleware)  | $25      | $60                     | $100          | **~$185**   |
+| 50 clients (per-project) | $25      | $1,667                  | $100          | **~$1,800** |
 
 ### Supabase free tier limits (2026)
 
-| Resource | Free Limit | Pro Limit |
-|---|---|---|
-| Active projects | 2 | Unlimited |
-| Database storage | 500 MB | 8 GB included |
-| Monthly active users | 50,000 | 100,000 included |
-| Bandwidth | 2 GB | 250 GB included |
-| Backups | None | Daily, 7-day retention |
-| Project pausing | After 7 days inactive | Never |
-| Monthly cost | $0 | $25/project |
+| Resource             | Free Limit            | Pro Limit              |
+| -------------------- | --------------------- | ---------------------- |
+| Active projects      | 2                     | Unlimited              |
+| Database storage     | 500 MB                | 8 GB included          |
+| Monthly active users | 50,000                | 100,000 included       |
+| Bandwidth            | 2 GB                  | 250 GB included        |
+| Backups              | None                  | Daily, 7-day retention |
+| Project pausing      | After 7 days inactive | Never                  |
+| Monthly cost         | $0                    | $25/project            |
 
 ### pgTAP assertion reference
 
-| Function | Use Case |
-|---|---|
-| `ok(boolean, description)` | Generic pass/fail assertion |
-| `is(actual, expected, description)` | Equality check |
-| `is_empty(query, description)` | Assert query returns zero rows — RLS blocks work |
-| `isnt_empty(query, description)` | Assert query returns at least one row — user can see their own data |
-| `throws_ok(query, errcode, errmsg, description)` | Assert query raises `42501` — INSERT was blocked |
-| `lives_ok(query, description)` | Assert query executes without error — catches false negatives |
-| `results_eq(query, array, description)` | Assert query results match exactly |
-| `plan(n)` | Declare the number of assertions in this test block |
-| `finish()` | Close the test plan; raises error if count mismatches |
+| Function                                         | Use Case                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------- |
+| `ok(boolean, description)`                       | Generic pass/fail assertion                                         |
+| `is(actual, expected, description)`              | Equality check                                                      |
+| `is_empty(query, description)`                   | Assert query returns zero rows — RLS blocks work                    |
+| `isnt_empty(query, description)`                 | Assert query returns at least one row — user can see their own data |
+| `throws_ok(query, errcode, errmsg, description)` | Assert query raises `42501` — INSERT was blocked                    |
+| `lives_ok(query, description)`                   | Assert query executes without error — catches false negatives       |
+| `results_eq(query, array, description)`          | Assert query results match exactly                                  |
+| `plan(n)`                                        | Declare the number of assertions in this test block                 |
+| `finish()`                                       | Close the test plan; raises error if count mismatches               |
 
 ### Inngest pricing thresholds
 
-| Scale | Plan | Monthly Cost |
-|---|---|---|
-| 0 → 50,000 steps | Hobby | $0 |
-| 50,000 → 1M steps | Pro | $75 |
-| 1M → 10M steps | Pro + add-ons | $200+ |
-| 10M+ steps | Temporal (graduate) | $100 min + infra |
+| Scale             | Plan                | Monthly Cost     |
+| ----------------- | ------------------- | ---------------- |
+| 0 → 50,000 steps  | Hobby               | $0               |
+| 50,000 → 1M steps | Pro                 | $75              |
+| 1M → 10M steps    | Pro + add-ons       | $200+            |
+| 10M+ steps        | Temporal (graduate) | $100 min + infra |
 
 ### Turborepo → Nx migration threshold
 
-| Repo Size | Tool | Key Reason |
-|---|---|---|
-| <15 packages | **Turborepo** | 2.8s cold build vs Nx's 8.3s |
-| 15–30 packages | Either | Turborepo simpler; Nx better with cross-domain imports |
-| 30+ packages (cross-domain) | **Nx** | Import-graph eliminates false-positive rebuilds |
-| 50+ packages (multi-team) | **Nx** | `enforce-module-boundaries` shrinks CI graph 20–30% |
-| 100+ packages | **Nx** | 7.47× faster than Turborepo (distributed execution) |
+| Repo Size                   | Tool          | Key Reason                                             |
+| --------------------------- | ------------- | ------------------------------------------------------ |
+| <15 packages                | **Turborepo** | 2.8s cold build vs Nx's 8.3s                           |
+| 15–30 packages              | Either        | Turborepo simpler; Nx better with cross-domain imports |
+| 30+ packages (cross-domain) | **Nx**        | Import-graph eliminates false-positive rebuilds        |
+| 50+ packages (multi-team)   | **Nx**        | `enforce-module-boundaries` shrinks CI graph 20–30%    |
+| 100+ packages               | **Nx**        | 7.47× faster than Turborepo (distributed execution)    |
 
 ---
 
-*Version 4.0 — Synthesised from nine source documents: Agency Platform Guide v3.0, Background Jobs Reference, Automated RLS Testing Reference, Style Dictionary v4 + Tailwind v4 Reference, Self-Hosted PostHog on Hetzner Reference, Scaling Architecture Reference, BookingWidget Architecture Reference, Platform Pricing Reference, and Tailwind v3→v4 Migration Guide. Enriched with targeted research on Turborepo/Nx selection, Supabase multi-tenancy, Vercel multi-site deployment, Sanity CMS architecture, and Inngest Next.js 16 compatibility. Verified against Next.js 16.1, Turborepo 2.7, Tailwind CSS v4, Style Dictionary v4, Supabase Supavisor, Inngest v3.51+, and platform pricing as of March 2026.*
+_Version 4.0 — Synthesised from nine source documents: Agency Platform Guide v3.0, Background Jobs Reference, Automated RLS Testing Reference, Style Dictionary v4 + Tailwind v4 Reference, Self-Hosted PostHog on Hetzner Reference, Scaling Architecture Reference, BookingWidget Architecture Reference, Platform Pricing Reference, and Tailwind v3→v4 Migration Guide. Enriched with targeted research on Turborepo/Nx selection, Supabase multi-tenancy, Vercel multi-site deployment, Sanity CMS architecture, and Inngest Next.js 16 compatibility. Verified against Next.js 16.1, Turborepo 2.7, Tailwind CSS v4, Style Dictionary v4, Supabase Supavisor, Inngest v3.51+, and platform pricing as of March 2026._
 
-*Written for a solo developer using Cursor and Windsurf, learning by trial and error.*
+_Written for a solo developer using Cursor and Windsurf, learning by trial and error._

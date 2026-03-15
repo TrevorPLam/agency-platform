@@ -43,6 +43,7 @@ agency-platform/
 Repeat these steps **on each machine** where you develop (e.g. PC, laptop). Each environment has its own clone and `.env.local`; the repo is designed for multi-environment use.
 
 1. **Clone and setup**
+
    ```bash
    git clone <repository-url>
    cd agency-platform
@@ -50,11 +51,13 @@ Repeat these steps **on each machine** where you develop (e.g. PC, laptop). Each
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 3. **Environment setup**
+
    ```bash
    cp .env.local.example .env.local
    # Edit .env.local with your actual values (per machine; file is gitignored)

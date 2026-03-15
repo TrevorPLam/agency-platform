@@ -6,12 +6,14 @@ const posts: Record<string, { title: string; date: string; content: string }> = 
   welcome: {
     title: 'Welcome to Riley Day Care',
     date: '2025-03-01',
-    content: 'We are excited to share updates and tips for families. Stay tuned for news about programs, events, and early learning resources.',
+    content:
+      'We are excited to share updates and tips for families. Stay tuned for news about programs, events, and early learning resources.',
   },
   'early-learning': {
     title: 'The Importance of Early Learning',
     date: '2025-02-15',
-    content: 'The first five years of life are critical for brain development. At Riley Day Care we use play-based learning to support literacy, math readiness, and social-emotional skills in a nurturing environment.',
+    content:
+      'The first five years of life are critical for brain development. At Riley Day Care we use play-based learning to support literacy, math readiness, and social-emotional skills in a nurturing environment.',
   },
 }
 
@@ -30,15 +32,17 @@ export default async function BlogPostPage({ params }: PageProps) {
   if (!post) notFound()
 
   return (
-    <main className="min-h-screen bg-background-primary text-text-primary">
-      <div className="container max-w-2xl mx-auto px-4 py-12">
+    <main className="bg-background-primary text-text-primary min-h-screen">
+      <div className="container mx-auto max-w-2xl px-4 py-12">
         <Link href="/blog">
-          <Button variant="outline" className="mb-8">← Back to Blog</Button>
+          <Button variant="outline" className="mb-8">
+            ← Back to Blog
+          </Button>
         </Link>
         <article>
-          <h1 className="text-4xl font-bold text-brand-primary mb-2">{post.title}</h1>
+          <h1 className="text-brand-primary mb-2 text-4xl font-bold">{post.title}</h1>
           <p className="text-text-secondary mb-8">{post.date}</p>
-          <div className="prose prose-slate max-w-none text-text-primary">
+          <div className="prose prose-slate text-text-primary max-w-none">
             <p className="text-text-secondary">{post.content}</p>
           </div>
         </article>

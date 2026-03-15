@@ -39,6 +39,13 @@ To run and verify Inngest locally:
 2. **Start the Inngest dev server**: in a second terminal run `npx inngest-cli@latest dev -u http://localhost:3001/api/inngest`. The dev UI is at http://localhost:8288.
 3. **Trigger an event**: in the dev UI use “Test Event”, or send a POST request to `http://localhost:8288/e/123` (dummy key `123`) with body:
    ```json
-   { "name": "agency/client.created", "data": { "tenantId": "<uuid>", "clientName": "Riverside Hotel", "clientEmail": "admin@example.com" } }
+   {
+     "name": "agency/client.created",
+     "data": {
+       "tenantId": "<uuid>",
+       "clientName": "Riverside Hotel",
+       "clientEmail": "admin@example.com"
+     }
+   }
    ```
    Use a valid UUID for `tenantId`. Step “provision-database” requires local Supabase running and `apps/agency-admin/.env.local` to have `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`; otherwise step 1 fails but step order and retry behaviour can still be confirmed in the UI.

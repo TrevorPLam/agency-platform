@@ -11,14 +11,21 @@ export function ContactForm() {
   const [state, formAction] = useActionState(submitContactForm, initialState)
 
   return (
-    <form action={formAction} className="space-y-4 max-w-md">
+    <form action={formAction} className="max-w-md space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
         <Input id="name" name="name" required placeholder="Your name" className="w-full" />
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" required placeholder="you@example.com" className="w-full" />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          required
+          placeholder="you@example.com"
+          className="w-full"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="message">Message</Label>
@@ -29,8 +36,8 @@ export function ContactForm() {
           rows={4}
           placeholder="How can we help?"
           className={cn(
-            'flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
-            'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+            'border-input bg-background ring-offset-background flex w-full rounded-md border px-3 py-2 text-sm',
+            'placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2'
           )}
         />
       </div>

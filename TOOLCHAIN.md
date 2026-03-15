@@ -7,33 +7,35 @@
 
 ## Core Development Tools
 
-| Tool | Required Version | Example / Verified | Verification Command |
-|------|------------------|--------------------|----------------------|
-| Node.js | 22.x or newer | v22.x / v25.x | `node --version` |
-| pnpm | 10.x.x | 10.32.1 | `pnpm --version` |
-| Turborepo | 2.7.x or newer | 2.8.17 | `turbo --version` or `pnpm exec turbo --version` |
-| Supabase CLI | Latest | 2.78.1 | `npx supabase --version` |
+| Tool         | Required Version | Example / Verified | Verification Command                             |
+| ------------ | ---------------- | ------------------ | ------------------------------------------------ |
+| Node.js      | 22.x or newer    | v22.x / v25.x      | `node --version`                                 |
+| pnpm         | 10.x.x           | 10.32.1            | `pnpm --version`                                 |
+| Turborepo    | 2.7.x or newer   | 2.8.17             | `turbo --version` or `pnpm exec turbo --version` |
+| Supabase CLI | Latest           | 2.78.1             | `npx supabase --version`                         |
 
 ## Per-Environment Checklist
 
 On **each** machine (PC, laptop, etc.) where you code, ensure:
 
-| Item | Notes |
-|------|-------|
+| Item           | Notes                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------- |
 | Docker Desktop | Required for local Supabase (`supabase start`). Start Docker on that machine before running Supabase. |
-| Git Identity | Configure once per machine: `git config --global user.name` / `user.email` |
-| IDE | Cursor, Windsurf, or VS Code — install on each environment as needed. |
+| Git Identity   | Configure once per machine: `git config --global user.name` / `user.email`                            |
+| IDE            | Cursor, Windsurf, or VS Code — install on each environment as needed.                                 |
 
 ## SaaS Accounts Setup Instructions
 
 ### Required Accounts
+
 1. **GitHub** ✅ - Already configured (trevo@users.noreply.github.com)
 2. **Supabase** - Visit https://supabase.com/sign-up to create free account
-3. **Vercel** - Visit https://vercel.com/signup to create free account  
+3. **Vercel** - Visit https://vercel.com/signup to create free account
 4. **Inngest** - Visit https://app.inngest.com/signup to create free account
 5. **PostHog Cloud** - Visit https://app.posthog.com/signup to create free account
 
 ### Account Setup Priority
+
 - **Immediate**: Supabase (required for T-11)
 - **Before Deployment**: Vercel (required for T-20)
 - **Background Jobs**: Inngest (required for T-16)
@@ -41,12 +43,12 @@ On **each** machine (PC, laptop, etc.) where you code, ensure:
 
 ## SaaS Accounts
 
-| Service | Status | Account Type |
-|---------|--------|--------------|
-| GitHub | ✅ Configured | trevo@users.noreply.github.com |
-| Supabase | ⚠️ Needs setup | Free tier - https://supabase.com/sign-up |
-| Vercel | ⚠️ Needs setup | Free tier - https://vercel.com/signup |
-| Inngest | ⚠️ Needs setup | Free tier - https://app.inngest.com/signup |
+| Service       | Status         | Account Type                               |
+| ------------- | -------------- | ------------------------------------------ |
+| GitHub        | ✅ Configured  | trevo@users.noreply.github.com             |
+| Supabase      | ⚠️ Needs setup | Free tier - https://supabase.com/sign-up   |
+| Vercel        | ⚠️ Needs setup | Free tier - https://vercel.com/signup      |
+| Inngest       | ⚠️ Needs setup | Free tier - https://app.inngest.com/signup |
 | PostHog Cloud | ⚠️ Needs setup | Free tier - https://app.posthog.com/signup |
 
 ## Installation Commands Reference
@@ -83,4 +85,5 @@ git config --global user.email "your.email@example.com"
 - [ ] This file exists and is committed to git
 
 ---
-*Run this checklist on every new environment (new PC, laptop, CI agent). Keep this file in version control.*
+
+_Run this checklist on every new environment (new PC, laptop, CI agent). Keep this file in version control._

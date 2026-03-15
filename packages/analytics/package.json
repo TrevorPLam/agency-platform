@@ -36,6 +36,9 @@
     "format": "esm",
     "dts": true,
     "clean": true,
-    "external": ["posthog-js", "posthog-node"]
+    "external": [
+      "posthog-js",
+      "posthog-node"
+    ]
   }
 }

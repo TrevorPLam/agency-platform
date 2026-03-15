@@ -10,9 +10,9 @@ const navLinks = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border-primary bg-background-primary/95 backdrop-blur">
-      <div className="container flex h-14 max-w-4xl items-center justify-between mx-auto px-4">
-        <Link href="/" className="font-semibold text-brand-primary text-lg">
+    <header className="border-border-primary bg-background-primary/95 sticky top-0 z-50 w-full border-b backdrop-blur">
+      <div className="container mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
+        <Link href="/" className="text-brand-primary text-lg font-semibold">
           The Barber Cave
         </Link>
         <nav className="flex gap-6">
@@ -21,7 +21,7 @@ export function SiteHeader() {
               key={href}
               href={href}
               className={cn(
-                'text-sm font-medium text-text-primary hover:text-brand-primary transition-colors'
+                'text-text-primary hover:text-brand-primary text-sm font-medium transition-colors'
               )}
             >
               {label}

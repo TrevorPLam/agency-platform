@@ -7,22 +7,32 @@ export const metadata = {
 }
 
 const posts = [
-  { slug: 'getting-started', title: 'Getting Started with Digital Marketing', date: '2025-03-01', excerpt: 'A practical guide for small businesses taking their first steps online.' },
-  { slug: 'design-tips', title: 'Design Tips That Convert', date: '2025-02-15', excerpt: 'How to use design to build trust and drive action.' },
+  {
+    slug: 'getting-started',
+    title: 'Getting Started with Digital Marketing',
+    date: '2025-03-01',
+    excerpt: 'A practical guide for small businesses taking their first steps online.',
+  },
+  {
+    slug: 'design-tips',
+    title: 'Design Tips That Convert',
+    date: '2025-02-15',
+    excerpt: 'How to use design to build trust and drive action.',
+  },
 ]
 
 export default function BlogPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-12">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Blog</h1>
+        <header className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-slate-900">Blog</h1>
           <p className="text-xl text-slate-600">Insights on marketing, design, and growth.</p>
         </header>
-        <section className="max-w-3xl mx-auto space-y-6">
+        <section className="mx-auto max-w-3xl space-y-6">
           {posts.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`}>
-              <Card className="hover:border-slate-400 transition-colors">
+              <Card className="transition-colors hover:border-slate-400">
                 <CardHeader>
                   <CardTitle className="text-slate-900">{post.title}</CardTitle>
                   <p className="text-sm text-slate-600">{post.date}</p>

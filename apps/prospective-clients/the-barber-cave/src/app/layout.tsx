@@ -13,11 +13,7 @@ export const metadata: Metadata = {
   openGraph: { title: 'The Barber Cave', description: 'Premium barber shop in Dallas, TX.' },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${inter.className} flex min-h-screen flex-col`}>

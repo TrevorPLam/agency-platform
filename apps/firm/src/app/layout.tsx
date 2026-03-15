@@ -6,18 +6,15 @@ import { SiteFooter } from '../components/site-footer'
 
 export const metadata: Metadata = {
   title: { default: 'Agency — Digital Marketing Excellence', template: '%s | Agency' },
-  description: 'Leading digital agency delivering exceptional marketing solutions that drive growth.',
+  description:
+    'Leading digital agency delivering exceptional marketing solutions that drive growth.',
   openGraph: {
     title: 'Agency — Digital Marketing Excellence',
     description: 'Leading digital agency delivering exceptional marketing solutions.',
   },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col">

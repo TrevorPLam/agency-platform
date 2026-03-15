@@ -42,10 +42,7 @@ export function initAnalytics(tenantSlug: string): void {
  * Capture an analytics event on the client side.
  * Tenant is automatically included as a super property.
  */
-export function captureEvent(
-  event: string,
-  properties?: Record<string, unknown>
-): void {
+export function captureEvent(event: string, properties?: Record<string, unknown>): void {
   if (typeof window === 'undefined' || !isInitialized) {
     return
   }
@@ -68,7 +65,7 @@ export function identifyUser(
 
   // Create tenant-specific user ID to maintain uniqueness across tenants
   const tenantSpecificUserId = `${userId}@${tenantSlug}`
-  
+
   posthog.identify(tenantSpecificUserId, {
     ...properties,
     tenant: tenantSlug,

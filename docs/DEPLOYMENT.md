@@ -15,10 +15,10 @@ This is the recommended model for a solo developer and for the first 8–9 clien
 
 Vercel Pro charges **$250/month per project** above the first 2 included projects. That creates a sharp cost jump at client count 9:
 
-| Clients | Calculation | Monthly total |
-|--------|-------------|---------------|
-| 8      | $60 seats + (6 × $250) = $1,500 projects | **$1,560** |
-| 9      | $60 seats + (7 × $250) = $1,750 projects | **$1,810** |
+| Clients | Calculation                              | Monthly total |
+| ------- | ---------------------------------------- | ------------- |
+| 8       | $60 seats + (6 × $250) = $1,500 projects | **$1,560**    |
+| 9       | $60 seats + (7 × $250) = $1,750 projects | **$1,810**    |
 
 Vercel’s **Enterprise minimum is $1,667/month**. At 9 clients your Pro bill ($1,810) already exceeds that. Every agency using one Vercel project per client is effectively on Enterprise pricing from client #9 onward, whether or not they have an Enterprise contract.
 
@@ -45,8 +45,8 @@ When you adopt the single-project model, use hostname-based rewriting so one dep
 import { NextRequest, NextResponse } from 'next/server'
 
 const TENANT_ROUTES: Record<string, string> = {
-  'rileydaycare.com':    '/tenants/riley-day-care',
-  'thebarbercave.com':   '/tenants/the-barber-cave',
+  'rileydaycare.com': '/tenants/riley-day-care',
+  'thebarbercave.com': '/tenants/the-barber-cave',
   // Add each client's domain here
 }
 
@@ -55,9 +55,7 @@ export function middleware(request: NextRequest) {
   const tenantPath = TENANT_ROUTES[hostname]
 
   if (tenantPath) {
-    return NextResponse.rewrite(
-      new URL(`${tenantPath}${request.nextUrl.pathname}`, request.url)
-    )
+    return NextResponse.rewrite(new URL(`${tenantPath}${request.nextUrl.pathname}`, request.url))
   }
 
   return NextResponse.next()
@@ -76,12 +74,12 @@ See the main Agency Platform Guide §14 for full context and the recommended app
 
 For each app (`riley-day-care`, `the-barber-cave`, `agency-admin`), create a Vercel project linked to the monorepo and set:
 
-| Setting | Value |
-|--------|--------|
-| **Root Directory** | `apps/prospective-clients/riley-day-care` (or `the-barber-cave`) or `apps/agency-admin` |
-| **Build Command** | `cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care` (or `--filter=@agency/the-barber-cave`, `--filter=@agency/agency-admin`) |
-| **Output Directory** | `apps/prospective-clients/riley-day-care/.next` (or same for `the-barber-cave`) or `apps/agency-admin/.next` |
-| **Install Command** | `pnpm install` |
+| Setting              | Value                                                                                                                                           |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Root Directory**   | `apps/prospective-clients/riley-day-care` (or `the-barber-cave`) or `apps/agency-admin`                                                         |
+| **Build Command**    | `cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care` (or `--filter=@agency/the-barber-cave`, `--filter=@agency/agency-admin`) |
+| **Output Directory** | `apps/prospective-clients/riley-day-care/.next` (or same for `the-barber-cave`) or `apps/agency-admin/.next`                                    |
+| **Install Command**  | `pnpm install`                                                                                                                                  |
 
 ### Environment variables per project
 

@@ -24,13 +24,14 @@ export default function ServicesPage() {
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-12">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Our services</h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            From strategy and brand to campaigns and analytics—we cover the full stack so you can focus on your business.
+        <header className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-slate-900">Our services</h1>
+          <p className="mx-auto max-w-2xl text-xl text-slate-600">
+            From strategy and brand to campaigns and analytics—we cover the full stack so you can
+            focus on your business.
           </p>
         </header>
-        <section className="grid gap-6 md:grid-cols-1 max-w-3xl mx-auto">
+        <section className="mx-auto grid max-w-3xl gap-6 md:grid-cols-1">
           {services.map((service) => (
             <Card key={service.title}>
               <CardHeader>

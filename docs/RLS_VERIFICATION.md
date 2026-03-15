@@ -4,13 +4,13 @@ This document records the Row-Level Security (RLS) verification for the agency p
 
 ## 1. RLS Checklist Summary
 
-| Table | RLS | Policies | Uses `public.tenant_id()` | Indexes |
-|-------|-----|----------|---------------------------|---------|
-| **tenants** | ✅ | SELECT only (own row: `id = public.tenant_id()`) | ✅ | PK on `id` |
-| **tenant_users** | ✅ | SELECT, INSERT, UPDATE, DELETE | ✅ | `idx_tenant_users_tenant_id`, `idx_tenant_users_user_id` |
-| **posts** | ✅ | SELECT, INSERT, UPDATE, DELETE | ✅ | `idx_posts_tenant_id`, `idx_posts_tenant_created` |
-| **audit_log** | ✅ | Service-role only (`USING (false)`) | N/A | `idx_audit_log_tenant_created` |
-| **customer_auth_mappings** | ✅ | SELECT only (`user_id = auth.uid()`); service-role write | N/A (user_id) | `idx_customer_auth_mappings_tenant_id`, `user_id`, `tenant_real` |
+| Table                      | RLS | Policies                                                 | Uses `public.tenant_id()` | Indexes                                                          |
+| -------------------------- | --- | -------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------- |
+| **tenants**                | ✅  | SELECT only (own row: `id = public.tenant_id()`)         | ✅                        | PK on `id`                                                       |
+| **tenant_users**           | ✅  | SELECT, INSERT, UPDATE, DELETE                           | ✅                        | `idx_tenant_users_tenant_id`, `idx_tenant_users_user_id`         |
+| **posts**                  | ✅  | SELECT, INSERT, UPDATE, DELETE                           | ✅                        | `idx_posts_tenant_id`, `idx_posts_tenant_created`                |
+| **audit_log**              | ✅  | Service-role only (`USING (false)`)                      | N/A                       | `idx_audit_log_tenant_created`                                   |
+| **customer_auth_mappings** | ✅  | SELECT only (`user_id = auth.uid()`); service-role write | N/A (user_id)             | `idx_customer_auth_mappings_tenant_id`, `user_id`, `tenant_real` |
 
 **Notes:**
 

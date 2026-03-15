@@ -10,7 +10,8 @@ export default function ProgramsPage() {
     {
       title: 'Infants',
       age: '6 weeks – 12 months',
-      description: 'Safe, nurturing care with individualized schedules and early sensory experiences.',
+      description:
+        'Safe, nurturing care with individualized schedules and early sensory experiences.',
     },
     {
       title: 'Toddlers',
@@ -25,11 +26,11 @@ export default function ProgramsPage() {
   ]
 
   return (
-    <main className="min-h-screen bg-background-primary text-text-primary">
-      <div className="container max-w-4xl mx-auto px-4 py-12">
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-brand-primary mb-4">Our Programs</h1>
-          <p className="text-lg text-text-secondary max-w-2xl mx-auto">
+    <main className="bg-background-primary text-text-primary min-h-screen">
+      <div className="container mx-auto max-w-4xl px-4 py-12">
+        <header className="mb-12 text-center">
+          <h1 className="text-brand-primary mb-4 text-4xl font-bold">Our Programs</h1>
+          <p className="text-text-secondary mx-auto max-w-2xl text-lg">
             Age-appropriate programs designed to support growth and learning at every stage.
           </p>
         </header>
@@ -38,7 +39,7 @@ export default function ProgramsPage() {
             <Card key={program.title}>
               <CardHeader>
                 <CardTitle className="text-brand-primary">{program.title}</CardTitle>
-                <p className="text-sm text-text-secondary">{program.age}</p>
+                <p className="text-text-secondary text-sm">{program.age}</p>
               </CardHeader>
               <CardContent>
                 <p className="text-text-secondary">{program.description}</p>

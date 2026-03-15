@@ -8,12 +8,12 @@
 
 ## Locked-in decisions
 
-| Decision | Your choice |
-|----------|-------------|
-| **Folder model** | **Option A** — `apps/prospective-clients/` (demo/test) and `apps/clients/` (real only). |
-| **Firm site scope** | **Broad** — form, blogs, etc. (not just minimum pages). |
-| **Riley Day Care** | **Convert riverside-hotel → Riley Day Care** and build out the site in full per your spec. |
-| **Template** | **“Day Care Template”** for now — sufficient until you know the repo better; can be refined later (e.g. scaffold variant or dedicated template). |
+| Decision            | Your choice                                                                                                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Folder model**    | **Option A** — `apps/prospective-clients/` (demo/test) and `apps/clients/` (real only).                                                                                                                                                          |
+| **Firm site scope** | **Broad** — form, blogs, etc. (not just minimum pages).                                                                                                                                                                                          |
+| **Riley Day Care**  | **Convert riverside-hotel → Riley Day Care** and build out the site in full per your spec.                                                                                                                                                       |
+| **Template**        | **“Day Care Template”** for now — sufficient until you know the repo better; can be refined later (e.g. scaffold variant or dedicated template).                                                                                                 |
 | **Riverside-hotel** | **In-place convert** — not preserved (not a real place). All current client apps are **prospective** (demo): **riley-day-care** and **the-barber-cave** in `apps/prospective-clients/`. `apps/clients/` is empty until first production go-live. |
 
 ---

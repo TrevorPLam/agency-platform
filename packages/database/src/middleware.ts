@@ -45,7 +45,7 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
     return {
       tenantId: process.env.NEXT_PUBLIC_TENANT_SLUG,
       tenantSlug: process.env.NEXT_PUBLIC_TENANT_SLUG,
-      source: 'development'
+      source: 'development',
     }
   }
 
@@ -55,14 +55,14 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
   if (!tenant) {
     throw new Error(
       `Unable to resolve tenant for hostname: ${hostname}. ` +
-      `Ensure the hostname is configured in the tenants table.`
+        `Ensure the hostname is configured in the tenants table.`
     )
   }
 
   return {
     tenantId: tenant.id,
     tenantSlug: tenant.slug,
-    source: 'hostname'
+    source: 'hostname',
   }
 }
 
@@ -186,6 +186,6 @@ export function getTenantFromHeaders(request: NextRequest): TenantResolution | n
   return {
     tenantId,
     tenantSlug,
-    source: source || 'header'
+    source: source || 'header',
   }
 }

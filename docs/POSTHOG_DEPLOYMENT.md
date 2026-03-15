@@ -6,12 +6,12 @@ This document covers the decision criteria for PostHog Cloud vs self-hosted depl
 
 PostHog’s own guidance: for most teams below ~5M events/month, self-hosting is not cost-effective. Approximate break-even as of March 2026:
 
-| Monthly Event Volume | Cloud Cost | Hetzner CCX23 Infra | Ops Cost (@$50/hr, 2 hr/mo) | Net Self-Hosted | Net Saving |
-|----------------------|------------|----------------------|-----------------------------|------------------|------------|
-| 1M                   | **$0**     | ~$34                 | ~$100                       | ~$134            | Cloud wins by $134 |
-| 3M                   | ~$84       | ~$34                 | ~$100                       | ~$134            | Cloud wins by $50 |
-| **~4–5M**            | ~$130–150  | ~$34                 | ~$100                       | ~$134            | **Break-even** |
-| 10M                  | ~$324      | ~$34                 | ~$100                       | ~$134            | Self-hosted saves ~$190 |
+| Monthly Event Volume | Cloud Cost | Hetzner CCX23 Infra | Ops Cost (@$50/hr, 2 hr/mo) | Net Self-Hosted | Net Saving              |
+| -------------------- | ---------- | ------------------- | --------------------------- | --------------- | ----------------------- |
+| 1M                   | **$0**     | ~$34                | ~$100                       | ~$134           | Cloud wins by $134      |
+| 3M                   | ~$84       | ~$34                | ~$100                       | ~$134           | Cloud wins by $50       |
+| **~4–5M**            | ~$130–150  | ~$34                | ~$100                       | ~$134           | **Break-even**          |
+| 10M                  | ~$324      | ~$34                | ~$100                       | ~$134           | Self-hosted saves ~$190 |
 
 If most events are identified (logged-in users), Cloud’s identified-event pricing is higher; break-even can drop to ~2–3M events/month.
 

@@ -9,9 +9,7 @@ export async function signOutAction() {
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) =>
-        cookieStore.set(name, value, options)
-      )
+      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
     },
   })
   await supabase.auth.signOut()

@@ -17,11 +17,16 @@ export async function middleware(request: NextRequest) {
   }
 
   const supabase = createSupabaseServerClient(cookieStore)
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
   const isProtected = pathname.startsWith('/dashboard')
-  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup') || pathname.startsWith('/callback')
+  const isAuthRoute =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/callback')
 
   if (isProtected && !user) {
     const loginUrl = new URL('/login', request.url)

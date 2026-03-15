@@ -18,7 +18,7 @@ export default function SignupPage() {
   const [state, formAction] = useActionState(signupAction, null)
 
   return (
-    <div className={cn('min-h-screen flex items-center justify-center p-4')}>
+    <div className={cn('flex min-h-screen items-center justify-center p-4')}>
       <form
         action={formAction}
         className="w-full max-w-sm space-y-4 rounded-lg border p-6 shadow-sm"
@@ -31,13 +31,7 @@ export default function SignupPage() {
         )}
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-          />
+          <Input id="email" name="email" type="email" autoComplete="email" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
@@ -49,11 +43,11 @@ export default function SignupPage() {
             required
             minLength={12}
           />
-          <p className="text-xs text-muted-foreground">Minimum 12 characters</p>
+          <p className="text-muted-foreground text-xs">Minimum 12 characters</p>
         </div>
         <SubmitButton />
-        <p className="text-center text-sm text-muted-foreground">
-          <a href="/login" className="underline hover:text-foreground">
+        <p className="text-muted-foreground text-center text-sm">
+          <a href="/login" className="hover:text-foreground underline">
             Already have an account? Sign in
           </a>
         </p>

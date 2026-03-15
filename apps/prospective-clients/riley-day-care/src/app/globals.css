@@ -1,12 +1,12 @@
-@import "tailwindcss";
-@import "tw-animate-css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* Tell Tailwind to scan the shared UI package for class names.
    Without this directive, production builds will purge all @agency/ui utility classes. */
 @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 /* Import client-specific design tokens */
-@import "../../tokens/riley-day-care.css";
+@import '../../tokens/riley-day-care.css';
 
 /* Dark mode configuration */
 @custom-variant dark (&:is(.dark *));
@@ -21,10 +21,10 @@
   --color-semantic-text-inverse: oklch(0.15 0.02 198.41);
   --color-semantic-text-accent: oklch(0.79 0.14 70.71);
   --color-semantic-border-primary: oklch(0.31 0.01 238.66);
-  --color-semantic-border-secondary: oklch(0.41 0.02 0.00);
+  --color-semantic-border-secondary: oklch(0.41 0.02 0);
   --color-semantic-border-accent: oklch(0.42 0.18 238.66);
   --color-semantic-interactive-primary-default: oklch(0.65 0.22 198.41);
-  --color-semantic-interactive-primary-hover: oklch(0.70 0.22 198.41);
+  --color-semantic-interactive-primary-hover: oklch(0.7 0.22 198.41);
   --color-semantic-interactive-primary-active: oklch(0.75 0.22 198.41);
   --color-semantic-interactive-primary-disabled: oklch(0.31 0.02 198.41);
 }

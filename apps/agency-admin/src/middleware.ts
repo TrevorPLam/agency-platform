@@ -3,10 +3,10 @@ import type { NextRequest } from 'next/server'
 
 export async function middleware(_req: NextRequest) {
   const res = NextResponse.next()
-  
+
   // TODO: Implement session refresh using @agency/database
   // This will be completed after Supabase local environment is set up (T-11)
-  
+
   return res
 }
 

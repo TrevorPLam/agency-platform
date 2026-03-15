@@ -4,18 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-background-primary text-text-primary">
-      <div className="container max-w-4xl mx-auto px-4 py-12 space-y-12">
-        <header className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-brand-primary">
-            Welcome to Riley Day Care
-          </h1>
-          <p className="text-lg text-text-secondary">
+    <main className="bg-background-primary text-text-primary min-h-screen">
+      <div className="container mx-auto max-w-4xl space-y-12 px-4 py-12">
+        <header className="space-y-4 text-center">
+          <h1 className="text-brand-primary text-4xl font-bold">Welcome to Riley Day Care</h1>
+          <p className="text-text-secondary text-lg">
             Quality child care and early learning in a safe, nurturing environment
           </p>
         </header>
 
-        <section className="grid md:grid-cols-2 gap-6">
+        <section className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="text-brand-primary">Programs</CardTitle>
@@ -24,7 +22,7 @@ export default function HomePage() {
               <p className="text-text-secondary">
                 Age-appropriate programs for infants through pre-K
               </p>
-              <Button asChild className="mt-4 bg-brand-primary hover:bg-brand-primary/90">
+              <Button asChild className="bg-brand-primary hover:bg-brand-primary/90 mt-4">
                 <Link href="/programs">Learn More</Link>
               </Button>
             </CardContent>
@@ -38,7 +36,7 @@ export default function HomePage() {
               <p className="text-text-secondary">
                 Schedule a visit or start the enrollment process
               </p>
-              <Button asChild className="mt-4 bg-brand-accent hover:bg-brand-accent/90">
+              <Button asChild className="bg-brand-accent hover:bg-brand-accent/90 mt-4">
                 <Link href="/contact">Get Started</Link>
               </Button>
             </CardContent>
@@ -46,8 +44,8 @@ export default function HomePage() {
         </section>
 
         <section className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Visit Us</h2>
-          <div className="flex justify-center gap-4 flex-wrap">
+          <h2 className="mb-4 text-2xl font-semibold">Visit Us</h2>
+          <div className="flex flex-wrap justify-center gap-4">
             <Button asChild variant="outline" className="border-brand-primary text-brand-primary">
               <Link href="/contact">Schedule a Tour</Link>
             </Button>

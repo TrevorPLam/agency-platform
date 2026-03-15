@@ -10,8 +10,7 @@ import { createInterface } from 'readline'
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-const ask = (question: string) =>
-  new Promise<string>((resolve) => rl.question(question, resolve))
+const ask = (question: string) => new Promise<string>((resolve) => rl.question(question, resolve))
 
 /** Slug must be kebab-case: lowercase letters/digits, single hyphens, no leading/trailing/consecutive hyphens */
 const KEBAB_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -42,13 +41,16 @@ async function main() {
     slug = process.env.SCAFFOLD_SLUG.trim()
     industry = process.env.SCAFFOLD_INDUSTRY ?? 'general'
     domain = process.env.SCAFFOLD_DOMAIN ?? ''
-    isProspective = process.env.SCAFFOLD_PROSPECTIVE === 'true' || process.env.SCAFFOLD_PROSPECTIVE === '1'
+    isProspective =
+      process.env.SCAFFOLD_PROSPECTIVE === 'true' || process.env.SCAFFOLD_PROSPECTIVE === '1'
   } else {
     name = await ask('Client display name (e.g. Riley Day Care): ')
     slug = (await ask('Client slug (e.g. riley-day-care): ')).trim()
     industry = await ask('Industry (healthcare/ecommerce/hospitality/general): ')
     domain = await ask('Production domain (e.g. rileydaycare.com): ')
-    const prospectAnswer = (await ask('Prospective (demo) or real client? (p/r): ')).trim().toLowerCase()
+    const prospectAnswer = (await ask('Prospective (demo) or real client? (p/r): '))
+      .trim()
+      .toLowerCase()
     isProspective = prospectAnswer === 'p' || prospectAnswer === 'prospective'
   }
 
@@ -66,7 +68,9 @@ async function main() {
   const templateRoot = join(root, 'apps', 'prospective-clients', 'riley-day-care')
 
   if (existsSync(appDir)) {
-    console.error(`\n❌ Directory already exists: apps/${appSubdir}/${slug}. Aborting to avoid overwriting.\n`)
+    console.error(
+      `\n❌ Directory already exists: apps/${appSubdir}/${slug}. Aborting to avoid overwriting.\n`
+    )
     process.exit(1)
   }
 
@@ -80,25 +84,18 @@ async function main() {
   packageJson.name = `@agency/${slug}`
   writeFileSync(join(appDir, 'package.json'), JSON.stringify(packageJson, null, 2))
 
-  writeFileSync(
-    join(appDir, 'tsconfig.json'),
-    readTemplate(templateRoot, 'tsconfig.json')
-  )
-  writeFileSync(
-    join(appDir, 'next.config.ts'),
-    readTemplate(templateRoot, 'next.config.ts')
-  )
+  writeFileSync(join(appDir, 'tsconfig.json'), readTemplate(templateRoot, 'tsconfig.json'))
+  writeFileSync(join(appDir, 'next.config.ts'), readTemplate(templateRoot, 'next.config.ts'))
   writeFileSync(
     join(appDir, 'postcss.config.mjs'),
     readTemplate(templateRoot, 'postcss.config.mjs')
   )
-  writeFileSync(
-    join(appDir, 'eslint.config.mjs'),
-    readTemplate(templateRoot, 'eslint.config.mjs')
-  )
+  writeFileSync(join(appDir, 'eslint.config.mjs'), readTemplate(templateRoot, 'eslint.config.mjs'))
 
-  const globalsCss = readTemplate(templateRoot, 'src', 'app', 'globals.css')
-    .replace(/riley-day-care\.css/, `${slug}.css`)
+  const globalsCss = readTemplate(templateRoot, 'src', 'app', 'globals.css').replace(
+    /riley-day-care\.css/,
+    `${slug}.css`
+  )
   writeFileSync(join(appDir, 'src', 'app', 'globals.css'), globalsCss)
 
   const layoutContent = readTemplate(templateRoot, 'src', 'app', 'layout.tsx')
@@ -109,7 +106,10 @@ async function main() {
   const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const pageContent = readTemplate(templateRoot, 'src', 'app', 'page.tsx')
     .replace(/Riley Day Care/g, safeName)
-    .replace(/Quality child care and early learning in a safe, nurturing environment/g, 'Your experience starts here')
+    .replace(
+      /Quality child care and early learning in a safe, nurturing environment/g,
+      'Your experience starts here'
+    )
   writeFileSync(join(appDir, 'src', 'app', 'page.tsx'), pageContent)
 
   writeFileSync(
@@ -117,8 +117,10 @@ async function main() {
     readTemplate(templateRoot, 'src', 'middleware.ts')
   )
 
-  const providersContent = readTemplate(templateRoot, 'src', 'components', 'providers.tsx')
-    .replace(/riley-day-care/g, slug)
+  const providersContent = readTemplate(templateRoot, 'src', 'components', 'providers.tsx').replace(
+    /riley-day-care/g,
+    slug
+  )
   writeFileSync(join(appDir, 'src', 'components', 'providers.tsx'), providersContent)
 
   writeFileSync(
@@ -162,10 +164,7 @@ async function main() {
       },
     },
   }
-  writeFileSync(
-    join(tokenDir, `${slug}.json`),
-    JSON.stringify(placeholderTokens, null, 2)
-  )
+  writeFileSync(join(tokenDir, `${slug}.json`), JSON.stringify(placeholderTokens, null, 2))
 
   execSync('pnpm install', { cwd: root, stdio: 'pipe', encoding: 'utf-8' })
 
@@ -179,7 +178,10 @@ async function main() {
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    const stderr = err && typeof err === 'object' && 'stderr' in err ? String((err as { stderr?: unknown }).stderr) : ''
+    const stderr =
+      err && typeof err === 'object' && 'stderr' in err
+        ? String((err as { stderr?: unknown }).stderr)
+        : ''
     console.error('\n❌ Post-scaffold type-check failed. Fix template or dependencies.\n')
     if (stderr) console.error(stderr)
     else console.error(msg)

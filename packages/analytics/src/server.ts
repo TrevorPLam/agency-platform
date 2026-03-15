@@ -20,7 +20,9 @@ export interface ServerEventProperties {
 function getServerClient(): PostHog {
   if (!posthogInstance) {
     if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-      throw new Error('NEXT_PUBLIC_POSTHOG_KEY environment variable is required for server-side analytics')
+      throw new Error(
+        'NEXT_PUBLIC_POSTHOG_KEY environment variable is required for server-side analytics'
+      )
     }
 
     posthogInstance = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -37,7 +39,7 @@ function getServerClient(): PostHog {
 /**
  * Capture an analytics event on the server side.
  * Tenant field is mandatory at the TypeScript level.
- * 
+ *
  * @param distinctId - User identifier (will be made tenant-specific)
  * @param event - Event name
  * @param properties - Event properties, must include tenant field
@@ -49,10 +51,10 @@ export function captureServerEvent(
 ): void {
   try {
     const posthog = getServerClient()
-    
+
     // Create tenant-specific distinct ID for uniqueness across tenants
     const tenantSpecificId = `${distinctId}@${properties.tenant}`
-    
+
     posthog.capture({
       distinctId: tenantSpecificId,
       event,
@@ -71,20 +73,17 @@ export function captureServerEvent(
 /**
  * Identify a user on the server side.
  * Creates tenant-specific user identification.
- * 
+ *
  * @param distinctId - User identifier
  * @param properties - User properties, must include tenant field
  */
-export function identifyServerUser(
-  distinctId: string,
-  properties: ServerEventProperties
-): void {
+export function identifyServerUser(distinctId: string, properties: ServerEventProperties): void {
   try {
     const posthog = getServerClient()
-    
+
     // Create tenant-specific distinct ID
     const tenantSpecificId = `${distinctId}@${properties.tenant}`
-    
+
     posthog.identify({
       distinctId: tenantSpecificId,
       properties: {
@@ -100,23 +99,19 @@ export function identifyServerUser(
 /**
  * Alias multiple user identifiers together on the server side.
  * Useful for merging anonymous and authenticated users.
- * 
+ *
  * @param distinctId - New user identifier
  * @param alias - Previous user identifier to alias from
  * @param tenant - Tenant slug for context
  */
-export function aliasServerUser(
-  distinctId: string,
-  alias: string,
-  tenant: string
-): void {
+export function aliasServerUser(distinctId: string, alias: string, tenant: string): void {
   try {
     const posthog = getServerClient()
-    
+
     // Create tenant-specific identifiers
     const tenantSpecificId = `${distinctId}@${tenant}`
     const tenantSpecificAlias = `${alias}@${tenant}`
-    
+
     posthog.alias({
       distinctId: tenantSpecificId,
       alias: tenantSpecificAlias,

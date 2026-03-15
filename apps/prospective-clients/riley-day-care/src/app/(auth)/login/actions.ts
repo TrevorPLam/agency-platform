@@ -34,11 +34,7 @@ export async function loginAction(
   }
 
   const admin = getAdminClient()
-  const { data: tenant } = await admin
-    .from('tenants')
-    .select('id')
-    .eq('slug', slug)
-    .single()
+  const { data: tenant } = await admin.from('tenants').select('id').eq('slug', slug).single()
 
   if (!tenant) {
     return { error: INVALID_CREDENTIALS }
@@ -60,9 +56,7 @@ export async function loginAction(
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) =>
-        cookieStore.set(name, value, options)
-      )
+      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
     },
   })
 

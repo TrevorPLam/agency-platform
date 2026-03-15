@@ -22,7 +22,7 @@ function LoginForm() {
   const [state, formAction] = useActionState(loginAction, null)
 
   return (
-    <div className={cn('min-h-screen flex items-center justify-center p-4')}>
+    <div className={cn('flex min-h-screen items-center justify-center p-4')}>
       <form
         action={formAction}
         className="w-full max-w-sm space-y-4 rounded-lg border p-6 shadow-sm"
@@ -36,13 +36,7 @@ function LoginForm() {
         )}
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-          />
+          <Input id="email" name="email" type="email" autoComplete="email" required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
@@ -55,8 +49,8 @@ function LoginForm() {
           />
         </div>
         <SubmitButton />
-        <p className="text-center text-sm text-muted-foreground">
-          <a href="/signup" className="underline hover:text-foreground">
+        <p className="text-muted-foreground text-center text-sm">
+          <a href="/signup" className="hover:text-foreground underline">
             Create an account
           </a>
         </p>
@@ -67,7 +61,9 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center p-4">Loading…</div>}>
+    <Suspense
+      fallback={<div className="flex min-h-screen items-center justify-center p-4">Loading…</div>}
+    >
       <LoginForm />
     </Suspense>
   )
