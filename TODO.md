@@ -1326,7 +1326,7 @@ Add a post-scaffold validation step to the script: after creating all files, run
 - [ ] **T-20.08** Create a separate Vercel project for `@agency/agency-admin` with the same configuration pattern
 - [ ] **T-20.09** HUMAN Connect the Inngest Vercel Marketplace integration to auto-inject `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY`
 - [ ] **T-20.10** HUMAN Trigger a second deployment — confirm Turborepo remote cache hits appear in the build log (unchanged packages should say "cache hit" not "cache miss")
-- [ ] **T-20.11** AGENT Create `docs/DEPLOYMENT.md` — documents: project-per-client model, the Vercel Pro → Enterprise cliff at 9 clients ($1,810/month threshold), the middleware routing architecture as the cost mitigation, the break-even analysis, and the recommended migration timing
+- [x] **T-20.11** AGENT Create `docs/DEPLOYMENT.md` — documents: project-per-client model, the Vercel Pro → Enterprise cliff at 9 clients ($1,810/month threshold), the middleware routing architecture as the cost mitigation, the break-even analysis, and the recommended migration timing
   - `📄 docs/DEPLOYMENT.md`
 
 ### Definition of Done
