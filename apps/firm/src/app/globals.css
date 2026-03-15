@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Tell Tailwind to scan the shared UI package for class names.
+   Without this directive, production builds will purge all @agency/ui utility classes. */
+@source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";

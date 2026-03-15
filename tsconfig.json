@@ -6,7 +6,8 @@
     { "path": "./packages/ui" },
     { "path": "./packages/database" },
     { "path": "./packages/analytics" },
-    { "path": "./packages/design-tokens" }
+    { "path": "./packages/design-tokens" },
+    { "path": "./apps/firm" }
   ],
   "compilerOptions": {
     "target": "ES2022",

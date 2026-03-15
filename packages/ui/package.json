@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
-    "radix-ui": "catalog:",
-    "tailwind-merge": "^3.0.0"
+    "tailwind-merge": "^3.0.0",
+    "class-variance-authority": "catalog:",
+    "lucide-react": "catalog:",
+    "radix-ui": "catalog:"
   },
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
