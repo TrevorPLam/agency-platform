@@ -1211,7 +1211,7 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
   - `📄 .windsurf/rules/monorepo.md`
 - [x] **T-18.07** AGENT Create `.windsurfrules` at repo root
   - `📄 .windsurfrules`
-- [ ] **T-18.08** HUMAN Test Cursor — open a migration file, ask it to add a new table: verify it uses the `auth.tenant_id()` pattern, `CONCURRENTLY` indexes, and the full RLS checklist without prompting
+- [ ] **T-18.08** HUMAN Test Cursor — open a migration file, ask it to add a new table: verify it uses the `public.tenant_id()` pattern, `CONCURRENTLY` indexes, and the full RLS checklist without prompting
 - [ ] **T-18.09** HUMAN Test Cursor — open a component, ask it to fetch data: verify it suggests a Server Component with `createSupabaseServerClient`, not `useEffect`
 - [ ] **T-18.10** HUMAN Test Cursor — ask it to style a button: verify it uses `cn()` from `@agency/ui` and references token-based classes, not hardcoded colors
 - [ ] **T-18.11** HUMAN Test Cursor — ask it to add an animation to a component: verify it uses `tw-animate-css` classes, not `tailwindcss-animate` or custom keyframes
@@ -1227,6 +1227,8 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 **AI_PROMPTING.md:** Ten prompt templates added for RLS migration, Server Component fetch, Client form, token styling, animation, Server Action with tenant check, client token file, tokens build verify, API route with auth, and RLS debug.
 
 **Remaining:** T-18.08–T-18.11 are HUMAN verification steps (Cursor behavior tests); no code changes.
+
+**T-18 verification checklist:** Added to docs/AI_PROMPTING.md (section "T-18 Cursor verification checklist"). Human should run T-18.08–T-18.11 per that checklist and check off each subtask when the AI output meets the pass criteria.
 
 ### Definition of Done
 

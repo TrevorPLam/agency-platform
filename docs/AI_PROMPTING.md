@@ -114,4 +114,19 @@ Debug RLS for table [name]. Policies should use public.tenant_id() (see supabase
 
 ---
 
+## T-18 Cursor verification checklist
+
+Use this checklist to verify that Cursor rules produce stack-correct suggestions without manual correction. Run each scenario in Cursor and confirm the AI output matches the pass criteria before marking T-18.08–T-18.11 complete in TODO.md.
+
+| ID | What to do | Pass criteria |
+|----|------------|---------------|
+| **T-18.08** | Open a migration file (e.g. under `supabase/migrations/`). Ask Cursor: "Add a new table `bookings` with tenant_id and created_at." | Output uses **public.tenant_id()** in all RLS policies (not inline JWT). Indexes use **CONCURRENTLY**. Full RLS checklist: ENABLE RLS, four policies (SELECT, INSERT WITH CHECK, UPDATE USING+WITH CHECK, DELETE). No prompting needed. |
+| **T-18.09** | Open a component file in `apps/` (e.g. a page). Ask: "Fetch the list of posts from Supabase and display them." | Cursor suggests a **Server Component** using **createSupabaseServerClient** from `@agency/database` with the cookie store. It does **not** suggest `useEffect` or `'use client'` for the fetch. |
+| **T-18.10** | Open a file with a button or card. Ask: "Style this button with our brand colors." | Cursor uses **cn()** from `@agency/ui` and **token-based classes** (e.g. `bg-brand-primary`, `text-text-default`). No hardcoded hex, no `theme()` in CSS, no new `tailwind.config.js`. |
+| **T-18.11** | Open a component. Ask: "Add a fade-in animation when this mounts." | Cursor uses **tw-animate-css** utility classes and/or references `@import "tw-animate-css"` in globals.css. It does **not** use `tailwindcss-animate` or custom `@keyframes`. |
+
+After all four pass, check off T-18.08–T-18.11 in TODO.md and mark T-18 complete.
+
+---
+
 *Use these prompts as-is or adapt the bracketed placeholders. They keep the AI within stack rules (Port 6543, app_metadata, cn(), @source, tw-animate-css, CONCURRENTLY, public.tenant_id()).*
