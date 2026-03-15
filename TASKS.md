@@ -95,16 +95,27 @@
 
 ## T-14: RLS Automated Testing
 
-- [ ] **T-14**  pgTAP suite runs locally and in CI; RLS coverage, tenant isolation, role hierarchy, positive access; Supashield allowlist documented.
+- [x] **T-14**  pgTAP suite runs locally and in CI; RLS coverage, tenant isolation, role hierarchy, positive access; Supashield allowlist documented.
 
 ### Shortlist
 
-- [ ] **T-14.01** Create `supabase/tests/database/000-setup-test-hooks.sql`.
-- [ ] **T-14.02** – **T-14.05** Create `00-rls-coverage.sql`, `01-tenant-isolation.sql`, `02-role-hierarchy.sql`, `03-positive-access.sql`.
-- [ ] **T-14.06** Run `supabase test db` — all pass.
-- [ ] **T-14.10** – **T-14.11** Add `SUPASHIELD_ALLOWLIST.md`, `EXPECTED_TABLE_COUNT.txt`.
+- [x] **T-14.01** Create `supabase/tests/database/000-setup-test-hooks.sql`.
+- [x] **T-14.02** – **T-14.05** Create `00-rls-coverage.sql`, `01-tenant-isolation.sql`, `02-role-hierarchy.sql`, `03-positive-access.sql`.
+- [x] **T-14.06** Run `supabase test db` — all pass.
+- [x] **T-14.10** – **T-14.11** Add `SUPASHIELD_ALLOWLIST.md`, `EXPECTED_TABLE_COUNT.txt`.
 
 *Full subtasks and DoD → TODO.md § T-14.*
+
+### Implementation notes (T-14)
+
+- **Setup:** `000-setup-test-hooks.sql` enables pgTAP in schema `extensions` and runs one trivial test so the harness is verified first (alphabetical order).
+- **00-rls-coverage.sql:** Asserts expected policy names on all five tables (tenants, tenant_users, posts, audit_log, customer_auth_mappings) via `policies_are()`.
+- **01-tenant-isolation.sql:** Inserts two tenants and two users, sets JWT to tenant A then B; asserts each role sees only one tenant_users and one post row.
+- **02-role-hierarchy.sql:** anon with empty JWT (`{}`) sees 0 rows on tenant_users and posts; authenticated with tenant_id sees ≥1 tenant_users row.
+- **03-positive-access.sql:** Authenticated user with tenant_id can SELECT/INSERT/UPDATE/DELETE own tenant's posts and SELECT own tenant row.
+- **Fix:** anon test uses `set_config('request.jwt.claims', '{}', true)` (empty string is invalid JSON).
+- **Run:** `npx supabase test db --local` — all 5 files, 18 tests pass. CI can run the same after `supabase start` (or use `--db-url` for a dedicated test DB).
+- **Supashield:** `SUPASHIELD_ALLOWLIST.md` documents intentional “no policy” designs (audit_log, tenants write, customer_auth_mappings write). `EXPECTED_TABLE_COUNT.txt` is `5` for regression checks.
 
 ---
 

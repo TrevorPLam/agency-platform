@@ -14,7 +14,8 @@
 | **T-11** | ✅ Complete | Supabase local/production linked; migrations apply; Studio verified when Docker runs |
 | **T-12** | ✅ Complete | 7 migrations, `public.tenant_id()`, `customer_auth_mappings`, types generated, seed, `db:generate-types` |
 | **T-13** | ✅ Complete | RLS verification doc, verify-rls-indexes.sql, 008_rls_checklist_comments.sql, rls.mdc updated |
-| **T-14 – T-25** | ❌ Not done | pgTAP tests, auth UI, Inngest, PostHog, AI rules, scaffold polish, Vercel, CI/CD, security, Prettier, CONTRIBUTING |
+| **T-14** | ✅ Complete | pgTAP suite in supabase/tests/database/ (000-setup, 00–03); SUPASHIELD_ALLOWLIST.md, EXPECTED_TABLE_COUNT.txt |
+| **T-15 – T-25** | ❌ Not done | Auth UI, Inngest, PostHog, AI rules, scaffold polish, Vercel, CI/CD, security, Prettier, CONTRIBUTING |
 
 The repo is a **working monorepo** with schema, types, and shared packages aligned to GUIDE.md. The **next actionable work** is T-13 (RLS verification) and T-14 (RLS tests), then T-15 (multi-tenant auth UI).
 
@@ -52,7 +53,7 @@ The repo is a **working monorepo** with schema, types, and shared packages align
 | `supabase/config.toml` | ✅ Present |
 | `supabase/seed.sql` | ✅ Inserts `riverside-hotel` tenant; ON CONFLICT DO NOTHING |
 | `supabase/migrations/` | ✅ **7 migrations** (see §3) |
-| `supabase/tests/database/` | ❌ **Empty** — no pgTAP files (T-14) |
+| `supabase/tests/database/` | ✅ pgTAP: 000-setup-test-hooks.sql, 00-rls-coverage.sql, 01-tenant-isolation.sql, 02-role-hierarchy.sql, 03-positive-access.sql |
 
 ### 2.4 Root and Supporting
 
@@ -116,7 +117,7 @@ The repo is a **working monorepo** with schema, types, and shared packages align
 | **T-11** | Done | Done. Local stack verified when Docker runs; production linked; docs/SUPABASE_LOCAL.md |
 | **T-12** | Done | Done. 7 migrations, public.tenant_id(), customer_auth_mappings, types, seed, db:generate-types (root + database package) |
 | **T-13** | Not done | Not done. RLS checklist and EXPLAIN ANALYZE verification still to do |
-| **T-14** | Not done | Not done. supabase/tests/database/ empty; no pgTAP, no SUPASHIELD_ALLOWLIST.md |
+| **T-14** | ✅ Complete | pgTAP suite in supabase/tests/database/; SUPASHIELD_ALLOWLIST.md, EXPECTED_TABLE_COUNT.txt |
 | **T-15** | Not done | Not done. No (auth)/login, signup, callback, /dashboard in riverside-hotel |
 | **T-16** | Not done | Not done. No inngest client, no app/api/inngest/route.ts, no functions in agency-admin |
 | **T-17** | Not done | Not done. PostHog not wired in riverside-hotel with tenant + IP/identify docs |
