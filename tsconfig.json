@@ -1,4 +1,8 @@
 {
+  "compilerOptions": {
+    "composite": false,
+    "skipLibCheck": true
+  },
   "files": [],
   "references": [
     { "path": "./packages/typescript-config" },
@@ -9,20 +13,7 @@
     { "path": "./packages/design-tokens" },
     { "path": "./apps/firm" },
     { "path": "./apps/agency-admin" },
-    { "path": "./apps/clients/riverside-hotel" }
-  ],
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "isolatedModules": true
-  }
+    { "path": "./apps/clients/riley-day-care" },
+    { "path": "./apps/prospective-clients/acme-health" }
+  ]
 }

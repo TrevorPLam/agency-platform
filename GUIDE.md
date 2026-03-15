@@ -54,9 +54,9 @@ A **monorepo** is a single Git repository containing multiple independent applic
 
 Your platform simultaneously manages three overlapping concerns.
 
-**Multi-industry** means one codebase serves healthcare intake forms and hotel booking flows without treating each as a custom project. You achieve this through configuration and content — design tokens, CMS schemas — rather than code branching. The healthcare `acme-health` app and the hospitality `riverside-hotel` app consume identical shared components; they look completely different because they load different token files.
+**Multi-industry** means one codebase serves healthcare intake forms, day-care sites, and other verticals without treating each as a custom project. You achieve this through configuration and content — design tokens, CMS schemas — rather than code branching. The prospective (demo) `acme-health` app and the real client `riley-day-care` app consume identical shared components; they look completely different because they load different token files.
 
-**Multi-client** means dozens of clients share infrastructure while remaining completely isolated from each other's data, branding, and domains. You achieve this through Row-Level Security (RLS) at the database layer and per-client deployment stamps at the Vercel layer. A user of Riverside Hotel's portal cannot — even in principle — read data belonging to Acme Health, regardless of how they manipulate their session.
+**Multi-client** means dozens of clients share infrastructure while remaining completely isolated from each other's data, branding, and domains. You achieve this through Row-Level Security (RLS) at the database layer and per-client deployment stamps at the Vercel layer. A user of one client's portal cannot — even in principle — read data belonging to another client, regardless of how they manipulate their session.
 
 **Multi-site** means each client may have several properties: a marketing site, a landing page generator, a booking portal, a client dashboard. You achieve this through the workspace model — each property is an independent `app` in the monorepo, with its own Vercel deployment, its own domain, and its own environment variables.
 
@@ -205,18 +205,20 @@ agency-platform/
 │   │   ├── app/
 │   │   ├── package.json
 │   │   └── next.config.ts
-│   └── clients/
-│       ├── acme-health/                # Healthcare client (slug: acme-health)
-│       │   ├── app/
-│       │   ├── tokens/                 # Compiled CSS tokens for this client
-│       │   ├── package.json
-│       │   └── next.config.ts
-│       ├── riverside-hotel/            # Hospitality client
+│   ├── firm/                            # Agency marketing site (broad: form, blogs, etc.)
+│   ├── prospective-clients/             # Demo/test only
+│   │   └── acme-health/                # Prospective (demo) client (slug: acme-health)
+│   │       ├── app/
+│   │       ├── tokens/
+│   │       ├── package.json
+│   │       └── next.config.ts
+│   └── clients/                        # Real clients only
+│       ├── riley-day-care/             # First real client (Day Care Template)
 │       │   ├── app/
 │       │   ├── tokens/
 │       │   ├── package.json
 │       │   └── next.config.ts
-│       └── [slug]/                     # Pattern for every new client
+│       └── [slug]/                     # Pattern for every new real client
 ├── packages/
 │   ├── ui/                             # Shared shadcn/ui component library
 │   │   ├── src/
@@ -234,8 +236,8 @@ agency-platform/
 │   │   │   ├── component/
 │   │   │   │   └── button.json         # Component-level tokens (→ semantic)
 │   │   │   ├── clients/
-│   │   │   │   ├── acme-health.json    # Per-client brand overrides
-│   │   │   │   └── riverside-hotel.json
+│   │   │   │   ├── acme-health.json    # Prospective client (apps/prospective-clients/)
+│   │   │   │   └── riley-day-care.json # Real client (apps/clients/)
 │   │   │   └── _base.json              # Primitive palette (shared)
 │   │   ├── sd.config.ts                # Style Dictionary v4 config
 │   │   └── package.json
@@ -289,6 +291,12 @@ agency-platform/
 ├── .env.local.example                  # Template for local environment variables
 └── .github/CODEOWNERS
 ```
+
+### Template and client layout (Option A)
+
+- **Real clients** live under `apps/clients/` (e.g. `riley-day-care`). **Prospective (demo) clients** live under `apps/prospective-clients/` (e.g. `acme-health`). The scaffold script (`pnpm scaffold`) asks whether the new app is prospective or real and creates the app in the correct directory.
+- The **first real client** is Riley Day Care (`apps/clients/riley-day-care`). It serves as the **Day Care Template**: the scaffold uses it as the source when creating new client apps. Future day-care-style clients are created by running `pnpm scaffold` and choosing "real" client; the script copies from `riley-day-care` and substitutes slug/name. A dedicated "day care" scaffold variant can be added later if needed.
+- See `docs/DAY_CARE_TEMPLATE.md` for how to create new day-care-style clients.
 
 ---
 
@@ -513,7 +521,7 @@ SUPABASE_SERVICE_ROLE_KEY=[service role key — NEVER public, NEVER NEXT_PUBLIC_
 NEXT_PUBLIC_POSTHOG_KEY=[PostHog project key for this client]
 NEXT_PUBLIC_POSTHOG_HOST=https://posthog.yourdomain.com
 
-NEXT_PUBLIC_TENANT_SLUG=riverside-hotel
+NEXT_PUBLIC_TENANT_SLUG=riley-day-care
 
 # For Inngest background jobs
 INNGEST_SIGNING_KEY=[from Inngest dashboard]
@@ -549,10 +557,10 @@ const ask = (question: string) =>
 async function main() {
   console.log('\n🏗  Agency Platform — Client Scaffolder\n')
 
-  const name = await ask('Client display name (e.g. Riverside Hotel): ')
-  const slug = await ask('Client slug (e.g. riverside-hotel): ')
+  const name = await ask('Client display name (e.g. Riley Day Care): ')
+  const slug = await ask('Client slug (e.g. riley-day-care): ')
   const industry = await ask('Industry (healthcare/ecommerce/hospitality/general): ')
-  const domain = await ask('Production domain (e.g. riverside-hotel.com): ')
+  const domain = await ask('Production domain (e.g. rileydaycare.com): ')
 
   rl.close()
 
@@ -1013,16 +1021,17 @@ export function captureServerEvent(
 
 ### Creating a client app
 
-From the repository root:
+From the repository root, use the scaffold script (recommended) or create manually:
+
 ```bash
-mkdir -p apps/clients/riverside-hotel
-cd apps/clients/riverside-hotel
-pnpm dlx create-next-app@latest . --typescript --no-tailwind --no-eslint --app --src-dir
+pnpm scaffold
+# Choose real client → template is apps/clients/riley-day-care
+# Or for a demo: choose prospective → creates under apps/prospective-clients/[slug]
 ```
 
-Then update `package.json` to connect it to the monorepo (or run `pnpm scaffold` which does this automatically):
+To create a client app manually (or run `pnpm scaffold` which does this automatically):
 
-**`apps/clients/riverside-hotel/next.config.ts`**
+**`apps/clients/riley-day-care/next.config.ts`** (or `apps/clients/[slug]/` for a new real client)
 ```ts
 import type { NextConfig } from 'next'
 
@@ -1039,19 +1048,19 @@ const nextConfig: NextConfig = {
 export default nextConfig
 ```
 
-**`apps/clients/riverside-hotel/src/app/globals.css`**
+**`apps/clients/riley-day-care/src/app/globals.css`** (or `[slug].css` for a new client)
 ```css
 /* 1. Import Tailwind v4 — this replaces the three @tailwind directives from v3 */
 @import "tailwindcss";
 
 /* 2. Import the compiled token file for this client.
       This file is generated by `pnpm tokens:build` from the JSON source in
-      packages/design-tokens/tokens/clients/riverside-hotel.json
+      packages/design-tokens/tokens/clients/riley-day-care.json
       It defines @theme {} blocks that Tailwind uses to generate utility classes. */
-@import "../../tokens/riverside-hotel.css";
+@import "../../tokens/riley-day-care.css";
 ```
 
-**`apps/clients/riverside-hotel/src/middleware.ts`**
+**`apps/clients/riley-day-care/src/middleware.ts`** (or `apps/clients/[slug]/` for a new client)
 ```ts
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
@@ -1172,10 +1181,10 @@ Style Dictionary v4 auto-detects the W3C Design Token Community Group format (us
 }
 ```
 
-**`packages/design-tokens/tokens/clients/riverside-hotel.json`**
+**`packages/design-tokens/tokens/clients/riley-day-care.json`**
 ```json
 {
-  "client": "riverside-hotel",
+  "client": "riley-day-care",
   "color": {
     "brand-primary": "#2d6a4f",
     "brand-secondary": "#b7e4c7",
@@ -1356,9 +1365,9 @@ Add `tokens:build` to your `packages/design-tokens/package.json`:
 ### Dark mode pattern
 
 ```css
-/* apps/clients/riverside-hotel/src/app/globals.css */
+/* apps/clients/riley-day-care/src/app/globals.css */
 @import "tailwindcss";
-@import "../../tokens/riverside-hotel.css";
+@import "../../tokens/riley-day-care.css";
 
 /* Dark mode: override semantic tokens with dark-appropriate values.
    Because semantic tokens use @theme inline, overriding the CSS variable
@@ -1751,12 +1760,12 @@ Inngest was designed for serverless from day one. Your functions live at an `/ap
 
 Install and configure the Inngest client. The Vercel Marketplace integration auto-injects `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` environment variables.
 
-**`apps/clients/riverside-hotel/src/inngest/client.ts`**
+**`apps/clients/riley-day-care/src/inngest/client.ts`**
 ```typescript
 import { Inngest } from 'inngest'
 
 export const inngest = new Inngest({
-  id: 'riverside-hotel',
+  id: 'riley-day-care',
   // Checkpointing (December 2025): near-zero inter-step latency for AI workflows.
   // maxRuntime must be ~20% below your Vercel maxDuration to avoid mid-checkpoint timeouts.
   checkpointing: {
@@ -1767,7 +1776,7 @@ export const inngest = new Inngest({
 })
 ```
 
-**`apps/clients/riverside-hotel/src/app/api/inngest/route.ts`**
+**`apps/clients/riley-day-care/src/app/api/inngest/route.ts`**
 ```typescript
 import { serve } from 'inngest/next'
 import { inngest } from '../../../inngest/client'
@@ -2110,7 +2119,7 @@ code lives in apps/clients/[slug]/.
 
 ## Running tasks
 - pnpm dev — starts all apps in watch mode
-- pnpm turbo run dev --filter=@agency/riverside-hotel — starts one app
+- pnpm turbo run dev --filter=@agency/riley-day-care — starts one app
 - pnpm tokens:build — compiles design tokens to CSS
 - supabase test db — runs pgTAP RLS isolation tests
 - supabase start — starts local Supabase (requires Docker)
@@ -2135,9 +2144,9 @@ For a solo developer starting out, use project-per-client. Switch to middleware 
 In the Vercel dashboard, create a new project, connect it to your GitHub repository, and configure:
 
 ```
-Root Directory: apps/clients/riverside-hotel
-Build Command:  cd ../../../ && pnpm turbo run build --filter=@agency/riverside-hotel
-Output Directory: apps/clients/riverside-hotel/.next
+Root Directory: apps/clients/riley-day-care
+Build Command:  cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care
+Output Directory: apps/clients/riley-day-care/.next
 Install Command: pnpm install
 ```
 
@@ -2153,7 +2162,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=[anon key]
 SUPABASE_SERVICE_ROLE_KEY=[service role key — never public]
 NEXT_PUBLIC_POSTHOG_KEY=[this client's PostHog project key]
 NEXT_PUBLIC_POSTHOG_HOST=https://posthog.yourdomain.com
-NEXT_PUBLIC_TENANT_SLUG=riverside-hotel
+NEXT_PUBLIC_TENANT_SLUG=riley-day-care
 INNGEST_SIGNING_KEY=[from Inngest dashboard]
 INNGEST_EVENT_KEY=[from Inngest dashboard]
 ```
@@ -2188,8 +2197,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Tenant manifest — at 50 clients, replace with Redis lookup (see §19)
 const TENANT_ROUTES: Record<string, string> = {
-  'riverside-hotel.com':  '/tenants/riverside-hotel',
-  'acme-health.com':      '/tenants/acme-health',
+  'rileydaycare.com':    '/tenants/riley-day-care',
+  'acme-health.com':     '/tenants/acme-health',
   // Add each client's domain here
 }
 
@@ -2531,7 +2540,7 @@ If you build a portal where your agency's own employees need to log in to multip
 // packages/database/src/auth.ts — already shown above in §6
 
 // The aliasEmail approach:
-// alice@example.com at Riverside Hotel → alice+riverside-hotel@example.com in auth
+// alice@example.com at Riley Day Care → alice+riley-day-care@example.com in auth
 // alice@example.com at Acme Health   → alice+acme-health@example.com in auth
 // Both auth records store real_email: 'alice@example.com' in app_metadata
 // Your login flow looks up the auth_email from customer_auth_mappings before signing in
@@ -2611,7 +2620,7 @@ async function getTenantByDomain(domain: string): Promise<Tenant | null> {
 
 ### Phase 3: 200+ clients (schema-per-tenant)
 
-**Database:** Each tenant's tables live in a dedicated PostgreSQL schema (`riverside_hotel.*` instead of `public.*` with a `tenant_id` filter). Stronger isolation guarantees without the cost of separate Supabase projects.
+**Database:** Each tenant's tables live in a dedicated PostgreSQL schema (e.g. `riley_day_care.*` instead of `public.*` with a `tenant_id` filter). Stronger isolation guarantees without the cost of separate Supabase projects.
 
 **Migration path (zero-downtime, expand-contract pattern):**
 

@@ -13,6 +13,7 @@
     "tokens:build": "turbo run tokens:build",
     "scaffold": "tsx scripts/scaffold-client.ts",
     "db:generate-types": "npx supabase gen types typescript --local > packages/database/src/types.ts",
+    "db:seed-user": "tsx scripts/create-test-user.ts",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [
@@ -25,6 +26,7 @@
   "author": "trevo",
   "license": "ISC",
   "devDependencies": {
+    "@agency/database": "workspace:*",
     "tsx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:"

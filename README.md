@@ -11,9 +11,11 @@ This is a **monorepo** using pnpm workspaces and Turborepo for efficient develop
 ```
 agency-platform/
 ├── apps/
-│   ├── clients/           # Client-specific applications
-│   │   └── riverside-hotel/  # First client app
-│   └── agency-admin/      # Internal agency management
+│   ├── firm/              # Agency marketing site
+│   ├── agency-admin/      # Internal agency management
+│   ├── prospective-clients/  # Demo/test sites (e.g. acme-health)
+│   └── clients/           # Real client applications only
+│       └── riley-day-care/   # First real client (day care)
 ├── packages/              # Shared packages
 │   ├── ui/               # Shared UI components (shadcn/ui)
 │   ├── database/         # Supabase client factories

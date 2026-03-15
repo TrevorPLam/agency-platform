@@ -1,0 +1,58 @@
+tables:
+  public.audit_log:
+    test_scenarios:
+      - name: anonymous_user
+        jwt_claims: &a1 {}
+        expected: &a2
+          SELECT: DENY
+          INSERT: DENY
+          UPDATE: DENY
+          DELETE: DENY
+      - name: authenticated_user
+        jwt_claims: &a3
+          sub: user-123
+          role: authenticated
+        expected: &a4
+          SELECT: ALLOW
+          INSERT: ALLOW
+          UPDATE: ALLOW
+          DELETE: ALLOW
+  public.customer_auth_mappings:
+    test_scenarios:
+      - name: anonymous_user
+        jwt_claims: *a1
+        expected: *a2
+      - name: authenticated_user
+        jwt_claims: *a3
+        expected: *a4
+  public.posts:
+    test_scenarios:
+      - name: anonymous_user
+        jwt_claims: *a1
+        expected: *a2
+      - name: authenticated_user
+        jwt_claims: *a3
+        expected: *a4
+  public.tenant_users:
+    test_scenarios:
+      - name: anonymous_user
+        jwt_claims: *a1
+        expected: *a2
+      - name: authenticated_user
+        jwt_claims: *a3
+        expected: *a4
+  public.tenants:
+    test_scenarios:
+      - name: anonymous_user
+        jwt_claims: *a1
+        expected: *a2
+      - name: authenticated_user
+        jwt_claims: *a3
+        expected: *a4
+storage_buckets: {}
+defaults:
+  anonymous_user_expectations: *a2
+  authenticated_user_expectations: *a4
+  default_jwt_claims:
+    anonymous: *a1
+    authenticated: *a3

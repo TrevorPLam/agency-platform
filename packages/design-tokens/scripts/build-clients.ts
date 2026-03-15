@@ -24,53 +24,56 @@ function formatClientTokens(tokens: any, outputReferences: boolean): string {
 
 function formatTokenValue(key: string, value: any, outputReferences: boolean, indent: number): string {
   const spaces = ' '.repeat(indent);
-  
+
   if (typeof value === 'object' && value !== null && !value.$value) {
     return Object.entries(value)
       .map(([subKey, subValue]) => formatTokenValue(`${key}-${subKey}`, subValue, outputReferences, indent))
       .join('\n');
   }
-  
+
   const tokenValue = value.$value || value;
   const cssVarName = `--${key.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}`;
-  const formattedValue = outputReferences && tokenValue.includes('{') 
+  const formattedValue = outputReferences && tokenValue.includes('{')
     ? `var(${tokenValue.replace(/[{}]/g, '').replace(/\./g, '-')})`
     : tokenValue;
-  
+
   return `${spaces}${cssVarName}: ${formattedValue};`;
 }
+
+/** Slugs that live under apps/prospective-clients (demo/test). All others go to apps/clients. */
+const PROSPECTIVE_SLUGS = ['acme-health'];
 
 async function buildClientTokens() {
   try {
     const clientsDir = path.join(process.cwd(), 'tokens', 'clients');
-    const appsClientsDir = path.join(process.cwd(), '..', '..', 'apps', 'clients');
-    
-    // Ensure apps/clients directory exists
-    await fs.mkdir(appsClientsDir, { recursive: true });
-    
+    const appsRoot = path.join(process.cwd(), '..', '..', 'apps');
+
     // Read all client token files
     const clientFiles = await fs.readdir(clientsDir);
     const clientJsonFiles = clientFiles.filter(file => file.endsWith('.json'));
-    
+
     console.log(`🔍 Found ${clientJsonFiles.length} client token files`);
-    
+
     // Build each client's tokens
     for (const clientFile of clientJsonFiles) {
       const clientName = clientFile.replace('.json', '');
       const clientTokenPath = path.join(clientsDir, clientFile);
-      const clientOutputDir = path.join(appsClientsDir, clientName, 'tokens');
-      
+      const appSubdir = PROSPECTIVE_SLUGS.includes(clientName) ? 'prospective-clients' : 'clients';
+      const clientOutputDir = path.join(appsRoot, appSubdir, clientName, 'tokens');
+
+      await fs.mkdir(clientOutputDir, { recursive: true });
+
       // Create output directory
       await fs.mkdir(clientOutputDir, { recursive: true });
-      
+
       // Read client tokens
       const clientTokens = JSON.parse(await fs.readFile(clientTokenPath, 'utf-8'));
-      
+
       // Create Style Dictionary config for this client
       const clientConfig = {
         source: [
           'tokens/primitive/**/*.json',
-          'tokens/semantic/**/*.json', 
+          'tokens/semantic/**/*.json',
           'tokens/component/**/*.json',
           `tokens/clients/${clientFile}`
         ],
@@ -84,8 +87,8 @@ async function buildClientTokens() {
                 format: 'css/client-theme',
                 filter: (token: any) => {
                   // Include client-specific tokens and override semantic tokens
-                  return token.path[0] === 'brand' || 
-                         token.path[0] === 'font' || 
+                  return token.path[0] === 'brand' ||
+                         token.path[0] === 'font' ||
                          token.path[0] === 'color' && token.path[1] === 'semantic';
                 },
                 options: {
@@ -96,17 +99,17 @@ async function buildClientTokens() {
           }
         }
       };
-      
+
       // Build client tokens
       const sd = new StyleDictionary(clientConfig);
       await sd.hasInitialized;
       await sd.buildPlatform('css/client');
-      
+
       console.log(`✅ Built tokens for client: ${clientName}`);
     }
-    
+
     console.log('🎉 All client tokens built successfully');
-    
+
   } catch (error) {
     console.error('❌ Error building client tokens:', error);
     process.exit(1);

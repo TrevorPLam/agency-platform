@@ -15,13 +15,13 @@
     }
   },
   "dependencies": {
-    "posthog-js": "^1.236.0",
-    "posthog-node": "^4.8.0"
+    "posthog-js": "catalog:",
+    "posthog-node": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "tsup": "^8.0.0",
-    "@types/node": "^22.0.0"
+    "typescript": "catalog:",
+    "tsup": "catalog:",
+    "@types/node": "catalog:"
   },
   "scripts": {
     "build": "tsup",

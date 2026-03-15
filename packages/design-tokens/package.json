@@ -11,12 +11,12 @@
     "tokens:build": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts"
   },
   "dependencies": {
-    "style-dictionary": "^4.0.0"
+    "style-dictionary": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
-    "tsup": "^8.0.0",
-    "@types/node": "^22.0.0"
+    "typescript": "catalog:",
+    "tsup": "catalog:",
+    "@types/node": "catalog:"
   },
   "files": [
     "dist",

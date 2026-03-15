@@ -1,6 +1,7 @@
 /**
  * Client scaffolding script (T-19). Run with: pnpm scaffold
- * Uses apps/clients/riverside-hotel as the exact template.
+ * Creates under apps/prospective-clients (demo) or apps/clients (real).
+ * Template: apps/clients/riley-day-care.
  */
 import { execSync } from 'child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
@@ -35,16 +36,20 @@ async function main() {
   let industry: string
   let domain: string
 
+  let isProspective: boolean
   if (process.env.SCAFFOLD_SLUG) {
     name = process.env.SCAFFOLD_NAME ?? process.env.SCAFFOLD_SLUG
     slug = process.env.SCAFFOLD_SLUG.trim()
     industry = process.env.SCAFFOLD_INDUSTRY ?? 'general'
     domain = process.env.SCAFFOLD_DOMAIN ?? ''
+    isProspective = process.env.SCAFFOLD_PROSPECTIVE === 'true' || process.env.SCAFFOLD_PROSPECTIVE === '1'
   } else {
-    name = await ask('Client display name (e.g. Riverside Hotel): ')
-    slug = (await ask('Client slug (e.g. riverside-hotel): ')).trim()
+    name = await ask('Client display name (e.g. Riley Day Care): ')
+    slug = (await ask('Client slug (e.g. riley-day-care): ')).trim()
     industry = await ask('Industry (healthcare/ecommerce/hospitality/general): ')
-    domain = await ask('Production domain (e.g. riverside-hotel.com): ')
+    domain = await ask('Production domain (e.g. rileydaycare.com): ')
+    const prospectAnswer = (await ask('Prospective (demo) or real client? (p/r): ')).trim().toLowerCase()
+    isProspective = prospectAnswer === 'p' || prospectAnswer === 'prospective'
   }
 
   if (!validateSlug(slug)) {
@@ -55,12 +60,13 @@ async function main() {
   }
 
   const root = process.cwd()
-  const appDir = join(root, 'apps', 'clients', slug)
+  const appSubdir = isProspective ? 'prospective-clients' : 'clients'
+  const appDir = join(root, 'apps', appSubdir, slug)
   const tokenDir = join(root, 'packages', 'design-tokens', 'tokens', 'clients')
-  const templateRoot = join(root, 'apps', 'clients', 'riverside-hotel')
+  const templateRoot = join(root, 'apps', 'clients', 'riley-day-care')
 
   if (existsSync(appDir)) {
-    console.error(`\n❌ Directory already exists: apps/clients/${slug}. Aborting to avoid overwriting.\n`)
+    console.error(`\n❌ Directory already exists: apps/${appSubdir}/${slug}. Aborting to avoid overwriting.\n`)
     process.exit(1)
   }
 
@@ -92,18 +98,18 @@ async function main() {
   )
 
   const globalsCss = readTemplate(templateRoot, 'src', 'app', 'globals.css')
-    .replace(/riverside-hotel\.css/, `${slug}.css`)
+    .replace(/riley-day-care\.css/, `${slug}.css`)
   writeFileSync(join(appDir, 'src', 'app', 'globals.css'), globalsCss)
 
   const layoutContent = readTemplate(templateRoot, 'src', 'app', 'layout.tsx')
-    .replace(/Riverside Hotel/g, name.replace(/'/g, "\\'"))
-    .replace(/Luxury hospitality experience/g, `${name} — client portal`.replace(/'/g, "\\'"))
+    .replace(/Riley Day Care/g, name.replace(/'/g, "\\'"))
+    .replace(/Quality child care and early learning/g, `${name} — client`.replace(/'/g, "\\'"))
   writeFileSync(join(appDir, 'src', 'app', 'layout.tsx'), layoutContent)
 
   const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const pageContent = readTemplate(templateRoot, 'src', 'app', 'page.tsx')
-    .replace(/Riverside Hotel/g, safeName)
-    .replace(/Experience luxury hospitality at its finest/g, 'Your experience starts here')
+    .replace(/Riley Day Care/g, safeName)
+    .replace(/Quality child care and early learning in a safe, nurturing environment/g, 'Your experience starts here')
   writeFileSync(join(appDir, 'src', 'app', 'page.tsx'), pageContent)
 
   writeFileSync(
@@ -112,7 +118,7 @@ async function main() {
   )
 
   const providersContent = readTemplate(templateRoot, 'src', 'components', 'providers.tsx')
-    .replace(/riverside-hotel/g, slug)
+    .replace(/riley-day-care/g, slug)
   writeFileSync(join(appDir, 'src', 'components', 'providers.tsx'), providersContent)
 
   writeFileSync(
@@ -120,20 +126,20 @@ async function main() {
     readTemplate(templateRoot, 'src', 'components', 'auth-analytics.tsx')
   )
 
-  const riverToken = JSON.parse(
-    readTemplate(root, 'packages', 'design-tokens', 'tokens', 'clients', 'riverside-hotel.json')
+  const templateToken = JSON.parse(
+    readTemplate(root, 'packages', 'design-tokens', 'tokens', 'clients', 'riley-day-care.json')
   )
   const placeholderTokens = {
-    ...riverToken,
+    ...templateToken,
     brand: {
       primary: { $type: 'color', $value: '#000000' },
       secondary: { $type: 'color', $value: '#666666' },
       accent: { $type: 'color', $value: '#000000' },
     },
     color: {
-      ...riverToken.color,
+      ...templateToken.color,
       semantic: {
-        ...riverToken.color.semantic,
+        ...templateToken.color.semantic,
         background: {
           primary: { $type: 'color', $value: '{brand.primary}' },
           secondary: { $type: 'color', $value: 'oklch(0.98 0.02 198.41)' },
@@ -180,12 +186,12 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`\n✅ Scaffolded @agency/${slug}`)
+  console.log(`\n✅ Scaffolded @agency/${slug} under apps/${appSubdir}/`)
   console.log('\nNext steps:')
   console.log(`  1. Edit packages/design-tokens/tokens/clients/${slug}.json with brand colours`)
   console.log(`  2. Run: pnpm tokens:build`)
   console.log(`  3. Add row to Supabase tenants table with slug "${slug}"`)
-  console.log(`  4. Create Vercel project pointing to apps/clients/${slug}`)
+  console.log(`  4. Create Vercel project pointing to apps/${appSubdir}/${slug}`)
   console.log(`  5. Set environment variables (e.g. NEXT_PUBLIC_TENANT_SLUG=${slug})`)
 }
 

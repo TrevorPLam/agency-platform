@@ -11,8 +11,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^3.0.0",
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:",
     "class-variance-authority": "catalog:",
     "lucide-react": "catalog:",
     "radix-ui": "catalog:"
@@ -20,15 +20,15 @@
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
     "@agency/typescript-config": "workspace:*",
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "eslint": "^9.0.0",
-    "tw-animate-css": "^1.2.0",
-    "typescript": "^5.7.0"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "tw-animate-css": "catalog:",
+    "typescript": "catalog:"
   },
   "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   }
 }

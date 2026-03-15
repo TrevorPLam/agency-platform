@@ -1,0 +1,86 @@
+{
+  "brand": {
+    "primary": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.18 145)"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "oklch(0.75 0.12 85)"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "oklch(0.70 0.15 250)"
+    }
+  },
+  "font": {
+    "primary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "system-ui", "sans-serif"]
+    },
+    "secondary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "Georgia", "serif"]
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": ["JetBrains Mono", "Consolas", "monospace"]
+    }
+  },
+  "color": {
+    "semantic": {
+      "background": {
+        "primary": {
+          "$type": "color",
+          "$value": "{brand.primary}"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.02 145)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.02 145)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.89 0.02 145)"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 145)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "interactive": {
+        "primary": {
+          "default": {
+            "$type": "color",
+            "$value": "{brand.primary}"
+          },
+          "hover": {
+            "$type": "color",
+            "$value": "oklch(0.50 0.18 145)"
+          },
+          "active": {
+            "$type": "color",
+            "$value": "oklch(0.45 0.18 145)"
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "oklch(0.89 0.02 145)"
+          }
+        }
+      }
+    }
+  }
+}

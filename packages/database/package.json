@@ -25,17 +25,17 @@
     "db:generate-types:local": "npx supabase gen types typescript --local > src/types.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.0",
-    "@supabase/ssr": "^0.6.0"
+    "@supabase/supabase-js": "catalog:",
+    "@supabase/ssr": "catalog:"
   },
   "peerDependencies": {
     "next": ">=14.0.0"
   },
   "devDependencies": {
     "@agency/typescript-config": "workspace:*",
-    "@types/node": "^22.0.0",
-    "tsup": "^8.0.0",
-    "typescript": "^5.7.0",
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

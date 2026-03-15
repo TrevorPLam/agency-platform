@@ -30,7 +30,6 @@
 # Documentation
 /docs/ @trevo
 /README.md @trevo
-/CONTRIBUTING.md @trevo
 /TOOLCHAIN.md @trevo
 
 # AI tooling rules

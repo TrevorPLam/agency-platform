@@ -8,10 +8,10 @@
     "./flat": "./flat.cjs"
   },
   "devDependencies": {
-    "eslint": "^9.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.57.0",
-    "@typescript-eslint/parser": "^8.57.0",
-    "eslint-config-next": "^16.1.0"
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "@typescript-eslint/eslint-plugin": "catalog:",
+    "@typescript-eslint/parser": "catalog:"
   },
   "peerDependencies": {
     "eslint": "*",

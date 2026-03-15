@@ -16,6 +16,7 @@ build/
 
 # Generated build artifacts
 apps/clients/*/tokens/*.css
+apps/prospective-clients/*/tokens/*.css
 
 # Supabase
 supabase/.branches/
