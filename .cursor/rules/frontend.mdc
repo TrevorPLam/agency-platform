@@ -30,8 +30,10 @@ alwaysApply: false
 - Fetch in Server Components — never in useEffect
 - Use createSupabaseServerClient from @agency/database in Server Components and Server Actions
 - Pass fetched data down as props to Client Components
+- WRONG: 'use client' + useEffect + fetch or Supabase in a component. CORRECT: async Server Component that calls createSupabaseServerClient(cookies()) and awaits .from('table').select(); pass result as props to children.
 
 ## Components
 - All shared components live in packages/ui, not in apps
 - Use cn() from @agency/ui for all className merging
 - shadcn/ui components are in packages/ui/src/components
+- WRONG: hardcoded colors (bg-[#hex], style={{ color: '...' }}), or theme() in CSS. CORRECT: cn() and token-based classes (bg-brand-primary, text-text-default, border-border-default).

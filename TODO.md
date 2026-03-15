@@ -1230,6 +1230,8 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 
 **T-18 verification checklist:** Added to docs/AI_PROMPTING.md (section "T-18 Cursor verification checklist"). Human should run T-18.08–T-18.11 per that checklist and check off each subtask when the AI output meets the pass criteria.
 
+**Agent validation (execute PROMPT.md):** All .cursor/rules/*.mdc, .windsurf/rules/monorepo.md, and .windsurfrules validated against GUIDE §13 and the T-18 checklist. frontend.mdc augmented with WRONG/CORRECT examples for (1) data fetching — Server Component + createSupabaseServerClient vs useEffect, (2) styling — cn() + token classes vs hardcoded colors. Rules reference public.tenant_id(), CONCURRENTLY, and tw-animate-css throughout. No stray or duplicate rule files. Human verification (T-18.08–T-18.11) pending; run the four scenarios in docs/AI_PROMPTING.md and check off when pass criteria are met.
+
 ### Definition of Done
 
 All Cursor `.mdc` files exist with valid YAML frontmatter. Windsurf rules file is under 6,000 tokens. All four test scenarios (T-18.08–T-18.11) produce correct suggestions without manual correction. `docs/AI_PROMPTING.md` is committed with working prompt templates.
