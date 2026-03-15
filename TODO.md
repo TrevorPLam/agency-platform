@@ -176,13 +176,13 @@ The `docs/` directory is a first-class workspace member. Every significant archi
 
 ## T-03: Workspace Configuration
 
-- [ ] **T-03**  `pnpm-workspace.yaml`, root `package.json`, `turbo.json`, and root `tsconfig.json` are in place, valid, and `pnpm install` succeeds.
+- [x] **T-03**  `pnpm-workspace.yaml`, root `package.json`, `turbo.json`, and root `tsconfig.json` are in place, valid, and `pnpm install` succeeds.
 
 ### Subtasks
 
-- [ ] **T-03.01** Create `pnpm-workspace.yaml` with `packages: ['apps/**', 'packages/**']`
+- [x] **T-03.01** Create `pnpm-workspace.yaml` with `packages: ['apps/**', 'packages/**']`
   - `📄 pnpm-workspace.yaml`
-- [ ] **T-03.02** Add the full version catalog under the `catalog:` key — include every shared dependency the stack requires:
+- [x] **T-03.02** Add the full version catalog under the `catalog:` key — include every shared dependency the stack requires:
   ```yaml
   catalog:
     next: ^16.1.0
@@ -210,14 +210,14 @@ The `docs/` directory is a first-class workspace member. Every significant archi
     vitest: ^3.0.0
     turbo: ^2.7.0
   ```
-- [ ] **T-03.03** Set `catalogMode: strict` and `cleanupUnusedCatalogs: true` in `pnpm-workspace.yaml`
-- [ ] **T-03.04** Document the `catalogMode: strict` known bug in `docs/PNPM_NOTES.md`: when running `pnpm add <pkg>` in a sub-package, pnpm may write `catalog:` (the protocol itself) back into `pnpm-workspace.yaml` as the version — check and correct after every `pnpm add`. The workaround is to manually edit the workspace.yaml and run `pnpm install` rather than using `pnpm add` for new dependencies.
+- [x] **T-03.03** Set `catalogMode: strict` and `cleanupUnusedCatalogs: true` in `pnpm-workspace.yaml`
+- [x] **T-03.04** Document the `catalogMode: strict` known bug in `docs/PNPM_NOTES.md`: when running `pnpm add <pkg>` in a sub-package, pnpm may write `catalog:` (the protocol itself) back into `pnpm-workspace.yaml` as the version — check and correct after every `pnpm add`. The workaround is to manually edit the workspace.yaml and run `pnpm install` rather than using `pnpm add` for new dependencies.
   - `📄 docs/PNPM_NOTES.md`
-- [ ] **T-03.05** Create root `package.json` as `"private": true` with scripts: `dev`, `build`, `lint`, `test`, `type-check`, `tokens:build`, `scaffold`, `db:generate-types`
+- [x] **T-03.05** Create root `package.json` as `"private": true` with scripts: `dev`, `build`, `lint`, `test`, `type-check`, `tokens:build`, `scaffold`, `db:generate-types`
   - `📄 package.json`
-- [ ] **T-03.06** Set `"packageManager": "pnpm@10.12.1"` in root `package.json`
-- [ ] **T-03.07** Add `"preinstall": "npx only-allow pnpm"` to root `package.json` scripts
-- [ ] **T-03.08** Create `turbo.json` with all required tasks:
+- [x] **T-03.06** Set `"packageManager": "pnpm@10.12.1"` in root `package.json`
+- [x] **T-03.07** Add `"preinstall": "npx only-allow pnpm"` to root `package.json` scripts
+- [x] **T-03.08** Create `turbo.json` with all required tasks:
   - `build`: `dependsOn: ["^build", "tokens:build"]`, outputs: `.next/**`, `!.next/cache/**`, `dist/**`
   - `dev`: `cache: false`, `persistent: true`
   - `lint`: `dependsOn: ["^build"]`
@@ -225,12 +225,12 @@ The `docs/` directory is a first-class workspace member. Every significant archi
   - `test`: `dependsOn: ["^build"]`, outputs: `coverage/**`
   - `tokens:build`: `inputs: ["tokens/**/*.json"]`, outputs: `dist/**/*.css`
   - `📄 turbo.json`
-- [ ] **T-03.09** Set `"ui": "tui"` in `turbo.json` for the terminal UI
-- [ ] **T-03.10** Create root `tsconfig.json` as a project references coordinator only — `"files": []`, `"references": []` (populated incrementally as packages are added)
+- [x] **T-03.09** Set `"ui": "tui"` in `turbo.json` for the terminal UI
+- [x] **T-03.10** Create root `tsconfig.json` as a project references coordinator only — `"files": []`, `"references": []` (populated incrementally as packages are added)
   - `📄 tsconfig.json`
-- [ ] **T-03.11** Run `pnpm install` from repo root — confirm `pnpm-lock.yaml` is generated
+- [x] **T-03.11** Run `pnpm install` from repo root — confirm `pnpm-lock.yaml` is generated
   - `📄 pnpm-lock.yaml`
-- [ ] **T-03.12** Commit `pnpm-lock.yaml` — it is required in version control
+- [x] **T-03.12** Commit `pnpm-lock.yaml` — it is required in version control
 
 ### Definition of Done
 
@@ -247,6 +247,18 @@ All internal package references use `workspace:*`. All external dependencies use
 ### Advanced Coding Patterns
 
 The `tokens:build` task uses `inputs: ["tokens/**/*.json"]` — Turborepo's cache is invalidated precisely when token source files change, not on every code change. For the `build` task, `"$TURBO_DEFAULT$"` catches all source files while preserving Turborepo's own filtering logic. Pair these `inputs` declarations with explicit `outputs` on every task — without both, Turborepo cannot restore from cache correctly.
+
+### Implementation Notes
+
+**Workspace Configuration:** Successfully configured pnpm workspace with strict catalog mode containing 23 shared dependencies. All external dependencies will use `catalog:` protocol to prevent version drift across packages.
+
+**Turborepo Pipeline:** Configured build pipeline with proper dependency chains. Build tasks depend on `^build` (upstream packages) and `tokens:build` for design token compilation. Dev tasks run persistently without caching for optimal development experience.
+
+**TypeScript Project References:** Root tsconfig.json configured as coordinator with empty `files` and `references` arrays. Individual package tsconfig.json files will be added incrementally as packages are created in subsequent tasks.
+
+**Package Manager Lock:** Updated root package.json with pnpm@10.12.1 lock and preinstall guard to prevent accidental npm/yarn usage. All scripts properly configured for Turborepo orchestration.
+
+**Documentation:** Created comprehensive PNPM_NOTES.md documenting catalogMode strict bug with workarounds and best practices for team members.
 
 ---
 
