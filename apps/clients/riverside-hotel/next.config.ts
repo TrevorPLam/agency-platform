@@ -1,6 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  transpilePackages: ['@agency/ui', '@agency/analytics'],
+import type { NextConfig } from 'next'
+
+const nextConfig: NextConfig = {
+  transpilePackages: ['@agency/ui', '@agency/database', '@agency/analytics'],
 }
 
-module.exports = nextConfig
+export default nextConfig

@@ -121,14 +121,24 @@
 
 ## T-15: Multi-Tenant Auth
 
-- [ ] **T-15**  Login, signup, callback, protected dashboard in riverside-hotel; session has `app_metadata.tenant_id`; tenant-scoped queries; email aliasing if using `customer_auth_mappings`.
+- [x] **T-15**  Login, signup, callback, protected dashboard in riverside-hotel; session has `app_metadata.tenant_id`; tenant-scoped queries; email aliasing if using `customer_auth_mappings`.
 
 ### Shortlist
 
-- [ ] **T-15.01** – **T-15.04** Add `(auth)/login`, `(auth)/signup`, `(auth)/callback`, `/dashboard`; middleware redirect for unauthenticated.
+- [x] **T-15.01** – **T-15.04** Add `(auth)/login`, `(auth)/signup`, `(auth)/callback`, `/dashboard`; middleware redirect for unauthenticated.
 - [ ] **T-15.05** – **T-15.09** Test admin user, tenant-scoped queries, cross-tenant isolation, email aliasing flow.
 
 *Full subtasks and DoD → TODO.md § T-15.*
+
+### Implementation notes (T-15)
+
+- **Routes:** `(auth)/login`, `(auth)/signup`, `(auth)/callback`, `/dashboard` in riverside-hotel. Login/signup use `@agency/ui` (Button, Input, Label); login form wrapped in `Suspense` for `useSearchParams()`.
+- **Middleware:** `src/middleware.ts` uses `createSupabaseServerClient` with request/response cookie store; refreshes session via `getUser()`; redirects unauthenticated from `/dashboard` to `/login?redirect=...`; redirects authenticated from `/login` and `/signup` to `/dashboard` (callback excluded).
+- **Server actions:** `resolveAuthEmail(realEmail)` (lookup `customer_auth_mappings` by tenant slug); `signupAction(email, password)` (calls `createUserForTenant`, returns `authEmail` for client sign-in); `signOutAction()` (signOut + redirect to `/login`).
+- **Auth flow:** Signup uses `createUserForTenant` (tenant-specific email, `app_metadata.tenant_id`, insert into `customer_auth_mappings`); login resolves real email → auth email then `signInWithPassword`. Callback exchanges code for session; redirect to `next` or `/dashboard`.
+- **Dashboard:** Server component; session via `createSupabaseServerClient(cookies())`; shows `extractOriginalEmail(user.email)` and `user.app_metadata?.tenant_id`; sign-out form calls `signOutAction`.
+- **Database package:** `CreateUserResult` extended with `authEmail`; build now runs `tsup && tsc -p tsconfig.declaration.json` so `.d.ts` are emitted (fixes app build type resolution). `packages/database/tsconfig.declaration.json` uses `composite: false` and `emitDeclarationOnly: true`.
+- **Remaining:** T-15.05–T-15.09 (admin user, tenant-scoped queries, cross-tenant isolation, email aliasing) are manual verification / test items; flows are in place.
 
 ---
 

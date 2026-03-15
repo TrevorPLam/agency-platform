@@ -22,6 +22,8 @@ export interface CreateUserResult {
     tenantId: TenantId
     emailConfirmed: boolean
   }
+  /** Internal auth email (for one-time client sign-in after signup; do not store). */
+  authEmail: string
   needsEmailVerification: boolean
 }
 
@@ -178,6 +180,7 @@ export async function createUserForTenant(
         tenantId,
         emailConfirmed: emailConfirm
       },
+      authEmail: tenantSpecificEmail,
       needsEmailVerification: !emailConfirm
     }
   } catch (error) {

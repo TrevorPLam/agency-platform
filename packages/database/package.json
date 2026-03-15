@@ -17,7 +17,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && tsc -p tsconfig.declaration.json",
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "test": "pnpm exec vitest run",
