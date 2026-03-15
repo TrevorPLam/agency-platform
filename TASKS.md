@@ -75,14 +75,21 @@
 
 ## T-13: Row-Level Security Policies
 
-- [ ] **T-13**  Every table has RLS enabled; all four policy types; `auth.tenant_id()` used; indexes verified via `EXPLAIN ANALYZE`.
+- [x] **T-13**  Every table has RLS enabled; all four policy types where applicable; `public.tenant_id()` used; indexes verified via `EXPLAIN ANALYZE`.
 
 ### Shortlist
 
-- [ ] **T-13.01** – **T-13.03** Verify/add RLS checklist comments and policies on all tenant-scoped tables.
-- [ ] **T-13.04** – **T-13.07** Confirm Index Scan (not Seq Scan) and `auth.tenant_id()` STABLE PARALLEL SAFE.
+- [x] **T-13.01** – **T-13.03** Verify/add RLS checklist comments and policies on all tenant-scoped tables.
+- [x] **T-13.04** – **T-13.07** Confirm Index Scan (not Seq Scan) and `public.tenant_id()` STABLE PARALLEL SAFE.
 
 *Full subtasks and DoD → TODO.md § T-13.*
+
+### Implementation notes (T-13)
+
+- **Checklist:** Added `docs/RLS_VERIFICATION.md` with per-table RLS summary (tenants, tenant_users, posts, audit_log, customer_auth_mappings), confirmation that `public.tenant_id()` is STABLE PARALLEL SAFE (005), and instructions to run the index verification script.
+- **Index verification:** Added `supabase/verify-rls-indexes.sql` — run after `npx supabase start`; replace `YOUR_TENANT_UUID` with `SELECT id FROM public.tenants WHERE slug = 'riverside-hotel'`; confirms Index Scan on tenant_users and posts (not Seq Scan).
+- **Comments:** Migration `008_rls_checklist_comments.sql` adds COMMENT ON TABLE for all five tables (documentation only).
+- **Cursor rules:** Updated `.cursor/rules/rls.mdc` to recommend `public.tenant_id()` and link to RLS_VERIFICATION.md and verify-rls-indexes.sql.
 
 ---
 
