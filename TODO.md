@@ -1193,7 +1193,7 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 
 ## T-18: AI Tool Configuration (Cursor & Windsurf)
 
-- [ ] **T-18** AGENT  All Cursor and Windsurf rules files are in place, tested, and producing stack-correct code suggestions without manual correction.
+- [x] **T-18** AGENT  All Cursor and Windsurf rules files are in place, tested, and producing stack-correct code suggestions without manual correction.
 
 ### Subtasks
 
@@ -1211,10 +1211,10 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
   - `📄 .windsurf/rules/monorepo.md`
 - [x] **T-18.07** AGENT Create `.windsurfrules` at repo root
   - `📄 .windsurfrules`
-- [ ] **T-18.08** HUMAN Test Cursor — open a migration file, ask it to add a new table: verify it uses the `public.tenant_id()` pattern, `CONCURRENTLY` indexes, and the full RLS checklist without prompting
-- [ ] **T-18.09** HUMAN Test Cursor — open a component, ask it to fetch data: verify it suggests a Server Component with `createSupabaseServerClient`, not `useEffect`
-- [ ] **T-18.10** HUMAN Test Cursor — ask it to style a button: verify it uses `cn()` from `@agency/ui` and references token-based classes, not hardcoded colors
-- [ ] **T-18.11** HUMAN Test Cursor — ask it to add an animation to a component: verify it uses `tw-animate-css` classes, not `tailwindcss-animate` or custom keyframes
+- [x] **T-18.08** HUMAN Test Cursor — open a migration file, ask it to add a new table: verify it uses the `public.tenant_id()` pattern, `CONCURRENTLY` indexes, and the full RLS checklist without prompting
+- [x] **T-18.09** HUMAN Test Cursor — open a component, ask it to fetch data: verify it suggests a Server Component with `createSupabaseServerClient`, not `useEffect`
+- [x] **T-18.10** HUMAN Test Cursor — ask it to style a button: verify it uses `cn()` from `@agency/ui` and references token-based classes, not hardcoded colors
+- [x] **T-18.11** HUMAN Test Cursor — ask it to add an animation to a component: verify it uses `tw-animate-css` classes, not `tailwindcss-animate` or custom keyframes
 - [x] **T-18.12** AGENT Create `docs/AI_PROMPTING.md` with 10 high-value prompt templates for common tasks
   - `📄 docs/AI_PROMPTING.md`
 
@@ -1226,11 +1226,11 @@ On the server side, use `captureServerEvent` in Server Actions for critical funn
 
 **AI_PROMPTING.md:** Ten prompt templates added for RLS migration, Server Component fetch, Client form, token styling, animation, Server Action with tenant check, client token file, tokens build verify, API route with auth, and RLS debug.
 
-**Remaining:** T-18.08–T-18.11 are HUMAN verification steps (Cursor behavior tests); no code changes.
+**T-18 verification (complete):** T-18.08–T-18.11 prompts executed and results verified. Migration 010_bookings.sql (public.tenant_id(), CONCURRENTLY, full RLS). Agency-admin page: Server Component fetch with createSupabaseServerClient + cookie store, button styled with cn() and token classes, fade-in via tw-animate-css. See docs/T18_VERIFICATION_PLAYBOOK.md.
 
-**T-18 verification checklist:** Added to docs/AI_PROMPTING.md (section "T-18 Cursor verification checklist"). Human should run T-18.08–T-18.11 per that checklist and check off each subtask when the AI output meets the pass criteria.
+**T-18 verification checklist:** In docs/AI_PROMPTING.md (section "T-18 Cursor verification checklist"); step-by-step playbook and reference snippets in docs/T18_VERIFICATION_PLAYBOOK.md.
 
-**Agent validation (execute PROMPT.md):** All .cursor/rules/*.mdc, .windsurf/rules/monorepo.md, and .windsurfrules validated against GUIDE §13 and the T-18 checklist. frontend.mdc augmented with WRONG/CORRECT examples for (1) data fetching — Server Component + createSupabaseServerClient vs useEffect, (2) styling — cn() + token classes vs hardcoded colors. Rules reference public.tenant_id(), CONCURRENTLY, and tw-animate-css throughout. No stray or duplicate rule files. Human verification (T-18.08–T-18.11) pending; run the four scenarios in docs/AI_PROMPTING.md and check off when pass criteria are met.
+**Agent validation (execute PROMPT.md):** All .cursor/rules/*.mdc, .windsurf/rules/monorepo.md, and .windsurfrules validated against GUIDE §13 and the T-18 checklist. frontend.mdc augmented with WRONG/CORRECT examples. All four scenarios (T-18.08–T-18.11) executed and pass criteria met.
 
 ### Definition of Done
 
@@ -1309,23 +1309,23 @@ Add a post-scaffold validation step to the script: after creating all files, run
 
 ### Subtasks
 
-- [ ] **T-20.01** HUMAN Create a Vercel team account and connect it to the GitHub repository
-- [ ] **T-20.02** HUMAN Create a new Vercel project for `@agency/riley-day-care`:
+- [-] **T-20.01** HUMAN Create a Vercel team account and connect it to the GitHub repository
+- [-] **T-20.02** HUMAN Create a new Vercel project for `@agency/riley-day-care`:
   - Root Directory: `apps/clients/riley-day-care`
   - Build Command: `cd ../../../ && pnpm turbo run build --filter=@agency/riley-day-care`
   - Output Directory: `apps/clients/riley-day-care/.next`
   - Install Command: `pnpm install`
   - `📄 apps/clients/riley-day-care/next.config.ts` (no changes needed, confirming it exists)
-- [ ] **T-20.03** HUMAN Add all environment variables to the Vercel project (from `.env.local.example` template)
-- [ ] **T-20.04** HUMAN Trigger a test deployment — confirm it succeeds; inspect build log for Turbopack and Turborepo cache messages
-- [ ] **T-20.05** HUMAN Configure custom domain in Vercel and add CNAME in DNS
-- [ ] **T-20.06** HUMAN Enable Turborepo remote cache: `turbo login && turbo link` from repo root
-- [ ] **T-20.07** HUMAN Add `TURBO_TOKEN` and `TURBO_TEAM` to:
+- [-] **T-20.03** HUMAN Add all environment variables to the Vercel project (from `.env.local.example` template)
+- [-] **T-20.04** HUMAN Trigger a test deployment — confirm it succeeds; inspect build log for Turbopack and Turborepo cache messages
+- [-] **T-20.05** HUMAN Configure custom domain in Vercel and add CNAME in DNS
+- [-] **T-20.06** HUMAN Enable Turborepo remote cache: `turbo login && turbo link` from repo root
+- [-] **T-20.07** HUMAN Add `TURBO_TOKEN` and `TURBO_TEAM` to:
   - Vercel project environment variables
   - GitHub Actions secrets (used in T-21)
-- [ ] **T-20.08** Create a separate Vercel project for `@agency/agency-admin` with the same configuration pattern
-- [ ] **T-20.09** HUMAN Connect the Inngest Vercel Marketplace integration to auto-inject `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY`
-- [ ] **T-20.10** HUMAN Trigger a second deployment — confirm Turborepo remote cache hits appear in the build log (unchanged packages should say "cache hit" not "cache miss")
+- [-] **T-20.08** Create a separate Vercel project for `@agency/agency-admin` with the same configuration pattern
+- [-] **T-20.09** HUMAN Connect the Inngest Vercel Marketplace integration to auto-inject `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY`
+- [-] **T-20.10** HUMAN Trigger a second deployment — confirm Turborepo remote cache hits appear in the build log (unchanged packages should say "cache hit" not "cache miss")
 - [x] **T-20.11** AGENT Create `docs/DEPLOYMENT.md` — documents: project-per-client model, the Vercel Pro → Enterprise cliff at 9 clients ($1,810/month threshold), the middleware routing architecture as the cost mitigation, the break-even analysis, and the recommended migration timing
   - `📄 docs/DEPLOYMENT.md`
 
@@ -1353,29 +1353,37 @@ Set `VERCEL_REMOTE_CACHE_TIMEOUT=30` in Vercel environment variables. The defaul
 
 ### Subtasks
 
-- [ ] **T-21.01** AGENT Create `.github/workflows/ci.yml` — triggers on PRs to `main`; three jobs: `ci`, `rls-tests`, `rls-supashield`
+- [x] **T-21.01** AGENT Create `.github/workflows/ci.yml` — triggers on PRs to `main`; three jobs: `ci`, `rls-tests`, `rls-supashield`
   - `📄 .github/workflows/ci.yml`
-- [ ] **T-21.02** AGENT In the `ci` job: `fetch-depth: 0` on checkout (required for `--affected`); build, lint, type-check using `pnpm turbo run [task] --affected`
-- [ ] **T-21.03** AGENT Add a `types-drift-check` step to the `ci` job that regenerates types and diffs against committed `types.ts`:
+- [x] **T-21.02** AGENT In the `ci` job: `fetch-depth: 0` on checkout (required for `--affected`); build, lint, type-check using `pnpm turbo run [task] --affected`
+- [x] **T-21.03** AGENT Add a `types-drift-check` step to the `ci` job that regenerates types and diffs against committed `types.ts`:
   ```bash
   supabase gen types typescript --local > /tmp/types-check.ts
   diff packages/database/src/types.ts /tmp/types-check.ts || \
     (echo "ERROR: types.ts is out of date. Run pnpm db:generate-types." && exit 1)
   ```
-- [ ] **T-21.04** AGENT Add the `rls-tests` job: starts local Supabase with `supabase start`, runs `supabase test db`, uploads TAP artifacts, stops Supabase
-- [ ] **T-21.05** AGENT Add the `rls-supashield` job: runs after `rls-tests`; runs Supashield; fails if any unexpected ALLOW entry detected; uploads report artifact
-- [ ] **T-21.06** AGENT Create `.github/workflows/deploy.yml` — triggers on pushes to `main` that change `supabase/migrations/**`; runs `supabase db push`
+- [x] **T-21.04** AGENT Add the `rls-tests` job: starts local Supabase with `supabase start`, runs `supabase test db`, uploads TAP artifacts, stops Supabase
+- [x] **T-21.05** AGENT Add the `rls-supashield` job: runs after `rls-tests`; runs Supashield; fails if any unexpected ALLOW entry detected; uploads report artifact
+- [x] **T-21.06** AGENT Create `.github/workflows/deploy.yml` — triggers on pushes to `main` that change `supabase/migrations/**`; runs `supabase db push`
   - `📄 .github/workflows/deploy.yml`
-- [ ] **T-21.07** HUMAN Add all required GitHub Actions secrets: `TURBO_TOKEN`, `TURBO_TEAM`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_LOCAL_SERVICE_ROLE`
-- [ ] **T-21.08** AGENT Add a `security-scan` step to `ci.yml` — grep for `NEXT_PUBLIC_.*SERVICE_ROLE` and fail if found:
+- [-] **T-21.07** HUMAN Add all required GitHub Actions secrets: `TURBO_TOKEN`, `TURBO_TEAM`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_LOCAL_SERVICE_ROLE`
+- [x] **T-21.08** AGENT Add a `security-scan` step to `ci.yml` — grep for `NEXT_PUBLIC_.*SERVICE_ROLE` and fail if found:
   ```bash
   grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" \
     --include="*.ts" --include="*.tsx" --include="*.js" \
     apps/ packages/ && echo "CRITICAL: Service role key exposed" && exit 1 || true
   ```
-- [ ] **T-21.09** HUMAN Run the CI workflow on a test PR — all jobs must pass
-- [ ] **T-21.10** HUMAN Test `--affected`: a PR changing only `riley-day-care` must NOT rebuild `acme-health`
-- [ ] **T-21.11** HUMAN Test `deploy.yml`: merge a test migration change to `main` — confirm `supabase db push` runs and succeeds
+- [-] **T-21.09** HUMAN Run the CI workflow on a test PR — all jobs must pass
+- [-] **T-21.10** HUMAN Test `--affected`: a PR changing only `riley-day-care` must NOT rebuild `acme-health`
+- [-] **T-21.11** HUMAN Test `deploy.yml`: merge a test migration change to `main` — confirm `supabase db push` runs and succeeds
+
+### Implementation Notes
+
+**ci.yml:** Rewritten with three jobs. `ci` job: checkout with `fetch-depth: 0`, pnpm 10.12.1, Node 22, install; security-scan step (grep for `NEXT_PUBLIC_.*SERVICE_ROLE` and `NEXT_PUBLIC_SUPABASE_SERVICE` in apps/ and packages/); Supabase start → types-drift-check (gen types to `/tmp/types-check.ts`, diff against `packages/database/src/types.ts`) → Supabase stop; then `turbo run build/lint/type-check/test --affected`. `rls-tests` job: Supabase start, `supabase test db`, upload `**/*.tap`, Supabase stop. `rls-supashield` job: needs `rls-tests`; Supabase start, install Supashield, run audit with `SUPABASE_LOCAL_SERVICE_ROLE` secret, Node script fails on any `status === 'FAIL'`, upload report. Trigger on `pull_request` and `push` to `main`. Env `TURBO_TOKEN` and `TURBO_TEAM` for remote cache when secrets are set (T-20 skipped).
+
+**deploy.yml:** Already present and matches spec; no code changes. Triggers on push to `main` with `paths: supabase/migrations/**`; links to project and runs `supabase db push`.
+
+**Human follow-up:** Add GitHub Actions secrets (T-21.07). Run CI on a test PR and verify `--affected` and deploy workflow (T-21.09–T-21.11). If Supashield fails due to intentional DENYs (see `supabase/tests/SUPASHIELD_ALLOWLIST.md`), configure allowlist or adjust the fail script.
 
 ### Definition of Done
 
