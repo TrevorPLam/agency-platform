@@ -2,7 +2,9 @@
   "files": [],
   "references": [
     { "path": "./packages/typescript-config" },
-    { "path": "./packages/eslint-config" }
+    { "path": "./packages/eslint-config" },
+    { "path": "./packages/ui" },
+    { "path": "./packages/database" }
   ],
   "compilerOptions": {
     "target": "ES2022",
