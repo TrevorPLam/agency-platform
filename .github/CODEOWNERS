@@ -1,0 +1,41 @@
+# Agency Platform CODEOWNERS
+# This file defines ownership for code review assignments
+
+# Global fallback - assign to the repository owner
+* @trevo
+
+# Core packages - critical infrastructure
+/packages/database/ @trevo
+/packages/ui/ @trevo
+/packages/analytics/ @trevo
+/packages/design-tokens/ @trevo
+/packages/typescript-config/ @trevo
+/packages/eslint-config/ @trevo
+
+# Database migrations - require database team review
+/supabase/migrations/ @trevo
+/supabase/tests/database/ @trevo
+
+# Client applications - per-client ownership
+/apps/clients/riverside-hotel/ @trevo
+
+# Agency admin application
+/apps/agency-admin/ @trevo
+
+# Build and deployment configuration
+/turbo.json @trevo
+/pnpm-workspace.yaml @trevo
+/.github/workflows/ @trevo
+
+# Documentation
+/docs/ @trevo
+/README.md @trevo
+/CONTRIBUTING.md @trevo
+/TOOLCHAIN.md @trevo
+
+# AI tooling rules
+/.cursor/rules/ @trevo
+/.windsurf/rules/ @trevo
+
+# Scripts and automation
+/scripts/ @trevo
