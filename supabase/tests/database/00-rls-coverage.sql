@@ -1,11 +1,27 @@
--- T-14: RLS coverage — assert expected policies exist on every table with RLS.
--- Policies are refactored to use public.tenant_id() in migration 007.
+-- T-14.02: RLS coverage — RLS enabled on all public tables, expected table count, and policy names.
+-- Policies use public.tenant_id() (migration 007). Requires 000-setup (Basejump test helpers).
 
 begin;
 create extension if not exists pgtap with schema extensions;
 set search_path to public, extensions;
 
-select plan(5);
+select plan(7);
+
+-- Schema-wide: RLS enabled on every table in public (no Basejump dependency)
+select is(
+  (select count(*)::int from pg_class c
+   join pg_namespace n on n.oid = c.relnamespace
+   where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity = true),
+  (select count(*)::int from pg_tables where schemaname = 'public'),
+  'RLS is enabled on all public tables'
+);
+
+-- Guardrail: exact table count (update when adding migrations)
+select is(
+  (select count(*)::int from pg_tables where schemaname = 'public'),
+  5,
+  'Expected exactly 5 tables in public schema'
+);
 
 -- tenants: single SELECT policy (own row only)
 select policies_are(

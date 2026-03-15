@@ -966,13 +966,13 @@ After adding any new policy, always run `EXPLAIN (ANALYZE, BUFFERS) SELECT * FRO
 
 ## T-14: RLS Automated Testing
 
-- [ ] **T-14**  The pgTAP test suite runs locally and in CI, covering RLS coverage for all tables, cross-tenant isolation attacks, role hierarchy, and positive access confirmation.
+- [x] **T-14**  The pgTAP test suite runs locally and in CI, covering RLS coverage for all tables, cross-tenant isolation attacks, role hierarchy, and positive access confirmation.
 
 ### Subtasks
 
-- [ ] **T-14.01** Create `supabase/tests/database/000-setup-test-hooks.sql` — installs pgTAP, http extension, and Basejump test helpers
+- [x] **T-14.01** Create `supabase/tests/database/000-setup-test-hooks.sql` — installs pgTAP, http extension, and Basejump test helpers
   - `📄 supabase/tests/database/000-setup-test-hooks.sql`
-- [ ] **T-14.02** Create `supabase/tests/database/00-rls-coverage.sql` — asserts RLS is enabled on ALL public tables; asserts the expected table count (update this number every time a new migration adds a table):
+- [x] **T-14.02** Create `supabase/tests/database/00-rls-coverage.sql` — asserts RLS is enabled on ALL public tables; asserts the expected table count (update this number every time a new migration adds a table):
   ```sql
   BEGIN;
   SELECT plan(2);
@@ -986,20 +986,34 @@ After adding any new policy, always run `EXPLAIN (ANALYZE, BUFFERS) SELECT * FRO
   ROLLBACK;
   ```
   - `📄 supabase/tests/database/00-rls-coverage.sql`
-- [ ] **T-14.03** Create `supabase/tests/database/01-tenant-isolation.sql` — simulates all four attack types for every tenant-scoped table: cross-tenant SELECT (`is_empty`), UPDATE (`is_empty`), DELETE (`is_empty`), INSERT with foreign tenant_id (`throws_ok` with error code `42501`)
+- [x] **T-14.03** Create `supabase/tests/database/01-tenant-isolation.sql` — simulates all four attack types for every tenant-scoped table: cross-tenant SELECT (`is_empty`), UPDATE (`is_empty`), DELETE (`is_empty`), INSERT with foreign tenant_id (`throws_ok` with error code `42501`)
   - `📄 supabase/tests/database/01-tenant-isolation.sql`
-- [ ] **T-14.04** Create `supabase/tests/database/02-role-hierarchy.sql` — tests admin vs regular user access within the same tenant
+- [x] **T-14.04** Create `supabase/tests/database/02-role-hierarchy.sql` — tests admin vs regular user access within the same tenant
   - `📄 supabase/tests/database/02-role-hierarchy.sql`
-- [ ] **T-14.05** Create `supabase/tests/database/03-positive-access.sql` — confirms authenticated users CAN read/write their own tenant's data (`isnt_empty`); catches over-restrictive policies that block legitimate access
+- [x] **T-14.05** Create `supabase/tests/database/03-positive-access.sql` — confirms authenticated users CAN read/write their own tenant's data (`isnt_empty`); catches over-restrictive policies that block legitimate access
   - `📄 supabase/tests/database/03-positive-access.sql`
-- [ ] **T-14.06** Run `supabase test db` locally — all tests must pass, zero `not ok` lines in TAP output
-- [ ] **T-14.07** Validation test: temporarily remove the SELECT policy from `posts`, run `supabase test db` — confirm `00-rls-coverage.sql` fails (proves the safety net works); restore the policy
-- [ ] **T-14.08** Install Supashield: `npm install -g supashield`
-- [ ] **T-14.09** Run `supashield test` against local Supabase — review the CRUD matrix report
-- [ ] **T-14.10** Create `supabase/tests/SUPASHIELD_ALLOWLIST.md` documenting any intentional ALLOW entries (e.g., the tenants self-read policy)
+- [x] **T-14.06** Run `supabase test db` locally — all tests must pass, zero `not ok` lines in TAP output
+- [x] **T-14.07** Validation test: temporarily remove the SELECT policy from `posts`, run `supabase test db` — confirm `00-rls-coverage.sql` fails (proves the safety net works); restore the policy
+- [x] **T-14.08** Install Supashield: `npm install -g supashield`
+- [x] **T-14.09** Run `supashield test` against local Supabase — review the CRUD matrix report
+- [x] **T-14.10** Create `supabase/tests/SUPASHIELD_ALLOWLIST.md` documenting any intentional ALLOW entries (e.g., the tenants self-read policy)
   - `📄 supabase/tests/SUPASHIELD_ALLOWLIST.md`
-- [ ] **T-14.11** Create `supabase/tests/EXPECTED_TABLE_COUNT.txt` containing the integer count of public tables (currently `4`) — update this file with every new table migration
+- [x] **T-14.11** Create `supabase/tests/EXPECTED_TABLE_COUNT.txt` containing the integer count of public tables (currently `4`) — update this file with every new table migration
   - `📄 supabase/tests/EXPECTED_TABLE_COUNT.txt`
+
+### Implementation Notes
+
+**Setup (T-14.01):** 000-setup uses pgTAP only; http/dbdev/Basejump were omitted so tests run without pg_tle/network. 00-rls-coverage uses a schema-wide RLS check via `pg_class.relrowsecurity` and table count (5) instead of `tests.rls_enabled('public')`.
+
+**Coverage (T-14.02):** 00-rls-coverage has plan(7): one RLS-on-all-tables assertion, one table-count assertion (5), and five `policies_are()` checks. Table count 5 matches public tables: tenants, tenant_users, posts, audit_log, customer_auth_mappings.
+
+**Isolation (T-14.03):** 01-tenant-isolation has 12 assertions: cross-tenant SELECT/UPDATE/DELETE (is_empty) and INSERT wrong tenant_id (throws_ok 42501) for tenants, tenant_users, and posts; both tenant A→B and B→A directions.
+
+**Validation (T-14.07):** Dropped "Tenants select own posts" policy, ran `supabase test db` — 00-rls-coverage failed with "Missing policies: Tenants select own posts". Restored policy; all tests pass.
+
+**Supashield (T-14.08–14.10):** Installed globally; ran `supashield init` and `supashield test`. Two intentional mismatches (tenants INSERT DENY, posts INSERT DENY when JWT has no tenant_id) documented in supabase/tests/SUPASHIELD_ALLOWLIST.md. pgTAP suite is the authoritative RLS test.
+
+**Artifacts:** supabase/tests/EXPECTED_TABLE_COUNT.txt = 5. supabase/tests/SUPASHIELD_ALLOWLIST.md documents intentional design and Supashield run notes.
 
 ### Definition of Done
 
