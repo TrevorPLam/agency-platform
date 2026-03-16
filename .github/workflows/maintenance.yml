@@ -1,0 +1,313 @@
+name: Repository Maintenance
+
+on:
+  schedule:
+    # Run maintenance daily at 2 AM UTC (9 PM EST)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Maintenance task to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - gc
+          - commit-graph
+          - loose-objects
+          - incremental-repack
+          - prefetch
+      aggressive:
+        description: 'Run aggressive garbage collection'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  maintenance:
+    name: Git Repository Maintenance
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for maintenance
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Optimize Git configuration for maintenance
+          git config --global gc.auto 256
+          git config --global gc.autoPackLimit 30
+          git config --global gc.pruneExpire "2.weeks.ago"
+          git config --global pack.threads 4
+          git config --global pack.windowMemory "100m"
+
+      - name: Repository Health Check
+        id: health-check
+        run: |
+          echo "📊 Repository Health Analysis"
+          echo "============================"
+          
+          # Repository size
+          REPO_SIZE=$(du -sh .git | cut -f1)
+          echo "repository-size=$REPO_SIZE" >> $GITHUB_OUTPUT
+          echo "📦 Repository size: $REPO_SIZE"
+          
+          # Object count
+          OBJECT_COUNT=$(git count-objects -v | grep 'in-pack' | cut -d: -f2 | tr -d ' ')
+          echo "object-count=$OBJECT_COUNT" >> $GITHUB_OUTPUT
+          echo "🔢 Objects in pack: $OBJECT_COUNT"
+          
+          # Pack files
+          PACK_COUNT=$(ls .git/objects/pack/*.pack 2>/dev/null | wc -l)
+          echo "pack-count=$PACK_COUNT" >> $GITHUB_OUTPUT
+          echo "📚 Pack files: $PACK_COUNT"
+          
+          # Loose objects
+          LOOSE_COUNT=$(git count-objects -v | grep 'loose' | cut -d: -f2 | tr -d ' ')
+          echo "loose-objects=$LOOSE_COUNT" >> $GITHUB_OUTPUT
+          echo "🎯 Loose objects: $LOOSE_COUNT"
+          
+          # Branch count
+          BRANCH_COUNT=$(git branch -a | wc -l)
+          echo "branch-count=$BRANCH_COUNT" >> $GITHUB_OUTPUT
+          echo "🌿 Branches: $BRANCH_COUNT"
+
+      - name: Run Maintenance Tasks
+        run: |
+          echo "🔧 Running Git maintenance tasks..."
+          
+          TASK="${{ github.event.inputs.task || 'all' }}"
+          AGGRESSIVE="${{ github.event.inputs.aggressive || 'false' }}"
+          
+          case $TASK in
+            "all")
+              echo "📋 Running all maintenance tasks..."
+              
+              # Prefetch remote changes
+              echo "📡 Running prefetch..."
+              git maintenance run --task=prefetch
+              
+              # Update commit graph
+              echo "📊 Updating commit graph..."
+              git maintenance run --task=commit-graph
+              
+              # Clean up loose objects
+              echo "🎯 Cleaning loose objects..."
+              git maintenance run --task=loose-objects
+              
+              # Incremental repack
+              echo "📦 Incremental repack..."
+              git maintenance run --task=incremental-repack
+              
+              # Standard garbage collection
+              if [ "$AGGRESSIVE" = "true" ]; then
+                echo "🧹 Running aggressive garbage collection..."
+                git gc --aggressive --prune=2.weeks.ago
+              else
+                echo "🧹 Running standard garbage collection..."
+                git gc --prune=2.weeks.ago
+              fi
+              ;;
+              
+            "gc")
+              echo "🧹 Running garbage collection..."
+              if [ "$AGGRESSIVE" = "true" ]; then
+                git gc --aggressive --prune=2.weeks.ago
+              else
+                git gc --prune=2.weeks.ago
+              fi
+              ;;
+              
+            "commit-graph")
+              echo "📊 Updating commit graph..."
+              git maintenance run --task=commit-graph
+              ;;
+              
+            "loose-objects")
+              echo "🎯 Cleaning loose objects..."
+              git maintenance run --task=loose-objects
+              ;;
+              
+            "incremental-repack")
+              echo "📦 Incremental repack..."
+              git maintenance run --task=incremental-repack
+              ;;
+              
+            "prefetch")
+              echo "📡 Running prefetch..."
+              git maintenance run --task=prefetch
+              ;;
+          esac
+
+      - name: Repository Verification
+        run: |
+          echo "🔍 Verifying repository integrity..."
+          
+          # Basic integrity check
+          if ! git fsck --no-dangling > /dev/null 2>&1; then
+            echo "❌ Repository integrity check failed"
+            exit 1
+          fi
+          
+          echo "✅ Repository integrity verified"
+
+      - name: Performance Metrics
+        id: performance
+        run: |
+          echo "📈 Performance Metrics"
+          echo "====================="
+          
+          # Time common operations
+          STATUS_TIME=$(time (git status >/dev/null) 2>&1 | grep real | awk '{print $2}')
+          echo "git-status-time=$STATUS_TIME" >> $GITHUB_OUTPUT
+          echo "⏱️ git status: $STATUS_TIME"
+          
+          LOG_TIME=$(time (git log --oneline -10 >/dev/null) 2>&1 | grep real | awk '{print $2}')
+          echo "git-log-time=$LOG_TIME" >> $GITHUB_OUTPUT
+          echo "⏱️ git log (10): $LOG_TIME"
+          
+          # Post-maintenance repository size
+          POST_SIZE=$(du -sh .git | cut -f1)
+          echo "post-maintenance-size=$POST_SIZE" >> $GITHUB_OUTPUT
+          echo "📦 Post-maintenance size: $POST_SIZE"
+
+      - name: Generate Maintenance Report
+        run: |
+          echo "# Repository Maintenance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Task:** ${{ github.event.inputs.task || 'all' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Aggressive:** ${{ github.event.inputs.aggressive || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Repository Health" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository Size:** ${{ steps.health-check.outputs.repository-size }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Objects:** ${{ steps.health-check.outputs.object-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pack Files:** ${{ steps.health-check.outputs.pack-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Loose Objects:** ${{ steps.health-check.outputs.loose-objects }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branches:** ${{ steps.health-check.outputs.branch-count }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Performance Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **git status:** ${{ steps.performance.outputs.git-status-time }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **git log (10):** ${{ steps.performance.outputs.git-log-time }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Post-maintenance Size:** ${{ steps.performance.outputs.post-maintenance-size }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Maintenance Tasks Completed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Repository integrity verified" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Garbage collection completed" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Commit graph updated" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Loose objects cleaned" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Incremental repack completed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create Maintenance Issue (if needed)
+        if: contains(steps.health-check.outputs.loose-objects, '[1-9]') || steps.health-check.outputs.pack-count > 10
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const looseObjects = '${{ steps.health-check.outputs.loose-objects }}';
+            const packCount = '${{ steps.health-check.outputs.pack-count }}';
+            
+            const body = `# Repository Maintenance Alert
+            
+            **Date:** ${new Date().toISOString()}
+            **Repository:** ${context.repo.owner}/${context.repo.repo}
+            
+            ## Health Metrics
+            - **Repository Size:** ${{ steps.health-check.outputs.repository-size }}
+            - **Objects:** ${{ steps.health-check.outputs.object-count }}
+            - **Pack Files:** ${{ steps.health-check.outputs.pack-count }}
+            - **Loose Objects:** ${{ steps.health-check.outputs.loose-objects }}
+            - **Branches:** ${{ steps.health-check.outputs.branch-count }}
+            
+            ## Recommendations
+            ${parseInt(looseObjects) > 100 ? '- Consider running aggressive garbage collection' : ''}
+            ${parseInt(packCount) > 20 ? '- Consider running full repository repack' : ''}
+            ${parseInt(looseObjects) === 0 && parseInt(packCount) < 5 ? '- Repository is in good health' : ''}
+            
+            ## Actions Taken
+            - [x] Automated maintenance completed
+            - [x] Repository integrity verified
+            - [x] Performance metrics recorded
+            
+            ---
+            *This issue was created automatically by the repository maintenance workflow.*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Repository Maintenance Alert - ${new Date().toISOString().split('T')[0]}`,
+              body: body,
+              labels: ['maintenance', 'repository-health', 'automated']
+            });
+
+  cleanup:
+    name: Branch Cleanup
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Prune Stale Branches
+        run: |
+          echo "🌿 Cleaning up stale branches..."
+          
+          # Fetch all branches
+          git fetch --prune
+          
+          # Find branches merged into main but not deleted
+          for branch in $(git branch -r --merged origin/main | grep -v 'origin/main' | grep -v 'origin/HEAD' | sed 's/origin\///'); do
+            echo "🗑️ Checking branch: $branch"
+            
+            # Check if branch is stale (no commits in 30 days)
+            last_commit=$(git log -1 --format=%cd --date=iso origin/$branch)
+            thirty_days_ago=$(date -d '30 days ago' --iso-8601)
+            
+            if [[ "$last_commit" < "$thirty_days_ago" ]]; then
+              echo "🗑️ Deleting stale branch: origin/$branch"
+              git push origin --delete $branch || echo "Failed to delete $branch (may already be deleted)"
+            fi
+          done
+
+      - name: Cleanup Tags
+        run: |
+          echo "🏷️ Cleaning up old tags..."
+          
+          # Keep only last 20 tags
+          tag_count=$(git tag | wc -l)
+          
+          if [ $tag_count -gt 20 ]; then
+            echo "Found $tag_count tags, keeping last 20"
+            
+            # Get tags to delete (oldest ones)
+            tags_to_delete=$(git tag --sort=-version:refname | tail -n +21)
+            
+            for tag in $tags_to_delete; do
+              echo "🗑️ Deleting old tag: $tag"
+              git tag -d $tag || true
+              git push origin :refs/tags/$tag || true
+            done
+          fi

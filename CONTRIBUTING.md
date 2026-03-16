@@ -24,7 +24,23 @@ This document covers everything you need to get running locally and contribute c
 
    All dependencies use the **catalog** in `pnpm-workspace.yaml` — versions are centralised there. Internal packages use `workspace:*`. Do not add version strings to `package.json` for catalogued packages; use `catalog:` and add the entry to the root catalog if needed. See [docs/PNPM_NOTES.md](./docs/PNPM_NOTES.md) for the `catalogMode: strict` workaround.
 
-3. **Environment setup**
+3. **Git performance optimization**
+
+   ```bash
+   # Apply Git performance optimizations for large repositories
+   ./scripts/setup/git-config.sh
+   
+   # Enable background maintenance
+   git maintenance register
+   git maintenance start
+   
+   # Verify performance
+   ./scripts/benchmark/git-performance.ts
+   ```
+
+   For detailed Git performance guidance, see [docs/development/GIT_PERFORMANCE.md](./docs/development/GIT_PERFORMANCE.md).
+
+4. **Environment setup**
 
    ```bash
    cp .env.local.example .env.local
@@ -145,6 +161,56 @@ Prettier is enforced in CI. Use the repo's `prettier.config.mjs` (semi: false, s
 ## Style drift prevention
 
 Prefer **design tokens** over arbitrary Tailwind values: use token-based spacing, colors, and typography (e.g. from `@agency/design-tokens`) instead of arbitrary values like `w-[17px]` or `text-[#abc]` where an equivalent token exists. This keeps client sites aligned with the design system and makes global changes safe. An optional ESLint rule (e.g. `eslint-plugin-tailwindcss` with `flat/recommended`, or a custom rule limiting arbitrary values) can be added to enforce this; see [packages/eslint-config](./packages/eslint-config) and [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) (style drift prevention).
+
+---
+
+## Git Performance and Maintenance
+
+### Regular Maintenance
+
+Keep the repository performing optimally with regular maintenance:
+
+```bash
+# Weekly maintenance
+git maintenance run
+git fetch --prune
+
+# Monthly deep clean
+./scripts/maintenance/git-gc.sh
+./scripts/audit/repository-audit.ts
+
+# Performance monitoring
+./scripts/benchmark/git-performance.ts --save
+```
+
+### Performance Issues
+
+If Git operations feel slow:
+
+```bash
+# Quick performance check
+./scripts/benchmark/git-performance.ts
+
+# Run maintenance
+git maintenance run --all
+
+# Aggressive cleanup (if needed)
+./scripts/maintenance/git-gc.sh --aggressive
+```
+
+### Repository Health
+
+Monitor repository health with automated tools:
+
+```bash
+# Comprehensive audit
+./scripts/audit/repository-audit.ts
+
+# Performance trends
+./scripts/benchmark/git-performance.ts --trends
+```
+
+For complete Git performance guidance, see [docs/development/PERFORMANCE_GUIDE.md](./docs/development/PERFORMANCE_GUIDE.md).
 
 ---
 

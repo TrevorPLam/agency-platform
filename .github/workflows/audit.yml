@@ -1,0 +1,251 @@
+name: Repository Audit
+
+on:
+  schedule:
+    # Run audit weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      save_report:
+        description: 'Save audit report as artifact'
+        required: false
+        default: true
+        type: boolean
+      create_issue:
+        description: 'Create issue for low health scores'
+        required: false
+        default: true
+        type: boolean
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  audit:
+    name: Repository Health Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required for comprehensive audit
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: |
+          npm install -g tsx
+          # Ensure audit script is executable
+          chmod +x scripts/audit/repository-audit.ts
+
+      - name: Run Repository Audit
+        id: audit
+        run: |
+          echo "🔍 Running comprehensive repository audit..."
+          
+          # Run the audit script
+          AUDIT_RESULT=$(npx tsx scripts/audit/repository-audit.ts --json --verbose 2>&1)
+          echo "$AUDIT_RESULT"
+          
+          # Extract health score for output
+          HEALTH_SCORE=$(echo "$AUDIT_RESULT" | jq -r '.health.score // 0')
+          REPO_SIZE=$(echo "$AUDIT_RESULT" | jq -r '.repository.size // "unknown"')
+          OBJECT_COUNT=$(echo "$AUDIT_RESULT" | jq -r '.objects.total // 0')
+          LOOSE_OBJECTS=$(echo "$AUDIT_RESULT" | jq -r '.objects.loose // 0')
+          
+          echo "health-score=$HEALTH_SCORE" >> $GITHUB_OUTPUT
+          echo "repo-size=$REPO_SIZE" >> $GITHUB_OUTPUT
+          echo "object-count=$OBJECT_COUNT" >> $GITHUB_OUTPUT
+          echo "loose-objects=$LOOSE_OBJECTS" >> $GITHUB_OUTPUT
+          
+          # Save detailed results
+          echo "$AUDIT_RESULT" > audit-results.json
+          
+          echo "📊 Audit Summary:"
+          echo "  Health Score: $HEALTH_SCORE/100"
+          echo "  Repository Size: $REPO_SIZE"
+          echo "  Total Objects: $OBJECT_COUNT"
+          echo "  Loose Objects: $LOOSE_OBJECTS"
+
+      - name: Generate Audit Report
+        run: |
+          echo "# Repository Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Extract key metrics from audit results
+          HEALTH_SCORE=$(jq -r '.health.score // 0' audit-results.json)
+          REPO_SIZE=$(jq -r '.repository.size // "unknown"' audit-results.json)
+          OBJECT_COUNT=$(jq -r '.objects.total // 0' audit-results.json)
+          LOOSE_OBJECTS=$(jq -r '.objects.loose // 0' audit-results.json)
+          PACK_FILES=$(jq -r '.objects.packs // 0' audit-results.json)
+          BRANCH_COUNT=$(jq -r '.branches.total // 0' audit-results.json)
+          STALE_BRANCHES=$(jq -r '.branches.stale // 0' audit-results.json)
+          STATUS_TIME=$(jq -r '.performance.statusTime // "unknown"' audit-results.json)
+          SECRETS_DETECTED=$(jq -r '.security.secrets // false' audit-results.json)
+          LARGE_FILES=$(jq -r '.security.largeFiles | length' audit-results.json)
+          
+          echo "## 📊 Key Metrics" >> $GITHUB_STEP_SUMMARY
+          echo "- **Health Score:** $HEALTH_SCORE/100" >> $GITHUB_STEP_SUMMARY
+          echo "- **Repository Size:** $REPO_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Total Objects:** $OBJECT_COUNT.toLocaleString()" >> $GITHUB_STEP_SUMMARY
+          echo "- **Loose Objects:** $LOOSE_OBJECTS.toLocaleString()" >> $GITHUB_STEP_SUMMARY
+          echo "- **Pack Files:** $PACK_FILES" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branches:** $BRANCH_COUNT" >> $GITHUB_STEP_SUMMARY
+          echo "- **Stale Branches:** $STALE_BRANCHES" >> $GITHUB_STEP_SUMMARY
+          echo "- **git status time:** $STATUS_TIME" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Health status
+          if [ "$HEALTH_SCORE" -ge 80 ]; then
+            echo "## 🎉 Health Status: Excellent" >> $GITHUB_STEP_SUMMARY
+          elif [ "$HEALTH_SCORE" -ge 60 ]; then
+            echo "## ✅ Health Status: Good" >> $GITHUB_STEP_SUMMARY
+          elif [ "$HEALTH_SCORE" -ge 40 ]; then
+            echo "## ⚠️ Health Status: Needs Attention" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## 🚨 Health Status: Critical" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Issues and recommendations
+          ISSUES_COUNT=$(jq -r '.health.issues | length' audit-results.json)
+          RECOMMENDATIONS_COUNT=$(jq -r '.health.recommendations | length' audit-results.json)
+          
+          if [ "$ISSUES_COUNT" -gt 0 ]; then
+            echo "## ❌ Issues Found ($ISSUES_COUNT)" >> $GITHUB_STEP_SUMMARY
+            jq -r '.health.issues[]' audit-results.json | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "$RECOMMENDATIONS_COUNT" -gt 0 ]; then
+            echo "## 💡 Recommendations ($RECOMMENDATIONS_COUNT)" >> $GITHUB_STEP_SUMMARY
+            jq -r '.health.recommendations[]' audit-results.json | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          # Security summary
+          echo "## 🔒 Security Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Secrets detected:** $([ "$SECRETS_DETECTED" = "true" ] && echo "⚠️ Yes" || echo "✅ No")" >> $GITHUB_STEP_SUMMARY
+          echo "- **Large files:** $LARGE_FILES" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sensitive files:** $(jq -r '.security.sensitiveFiles | length' audit-results.json)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Performance summary
+          echo "## ⚡ Performance Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **git status:** $STATUS_TIME" >> $GITHUB_STEP_SUMMARY
+          echo "- **git log (10):** $(jq -r '.performance.logTime // "unknown"' audit-results.json)" >> $GITHUB_STEP_SUMMARY
+          if [ -n "$(jq -r '.performance.fetchTime // empty' audit-results.json)" ]; then
+            echo "- **git fetch:** $(jq -r '.performance.fetchTime' audit-results.json)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Audit Results
+        if: github.event.inputs.save_report == 'true' || github.event.inputs.save_report == ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: repository-audit-${{ github.run_number }}
+          path: |
+            audit-results.json
+            .git-gc*.log
+          retention-days: 30
+
+      - name: Create Issue for Low Health Score
+        if: |
+          (github.event.inputs.create_issue == 'true' || github.event.inputs.create_issue == '') && 
+          steps.audit.outputs.health-score < 60
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const auditResults = JSON.parse(fs.readFileSync('audit-results.json', 'utf8'));
+            
+            const healthScore = auditResults.health.score;
+            const repoSize = auditResults.repository.size;
+            const issues = auditResults.health.issues;
+            const recommendations = auditResults.health.recommendations;
+            
+            let priority = 'medium';
+            if (healthScore < 40) priority = 'high';
+            if (healthScore >= 60) priority = 'low';
+            
+            const body = `# Repository Health Alert
+            
+            **Date:** ${new Date().toISOString()}
+            **Repository:** ${context.repo.owner}/${context.repo.repo}
+            **Health Score:** ${healthScore}/100
+            **Priority:** ${priority.toUpperCase()}
+            
+            ## 📊 Repository Metrics
+            - **Size:** ${repoSize}
+            - **Objects:** ${auditResults.objects.total.toLocaleString()}
+            - **Loose Objects:** ${auditResults.objects.loose.toLocaleString()}
+            - **Pack Files:** ${auditResults.objects.packs}
+            - **Branches:** ${auditResults.branches.total}
+            - **Stale Branches:** ${auditResults.branches.stale}
+            
+            ## ⚡ Performance
+            - **git status:** ${auditResults.performance.statusTime}
+            - **git log (10):** ${auditResults.performance.logTime}
+            
+            ## 🔒 Security
+            - **Secrets detected:** ${auditResults.security.secrets ? '⚠️ Yes' : '✅ No'}
+            - **Large files:** ${auditResults.security.largeFiles.length}
+            - **Sensitive files:** ${auditResults.security.sensitiveFiles.length}
+            
+            ## ❌ Issues (${issues.length})
+            ${issues.length > 0 ? issues.map(issue => `- ${issue}`).join('\n') : 'No critical issues found.'}
+            
+            ## 💡 Recommendations (${recommendations.length})
+            ${recommendations.length > 0 ? recommendations.map(rec => `- ${rec}`).join('\n') : 'No specific recommendations.'}
+            
+            ## 🚨 Next Steps
+            1. Review and address critical issues
+            2. Implement recommended optimizations
+            3. Schedule repository maintenance if needed
+            4. Monitor health score improvement
+            
+            ---
+            *This issue was created automatically by the repository audit workflow.*
+            
+            **Audit Details:**
+            - **Workflow Run:** ${context.runId}
+            - **Branch:** ${context.ref}
+            - **Commit:** ${context.sha}`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Repository Health Alert - Score: ${healthScore}/100`,
+              body: body,
+              labels: ['repository-health', 'audit', 'automated', priority]
+            });
+
+      - name: Check for Critical Issues
+        if: steps.audit.outputs.health-score < 40
+        run: |
+          echo "🚨 CRITICAL: Repository health score is below 40"
+          echo "Immediate attention required!"
+          
+          # Trigger maintenance workflow if health is critical
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/dispatches \
+            -d '{"event_type":"critical_maintenance","client_payload":{"health_score":"'${{ steps.audit.outputs.health-score }}'"}}'
+
+      - name: Success Notification
+        if: steps.audit.outputs.health-score >= 80
+        run: |
+          echo "🎉 Excellent repository health!"
+          echo "Score: ${{ steps.audit.outputs.health-score }}/100"
+          echo "Repository is well maintained and optimized."
