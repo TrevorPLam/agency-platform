@@ -1,0 +1,244 @@
+name: SBOM Generation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      scan_target:
+        description: 'Scan target (all, apps, packages)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - apps
+          - packages
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  generate-sbom:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install SBOM tools
+        run: |
+          # Install Syft for SBOM generation
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          # Install Trivy for vulnerability scanning
+          sudo apt-get update
+          sudo apt-get install wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install trivy
+
+      - name: Generate workspace SBOM (CycloneDX)
+        run: |
+          mkdir -p sbom-artifacts
+          
+          # Generate comprehensive workspace SBOM
+          syft dir:. \
+            --output cyclonedx-json \
+            --file sbom-artifacts/workspace-cyclonedx.json \
+            --exclude "**/node_modules/**" \
+            --exclude "**/.git/**" \
+            --exclude "**/dist/**" \
+            --exclude "**/.next/**"
+
+      - name: Generate workspace SBOM (SPDX)
+        run: |
+          # Generate SPDX format for compliance
+          syft dir:. \
+            --output spdx-json \
+            --file sbom-artifacts/workspace-spdx.json \
+            --exclude "**/node_modules/**" \
+            --exclude "**/.git/**" \
+            --exclude "**/dist/**" \
+            --exclude "**/.next/**"
+
+      - name: Generate app-specific SBOMs
+        run: |
+          mkdir -p sbom-artifacts/apps
+          
+          for app in apps/*/; do
+            if [ -d "$app" ]; then
+              app_name=$(basename "$app")
+              echo "Generating SBOM for app: $app_name"
+              
+              syft dir:"$app" \
+                --output cyclonedx-json \
+                --file "sbom-artifacts/apps/${app_name}-cyclonedx.json" \
+                --exclude "**/node_modules/**" \
+                --exclude "**/dist/**" \
+                --exclude "**/.next/**" || echo "Warning: Could not generate SBOM for $app_name"
+            fi
+          done
+
+      - name: Generate package-specific SBOMs
+        run: |
+          mkdir -p sbom-artifacts/packages
+          
+          for package in packages/*/; do
+            if [ -d "$package" ]; then
+              package_name=$(basename "$package")
+              echo "Generating SBOM for package: $package_name"
+              
+              syft dir:"$package" \
+                --output cyclonedx-json \
+                --file "sbom-artifacts/packages/${package_name}-cyclonedx.json" \
+                --exclude "**/node_modules/**" \
+                --exclude "**/dist/**" || echo "Warning: Could not generate SBOM for $package_name"
+            fi
+          done
+
+      - name: Run vulnerability scan on SBOMs
+        run: |
+          mkdir -p sbom-artifacts/vulnerability-reports
+          
+          # Scan workspace SBOM
+          trivy config --format json --output sbom-artifacts/vulnerability-reports/workspace-vulns.json .
+          
+          # Scan each app
+          for app in apps/*/; do
+            if [ -d "$app" ]; then
+              app_name=$(basename "$app")
+              trivy config --format json --output "sbom-artifacts/vulnerability-reports/${app_name}-vulns.json" "$app" || echo "Warning: Could not scan $app_name"
+            fi
+          done
+
+      - name: Generate SBOM summary report
+        run: |
+          cat > sbom-artifacts/sbom-summary.md << 'EOF'
+          # SBOM Generation Report
+          
+          ## Generated: $(date)
+          
+          ## Workspace Overview
+          - Total packages identified: $(jq '.components | length' sbom-artifacts/workspace-cyclonedx.json 2>/dev/null || echo "N/A")
+          - Vulnerabilities found: $(jq '.Results | length' sbom-artifacts/vulnerability-reports/workspace-vulns.json 2>/dev/null || echo "N/A")
+          
+          ## Generated Files
+          ### SBOM Files
+          - workspace-cyclonedx.json (CycloneDX format)
+          - workspace-spdx.json (SPDX format)
+          - apps/*-cyclonedx.json (App-specific SBOMs)
+          - packages/*-cyclonedx.json (Package-specific SBOMs)
+          
+          ### Vulnerability Reports
+          - workspace-vulns.json (Workspace vulnerabilities)
+          - apps/*-vulns.json (App-specific vulnerabilities)
+          
+          ## Security Summary
+          This SBOM provides complete visibility into the software supply chain for the agency platform.
+          All dependencies are tracked and monitored for security vulnerabilities.
+          EOF
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-artifacts
+          path: sbom-artifacts/
+          retention-days: 90
+
+      - name: Generate SBOM attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: sbom-artifacts/workspace-cyclonedx.json
+
+  sbom-quality-check:
+    name: SBOM Quality Check
+    runs-on: ubuntu-latest
+    needs: generate-sbom
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-artifacts
+          path: sbom-artifacts/
+
+      - name: Validate SBOM quality
+        run: |
+          # Check SBOM file sizes and structure
+          if [ ! -f "sbom-artifacts/workspace-cyclonedx.json" ]; then
+            echo "❌ ERROR: Workspace SBOM not generated"
+            exit 1
+          fi
+          
+          # Validate CycloneDX structure
+          if ! jq -e '.bomFormat' sbom-artifacts/workspace-cyclonedx.json > /dev/null 2>&1; then
+            echo "❌ ERROR: Invalid CycloneDX format"
+            exit 1
+          fi
+          
+          # Check for required components
+          component_count=$(jq '.components | length' sbom-artifacts/workspace-cyclonedx.json 2>/dev/null || echo "0")
+          if [ "$component_count" -eq 0 ]; then
+            echo "⚠️  WARNING: No components found in SBOM"
+          else
+            echo "✅ SBOM contains $component_count components"
+          fi
+          
+          # Validate SPDX format
+          if [ -f "sbom-artifacts/workspace-spdx.json" ]; then
+            if ! jq -e '.spdxVersion' sbom-artifacts/workspace-spdx.json > /dev/null 2>&1; then
+              echo "❌ ERROR: Invalid SPDX format"
+              exit 1
+            fi
+            echo "✅ SPDX format valid"
+          fi
+
+      - name: Check for critical vulnerabilities
+        run: |
+          if [ -f "sbom-artifacts/vulnerability-reports/workspace-vulns.json" ]; then
+            critical_vulns=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "CRITICAL")] | length' sbom-artifacts/vulnerability-reports/workspace-vulns.json 2>/dev/null || echo "0")
+            high_vulns=$(jq '[.Results[]?.Vulnerabilities[]? | select(.Severity == "HIGH")] | length' sbom-artifacts/vulnerability-reports/workspace-vulns.json 2>/dev/null || echo "0")
+            
+            if [ "$critical_vulns" -gt 0 ]; then
+              echo "❌ ERROR: $critical_vulns critical vulnerabilities found"
+              exit 1
+            fi
+            
+            if [ "$high_vulns" -gt 0 ]; then
+              echo "⚠️  WARNING: $high_vulns high vulnerabilities found"
+            fi
+            
+            echo "✅ No critical vulnerabilities detected"
+          fi

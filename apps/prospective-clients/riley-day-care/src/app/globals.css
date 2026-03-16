@@ -6,7 +6,7 @@
 @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 /* Import client-specific design tokens */
-@import '../../tokens/riley-day-care.css';
+@import '../../../tokens/riley-day-care.css';
 
 /* Dark mode configuration */
 @custom-variant dark (&:is(.dark *));

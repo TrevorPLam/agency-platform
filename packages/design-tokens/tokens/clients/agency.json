@@ -1,0 +1,118 @@
+{
+  "brand": {
+    "primary": {
+      "$type": "color",
+      "$value": "oklch(0.65 0.22 198.41)"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "oklch(0.70 0.15 250)"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "oklch(0.42 0.18 238.66)"
+    }
+  },
+  "font": {
+    "primary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "system-ui", "sans-serif"]
+    },
+    "secondary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "Georgia", "serif"]
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": ["JetBrains Mono", "Consolas", "monospace"]
+    }
+  },
+  "color": {
+    "semantic": {
+      "background": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 198.41)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.12 0.02 198.41)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "oklch(0.18 0.14 70.71)"
+        }
+      },
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.02 198.41)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.89 0.02 198.41)"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 198.41)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "oklch(0.79 0.14 70.71)"
+        }
+      },
+      "border": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.31 0.01 238.66)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.41 0.02 0)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "oklch(0.42 0.18 238.66)"
+        }
+      },
+      "interactive": {
+        "primary": {
+          "default": {
+            "$type": "color",
+            "$value": "oklch(0.65 0.22 198.41)"
+          },
+          "hover": {
+            "$type": "color",
+            "$value": "oklch(0.7 0.22 198.41)"
+          },
+          "active": {
+            "$type": "color",
+            "$value": "oklch(0.75 0.22 198.41)"
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "oklch(0.31 0.02 198.41)"
+          }
+        },
+        "secondary": {
+          "default": {
+            "$type": "color",
+            "$value": "oklch(0.95 0.01 198.41)"
+          },
+          "hover": {
+            "$type": "color",
+            "$value": "oklch(0.98 0.01 198.41)"
+          },
+          "active": {
+            "$type": "color",
+            "$value": "oklch(0.95 0.01 198.41)"
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "oklch(0.89 0.01 198.41)"
+          }
+        }
+      }
+    }
+  }
+}

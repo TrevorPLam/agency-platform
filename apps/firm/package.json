@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "playwright test"
   },
   "dependencies": {
     "@agency/ui": "workspace:*",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
     "@agency/typescript-config": "workspace:*",
+    "@playwright/test": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

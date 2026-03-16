@@ -20,7 +20,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const supabase = createSupabaseServerClient(cookieStore)
-  await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   try {
     const tenant = await resolveTenantFromRequest(request)
@@ -31,11 +33,23 @@ export async function middleware(request: NextRequest) {
     // No tenant for this hostname (e.g. generic admin URL); continue without tenant headers
   }
 
+  const pathname = request.nextUrl.pathname
+  const isLogin = pathname.startsWith('/login')
+  const isCallback = pathname.startsWith('/callback')
+
+  if (!isLogin && !isCallback && !user) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  if (isLogin && user) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
   return response
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }

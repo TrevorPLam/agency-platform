@@ -74,10 +74,9 @@ These files were referenced but are now located at the repo root: `TODO.md`. The
 
 ### 3.2 Agency-admin (`apps/agency-admin`)
 
-- **Implemented:** Single dashboard page (lists recent posts from Supabase); Inngest route with `onboardingWorkflow` and `emailSequence`; middleware that calls `resolveTenantFromRequest` and sets `x-tenant-id`, `x-tenant-slug`, `x-tenant-source`. Layout has no `Providers` wrapper — only `ThemeToggle` in header.
-- **Analytics:** `@agency/analytics` is in dependencies and next.config transpilePackages, but **initAnalytics is never called** (no Providers, no client-side analytics). Server-side exports (e.g. `captureServerEvent`) are not used anywhere in the repo.
-- **Gap — No authentication:** Dashboard is not behind login; anyone with the URL can see “Recent posts.” If internal-only, acceptable; otherwise add auth (e.g. Supabase session) before rendering dashboard.
-- **Gap — Analytics unused:** Either add a Providers that calls `initAnalytics('agency-admin')` if you want client tracking, or remove the dependency to avoid confusion.
+- **Implemented:** Single dashboard page (lists recent posts from Supabase); Inngest route with `onboardingWorkflow` and `emailSequence`; middleware that calls `resolveTenantFromRequest` and sets `x-tenant-id`, `x-tenant-slug`, `x-tenant-source`. Layout uses `Providers` (calls `initAnalytics('agency-admin')`) and `ThemeToggle`; header includes sign-out when authenticated. Middleware enforces session-based auth (redirect to `/login` when unauthenticated).
+- **Analytics:** `@agency/analytics` is in use via Providers and `initAnalytics('agency-admin')`. Server-side exports (e.g. `captureServerEvent`) are not used anywhere in the repo.
+- **Auth:** Dashboard and cost/metrics pages are protected; only authenticated users can reach them. Minimal sign-in page and sign-out action use Supabase auth and `@agency/ui`.
 
 ### 3.3 Prospective clients: Riley Day Care (`apps/prospective-clients/riley-day-care`)
 
@@ -87,12 +86,7 @@ These files were referenced but are now located at the repo root: `TODO.md`. The
 
 ### 3.4 Prospective clients: The Barber Cave (`apps/prospective-clients/the-barber-cave`)
 
-- **Implemented:** Home, Contact (form + `contact_submissions` + email), Services; layout with Providers (initAnalytics('the-barber-cave')), SiteHeader, SiteFooter. `globals.css` imports `../../tokens/the-barber-cave.css`.
-- **Middleware mismatch:** The Barber Cave **has** middleware that:
-  - Protects `/dashboard` (redirects to `/login` if not logged in)
-  - Redirects `/login`, `/signup` to `/dashboard` when user is logged in
-  - But the app **has no** `(auth)` routes: no `login`, `signup`, `callback`, or `dashboard` pages. So visiting `/dashboard` redirects to `/login`, which 404s. Middleware also **does not** call `resolveTenantFromRequest` (unlike Riley Day Care), so no tenant headers are set.
-- **Conclusion:** Middleware was copied from a template that has auth; this client was not given auth routes. Either: (1) remove the auth-related branches from the-barber-cave middleware (and optionally add tenant resolution if needed), or (2) add the `(auth)` route group and pages if The Barber Cave should have client login/dashboard.
+- **Implemented:** Home, Contact (form + `contact_submissions` + email), Services; layout with Providers (initAnalytics('the-barber-cave')), SiteHeader, SiteFooter. `globals.css` imports `../../../tokens/the-barber-cave.css`. Full auth template: `(auth)/login`, `(auth)/signup`, `(auth)/callback`, `dashboard`, and `actions/auth` (signOut). Middleware is aligned with Riley Day Care: `resolveTenantFromRequest` sets `x-tenant-id`, `x-tenant-slug`, `x-tenant-source`; `createSupabaseServerClient` + `getUser()`; protected `/dashboard` (redirect to `/login` when unauthenticated); redirect from `/login`/`/signup` to `/dashboard` when authenticated.
 - **Scaffold note:** The scaffold script copies `middleware.ts` from riley-day-care (which includes tenant resolution + auth redirects) but does **not** copy the `(auth)` folder. So any newly scaffolded client gets redirects to /login/dashboard with no corresponding pages unless you add them manually.
 
 ### 3.5 Production clients (`apps/clients/`)

@@ -35,7 +35,7 @@ assignees: "@trevo"
 - **Version**: [e.g. 22]
 
 ### Application
-- **App**: [e.g. agency-admin, firm, riverside-hotel]
+- **App**: [e.g. agency-admin, firm, riley-day-care, the-barber-cave]
 - **URL**: [if applicable]
 - **User Role**: [e.g. admin, tenant admin, end user]
 

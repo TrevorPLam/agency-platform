@@ -2,6 +2,8 @@
 
 This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See docs/ARCHITECTURE.md and docs/MULTI_TENANT_AUTH.md for full context.
 
+**Supply Chain Security**: For comprehensive supply chain security measures including SBOM generation, SLSA attestations, and cryptographic verification, see [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md).
+
 ---
 
 ## Vector 1: JWT Claim Injection (Critical)
@@ -94,6 +96,42 @@ grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" --include="*.
 | 2026-03-15 | 3      | SERVICE*ROLE in apps/; NEXT_PUBLIC*.\*SERVICE_ROLE     | Zero in app source (only node*modules). Zero NEXT_PUBLIC* service role in apps/ packages/. |
 | 2026-03-15 | 4      | Admin client review                                    | See Vector 4 baseline review above. All usages tenant- or event-scoped.                    |
 | 2026-03-15 | 5      | HIPAA doc + checklist                                  | Documented in this file; onboarding checklist to reference when created (T-23).            |
+| 2026-03-16 | 6      | Supply chain security implementation                   | SBOM generation, SLSA attestations, integrity verification, cryptographic verification implemented. |
+
+---
+
+## Vector 6: Supply Chain Security
+
+**What it is:** Compromise of the software supply chain through vulnerable dependencies, malicious packages, or tampered build artifacts.
+
+**Detection:**
+
+```bash
+# Automated SBOM generation and vulnerability scanning
+pnpm run generate-sbom
+pnpm run scan-dependencies --severity high
+
+# Artifact integrity verification
+pnpm run verify-integrity --path dist/
+
+# Cryptographic signature verification
+pnpm run verify-signatures
+```
+
+**Fix:** 
+- Generate SBOMs for all builds to track dependencies
+- Implement SLSA attestations for build provenance
+- Verify artifact integrity with cryptographic hashes
+- Monitor dependencies for vulnerabilities continuously
+- Sign critical artifacts with digital signatures
+
+**Implementation:** See [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md) for comprehensive supply chain security measures including:
+- SBOM generation automation (CycloneDX, SPDX)
+- SLSA Level 3 compliance
+- Artifact integrity verification (SHA-256/384/512)
+- Build provenance tracking
+- Supply chain monitoring
+- Cryptographic verification (Ed25519, RSA)
 
 ---
 

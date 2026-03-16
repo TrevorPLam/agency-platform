@@ -64,9 +64,14 @@ async function buildClientTokens() {
     for (const clientFile of clientJsonFiles) {
       const clientName = clientFile.replace('.json', '')
       const clientTokenPath = path.join(clientsDir, clientFile)
-      const prospectivePath = path.join(appsRoot, 'prospective-clients', clientName)
-      const appSubdir = existsSync(prospectivePath) ? 'prospective-clients' : 'clients'
-      const clientOutputDir = path.join(appsRoot, appSubdir, clientName, 'tokens')
+      const clientOutputDir =
+        clientName === 'agency'
+          ? path.join(appsRoot, 'firm', 'tokens')
+          : (() => {
+              const prospectivePath = path.join(appsRoot, 'prospective-clients', clientName)
+              const appSubdir = existsSync(prospectivePath) ? 'prospective-clients' : 'clients'
+              return path.join(appsRoot, appSubdir, clientName, 'tokens')
+            })()
 
       await fs.mkdir(clientOutputDir, { recursive: true })
 

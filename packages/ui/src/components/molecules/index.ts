@@ -59,3 +59,4 @@ export {
   TabsTrigger,
   TabsContent,
 } from './tabs'
+export { Alert, AlertTitle, AlertDescription, alertVariants } from './alert'

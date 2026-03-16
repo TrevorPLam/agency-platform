@@ -1,0 +1,70 @@
+{
+  "name": "@agency/security",
+  "version": "0.1.0",
+  "description": "Supply chain security and SBOM utilities for Agency Platform",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest",
+    "generate-sbom": "tsx scripts/generate-sbom.ts",
+    "verify-sbom": "tsx scripts/verify-sbom.ts",
+    "scan-dependencies": "tsx scripts/scan-dependencies.ts"
+  },
+  "dependencies": {
+    "@agency/database": "workspace:*",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "node": ">=22.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./sbom": {
+      "import": "./dist/sbom.js",
+      "require": "./dist/sbom.cjs",
+      "types": "./dist/sbom.d.ts"
+    },
+    "./integrity": {
+      "import": "./dist/integrity.js",
+      "require": "./dist/integrity.cjs",
+      "types": "./dist/integrity.d.ts"
+    },
+    "./provenance": {
+      "import": "./dist/provenance.js",
+      "require": "./dist/provenance.cjs",
+      "types": "./dist/provenance.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "security",
+    "sbom",
+    "supply-chain",
+    "integrity",
+    "provenance",
+    "agency-platform"
+  ],
+  "author": "trevo",
+  "license": "ISC"
+}

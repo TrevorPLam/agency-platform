@@ -6,7 +6,7 @@
 @source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 /* Import client-specific design tokens */
-@import '../../tokens/the-barber-cave.css';
+@import '../../../tokens/the-barber-cave.css';
 
 /* Dark mode configuration */
 @custom-variant dark (&:is(.dark *));

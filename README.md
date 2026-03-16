@@ -120,6 +120,9 @@ Each client gets custom token compilation for brand consistency while sharing co
 - **Row-Level Security** on all database tables
 - **Branch protection** on main branch
 - **Dependency scanning** through GitHub security
+- **Supply chain security** with SBOM generation, SLSA attestations, and cryptographic verification
+
+See [SECURITY.md](./SECURITY.md) for detailed security measures and [docs/security/SUPPLY_CHAIN_SECURITY.md](./docs/security/SUPPLY_CHAIN_SECURITY.md) for comprehensive supply chain security implementation.
 
 ## 📚 Documentation
 

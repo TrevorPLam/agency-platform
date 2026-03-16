@@ -1,6 +1,7 @@
 import './globals.css'
 import { ThemeToggle } from '@agency/ui'
 import { Providers } from '../components/providers'
+import { HeaderAuth } from '../components/header-auth'
 
 export const metadata = {
   title: 'Agency Admin - Internal Dashboard',
@@ -12,7 +13,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen bg-white dark:bg-[var(--color-semantic-background-primary)]">
         <Providers>
-          <header className="flex h-14 items-center justify-end border-b border-slate-200 px-4 dark:border-slate-700">
+          <header className="flex h-14 items-center justify-end gap-2 border-b border-slate-200 px-4 dark:border-slate-700">
+            <HeaderAuth />
             <ThemeToggle />
           </header>
           {children}

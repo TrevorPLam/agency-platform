@@ -65,3 +65,9 @@ export {
   TabsTrigger,
   TabsContent,
 } from './components/molecules'
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  alertVariants,
+} from './components/molecules'
