@@ -173,7 +173,7 @@ export class ProvenanceTracker {
     const recommendations: string[] = []
 
     // Check SLSA level compliance
-    if (this.config.slsaLevel > 3 && !provenance.invocationId) {
+    if (Number(this.config.slsaLevel) > 3 && !provenance.invocationId) {
       issues.push('Missing invocation ID for SLSA Level 4+ compliance')
     }
 

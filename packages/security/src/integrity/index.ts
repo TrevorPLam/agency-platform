@@ -302,7 +302,7 @@ export class IntegrityVerifier {
     const verification = await this.verifyManifest(dirPath, manifest)
     
     const recommendations = [
-      ...verification.recommendations,
+      ...(verification.recommendations || []),
       'Store integrity manifest in secure location',
       'Regularly verify artifact integrity',
       'Implement automated integrity checks in CI/CD',

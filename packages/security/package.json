@@ -22,6 +22,7 @@
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
     "@agency/typescript-config": "workspace:*",
+    "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
     "tsup": "^8.0.0",
     "tsx": "^4.21.0",
@@ -33,24 +34,24 @@
   },
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./sbom": {
+      "types": "./dist/sbom.d.ts",
       "import": "./dist/sbom.js",
-      "require": "./dist/sbom.cjs",
-      "types": "./dist/sbom.d.ts"
+      "require": "./dist/sbom.cjs"
     },
     "./integrity": {
+      "types": "./dist/integrity.d.ts",
       "import": "./dist/integrity.js",
-      "require": "./dist/integrity.cjs",
-      "types": "./dist/integrity.d.ts"
+      "require": "./dist/integrity.cjs"
     },
     "./provenance": {
+      "types": "./dist/provenance.d.ts",
       "import": "./dist/provenance.js",
-      "require": "./dist/provenance.cjs",
-      "types": "./dist/provenance.d.ts"
+      "require": "./dist/provenance.cjs"
     }
   },
   "files": [

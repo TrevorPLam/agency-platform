@@ -648,6 +648,9 @@ importers:
       '@agency/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.15
       eslint:
         specifier: ^9.0.0
         version: 9.39.4(jiti@2.6.1)

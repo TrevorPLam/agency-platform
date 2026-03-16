@@ -129,7 +129,7 @@ export const SecurityConfigSchema = z.object({
   }),
   provenanceTracking: z.object({
     enabled: z.boolean(),
-    slsaLevel: z.enum([1, 2, 3, 4]),
+    slsaLevel: z.number(),
     attestations: z.boolean(),
   }),
   vulnerabilityScanning: z.object({
