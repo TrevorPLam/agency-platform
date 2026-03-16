@@ -32,5 +32,8 @@
         "../../apps/prospective-clients/*/tokens/*.css"
       ]
     }
-  }
+  },
+  "globalDependencies": [
+    "**/.env.*local"
+  ]
 }

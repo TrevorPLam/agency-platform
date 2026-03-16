@@ -14,10 +14,12 @@
     "@agency/database": "workspace:*",
     "@agency/analytics": "workspace:*",
     "@agency/email": "workspace:*",
+    "@agency/metrics": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "inngest": "catalog:"
+    "inngest": "catalog:",
+    "lucide-react": "catalog:"
   },
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",

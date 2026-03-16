@@ -53,3 +53,9 @@ export {
   SheetDescription,
 } from './sheet'
 export { ThemeToggle } from './theme-toggle'
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from './tabs'

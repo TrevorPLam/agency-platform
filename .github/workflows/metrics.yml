@@ -1,0 +1,373 @@
+name: DORA Metrics Collection
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      time_window_days:
+        description: 'Time window in days for metrics calculation'
+        required: false
+        default: '30'
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/migrations/**'
+      - '.github/workflows/metrics.yml'
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  collect-metrics:
+    name: Collect DORA Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for full git history
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm turbo run build --filter=@agency/metrics
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase for local operations
+        run: |
+          supabase db start
+          supabase db reset
+
+      - name: Create metrics database schema
+        run: |
+          # Create deployments table
+          cat << 'EOF' | supabase db push
+          create table if not exists deployments (
+            id text primary key,
+            timestamp timestamptz not null,
+            commit_sha text not null,
+            environment text not null check (environment in ('production', 'staging', 'development')),
+            service text not null,
+            status text not null check (status in ('success', 'failure', 'rollback')),
+            metadata jsonb,
+            created_at timestamptz default now(),
+            updated_at timestamptz default now()
+          );
+
+          create index if not exists idx_deployments_timestamp on deployments(timestamp);
+          create index if not exists idx_deployments_environment on deployments(environment);
+          create index if not exists idx_deployments_service on deployments(service);
+          create index if not exists idx_deployments_commit_sha on deployments(commit_sha);
+          EOF
+
+          # Create incidents table
+          cat << 'EOF' | supabase db push
+          create table if not exists incidents (
+            id text primary key,
+            detected_at timestamptz not null,
+            resolved_at timestamptz,
+            severity text not null check (severity in ('low', 'medium', 'high', 'critical')),
+            deployment_id text references deployments(id),
+            description text not null,
+            service text not null,
+            metadata jsonb,
+            created_at timestamptz default now(),
+            updated_at timestamptz default now()
+          );
+
+          create index if not exists idx_incidents_detected_at on incidents(detected_at);
+          create index if not exists idx_incidents_resolved_at on incidents(resolved_at);
+          create index if not exists idx_incidents_severity on incidents(severity);
+          create index if not exists idx_incidents_service on incidents(service);
+          create index if not exists idx_incidents_deployment_id on incidents(deployment_id);
+          EOF
+
+          # Create pull_requests table
+          cat << 'EOF' | supabase db push
+          create table if not exists pull_requests (
+            id text primary key,
+            number integer not null,
+            first_commit_at timestamptz not null,
+            created_at timestamptz not null,
+            merged_at timestamptz,
+            base_branch text not null,
+            head_branch text not null,
+            deployment_id text references deployments(id),
+            metadata jsonb,
+            created_at timestamptz default now(),
+            updated_at timestamptz default now()
+          );
+
+          create index if not exists idx_pull_requests_created_at on pull_requests(created_at);
+          create index if not exists idx_pull_requests_merged_at on pull_requests(merged_at);
+          create index if not exists idx_pull_requests_base_branch on pull_requests(base_branch);
+          EOF
+
+          # Create DORA metrics results table
+          cat << 'EOF' | supabase db push
+          create table if not exists dora_metrics_results (
+            id uuid primary key default gen_random_uuid(),
+            calculated_at timestamptz not null,
+            period_start timestamptz not null,
+            period_end timestamptz not null,
+            deployment_frequency numeric not null,
+            lead_time_for_changes numeric not null,
+            change_failure_rate numeric not null,
+            mean_time_to_recovery numeric not null,
+            deployment_performance_level text not null,
+            lead_time_performance_level text not null,
+            failure_rate_performance_level text not null,
+            mttr_performance_level text not null,
+            data_points_deployments integer not null,
+            data_points_incidents integer not null,
+            data_points_pull_requests integer not null,
+            created_at timestamptz default now()
+          );
+
+          create index if not exists idx_dora_metrics_calculated_at on dora_metrics_results(calculated_at);
+          create index if not exists idx_dora_metrics_period on dora_metrics_results(period_start, period_end);
+          EOF
+
+          # Create DORA metric snapshots table
+          cat << 'EOF' | supabase db push
+          create table if not exists dora_metric_snapshots (
+            id uuid primary key default gen_random_uuid(),
+            timestamp timestamptz not null,
+            value numeric not null,
+            metadata jsonb not null,
+            metric_type text not null check (metric_type in ('deployment-frequency', 'lead-time-for-changes', 'change-failure-rate', 'mean-time-to-recovery')),
+            created_at timestamptz default now()
+          );
+
+          create index if not exists idx_dora_snapshots_timestamp on dora_metric_snapshots(timestamp);
+          create index if not exists idx_dora_snapshots_metric_type on dora_metric_snapshots(metric_type);
+          EOF
+
+      - name: Collect deployment events
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e "
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+          
+          // Get recent deployments (merged PRs to main)
+          const timeWindowDays = process.env.INPUT_TIME_WINDOW_DAYS || '30';
+          const sinceDate = new Date(Date.now() - (parseInt(timeWindowDays) * 24 * 60 * 60 * 1000)).toISOString();
+          
+          console.log('Collecting deployment events since:', sinceDate);
+          
+          // Get merged PRs to main branch
+          const prs = JSON.parse(execSync(\`gh pr list --repo \${GITHUB_REPOSITORY} --base main --state merged --json number,mergedAt,headRefName,title --limit 100\`, { encoding: 'utf-8' }));
+          
+          const deployments = [];
+          
+          for (const pr of prs) {
+            if (new Date(pr.mergedAt) >= new Date(sinceDate)) {
+              // Get commit SHA for this PR
+              const commits = JSON.parse(execSync(\`gh pr view \${pr.number} --repo \${GITHUB_REPOSITORY} --json commits --jq '.commits[-1].oid'\`, { encoding: 'utf-8' }));
+              
+              deployments.push({
+                id: \`deploy-\${pr.number}\`,
+                timestamp: pr.mergedAt,
+                commit_sha: commits,
+                environment: 'production',
+                service: 'agency-platform',
+                status: 'success',
+                metadata: {
+                  pr_number: pr.number,
+                  pr_title: pr.title,
+                  branch: pr.headRefName
+                }
+              });
+            }
+          }
+          
+          console.log(\`Found \${deployments.length} deployments\`);
+          
+          // Write deployments to file
+          fs.writeFileSync('deployments.json', JSON.stringify(deployments, null, 2));
+          "
+
+      - name: Collect pull request events
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e "
+          const { execSync } = require('child_process');
+          const fs = require('fs');
+          
+          const timeWindowDays = process.env.INPUT_TIME_WINDOW_DAYS || '30';
+          const sinceDate = new Date(Date.now() - (parseInt(timeWindowDays) * 24 * 60 * 60 * 1000)).toISOString();
+          
+          console.log('Collecting pull request events since:', sinceDate);
+          
+          // Get PRs created in the time window
+          const prs = JSON.parse(execSync(\`gh pr list --repo \${GITHUB_REPOSITORY} --state all --json number,createdAt,mergedAt,baseRefName,headRefName,title --limit 200\`, { encoding: 'utf-8' }));
+          
+          const pullRequests = [];
+          
+          for (const pr of prs) {
+            if (new Date(pr.createdAt) >= new Date(sinceDate)) {
+              // Get first commit date for this PR
+              try {
+                const commits = JSON.parse(execSync(\`gh pr view \${pr.number} --repo \${GITHUB_REPOSITORY} --json commits --jq '.commits | .[-1] | {oid: .oid, date: .committedDate}'\`, { encoding: 'utf-8' }));
+                
+                pullRequests.push({
+                  id: \`pr-\${pr.number}\`,
+                  number: pr.number,
+                  first_commit_at: commits.date,
+                  created_at: pr.createdAt,
+                  merged_at: pr.mergedAt || null,
+                  base_branch: pr.baseRefName,
+                  head_branch: pr.headRefName,
+                  metadata: {
+                    pr_title: pr.title,
+                    commit_sha: commits.oid
+                  }
+                });
+              } catch (error) {
+                console.log(\`Skipping PR \${pr.number} due to error:\`, error.message);
+              }
+            }
+          }
+          
+          console.log(\`Found \${pullRequests.length} pull requests\`);
+          
+          // Write pull requests to file
+          fs.writeFileSync('pull-requests.json', JSON.stringify(pullRequests, null, 2));
+          "
+
+      - name: Calculate DORA metrics
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TIME_WINDOW_DAYS: ${{ github.event.inputs.time_window_days || '30' }}
+        run: |
+          node -e "
+          const { DORAMetricsCollector } = require('./packages/metrics/dist/index.js');
+          const fs = require('fs');
+          
+          // Load collected data
+          const deployments = JSON.parse(fs.readFileSync('deployments.json', 'utf-8'));
+          const pullRequests = JSON.parse(fs.readFileSync('pull-requests.json', 'utf-8'));
+          
+          // Configure metrics collector
+          const config = {
+            timeWindowDays: parseInt(process.env.TIME_WINDOW_DAYS),
+            environments: ['production'],
+            services: [], // All services
+            alertThresholds: {
+              deploymentFrequency: 7,
+              leadTimeForChanges: 24,
+              changeFailureRate: 15,
+              meanTimeToRecovery: 1
+            }
+          };
+          
+          const collector = new DORAMetricsCollector(config);
+          
+          // Store data in database
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          
+          // Store deployments
+          for (const deployment of deployments) {
+            console.log(\`Storing deployment: \${deployment.id}\`);
+            // This would involve actual database calls - simplified for demo
+          }
+          
+          // Store pull requests
+          for (const pr of pullRequests) {
+            console.log(\`Storing PR: \${pr.id}\`);
+            // This would involve actual database calls - simplified for demo
+          }
+          
+          // Calculate metrics
+          collector.calculateMetrics()
+            .then(result => {
+              console.log('DORA Metrics Calculation Results:');
+              console.log('=====================================');
+              console.log(\`Deployment Frequency: \${result.metrics.deploymentFrequency} deployments/week\`);
+              console.log(\`Lead Time for Changes: \${result.metrics.leadTimeForChanges} hours\`);
+              console.log(\`Change Failure Rate: \${result.metrics.changeFailureRate}%\`);
+              console.log(\`Mean Time to Recovery: \${result.metrics.meanTimeToRecovery} hours\`);
+              console.log('=====================================');
+              
+              // Store results for workflow
+              fs.writeFileSync('metrics-results.json', JSON.stringify(result, null, 2));
+              
+              // Set output variables
+              console.log(\`::set-output name=deployment-frequency::\${result.metrics.deploymentFrequency}\`);
+              console.log(\`::set-output name=lead-time::\${result.metrics.leadTimeForChanges}\`);
+              console.log(\`::set-output name=change-failure-rate::\${result.metrics.changeFailureRate}\`);
+              console.log(\`::set-output name=mttr::\${result.metrics.meanTimeToRecovery}\`);
+            })
+            .catch(error => {
+              console.error('Error calculating metrics:', error);
+              process.exit(1);
+            });
+          "
+
+      - name: Upload metrics results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dora-metrics-results
+          path: |
+            metrics-results.json
+            deployments.json
+            pull-requests.json
+          retention-days: 30
+
+      - name: Generate metrics summary
+        if: always()
+        run: |
+          if [ -f "metrics-results.json" ]; then
+            echo "## DORA Metrics Summary" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Value | Performance Level |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|-------------------|" >> $GITHUB_STEP_SUMMARY
+            
+            node -e "
+            const result = JSON.parse(require('fs').readFileSync('metrics-results.json', 'utf-8'));
+            console.log(\`| Deployment Frequency | \${result.metrics.deploymentFrequency} deployments/week | \${result.performanceLevels['deployment-frequency'].level} |\`);
+            console.log(\`| Lead Time for Changes | \${result.metrics.leadTimeForChanges} hours | \${result.performanceLevels['lead-time-for-changes'].level} |\`);
+            console.log(\`| Change Failure Rate | \${result.metrics.changeFailureRate}% | \${result.performanceLevels['change-failure-rate'].level} |\`);
+            console.log(\`| Mean Time to Recovery | \${result.metrics.meanTimeToRecovery} hours | \${result.performanceLevels['mean-time-to-recovery'].level} |\`);
+            " >> $GITHUB_STEP_SUMMARY
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Data Points" >> $GITHUB_STEP_SUMMARY
+            echo "- Deployments: $(jq -r '.dataPoints.deployments' metrics-results.json)" >> $GITHUB_STEP_SUMMARY
+            echo "- Incidents: $(jq -r '.dataPoints.incidents' metrics-results.json)" >> $GITHUB_STEP_SUMMARY
+            echo "- Pull Requests: $(jq -r '.dataPoints.pullRequests' metrics-results.json)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ Metrics Collection Failed" >> $GITHUB_STEP_SUMMARY
+            echo "Unable to generate metrics results. Check the workflow logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup

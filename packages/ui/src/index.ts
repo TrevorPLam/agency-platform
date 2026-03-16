@@ -5,6 +5,7 @@ export { Badge, badgeVariants } from './components/atoms'
 export { Button, buttonVariants } from './components/atoms'
 export { Input } from './components/atoms'
 export { Label } from './components/atoms'
+export { Progress } from './components/atoms'
 
 // Molecules
 export {
@@ -58,3 +59,9 @@ export {
   DropdownMenuRadioGroup,
 } from './components/molecules'
 export { ThemeToggle } from './components/molecules'
+export {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from './components/molecules'
