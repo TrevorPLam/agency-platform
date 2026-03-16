@@ -1,0 +1,81 @@
+{
+  "name": "@agency/artifacts",
+  "version": "0.1.0",
+  "description": "Artifact lifecycle management and registry for Agency Platform",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./registry": {
+      "types": "./dist/registry.d.ts",
+      "import": "./dist/registry.js",
+      "require": "./dist/registry.cjs"
+    },
+    "./promotion": {
+      "types": "./dist/promotion.d.ts",
+      "import": "./dist/promotion.js",
+      "require": "./dist/promotion.cjs"
+    },
+    "./policies": {
+      "types": "./dist/policies.d.ts",
+      "import": "./dist/policies.js",
+      "require": "./dist/policies.cjs"
+    },
+    "./retention": {
+      "types": "./dist/retention.d.ts",
+      "import": "./dist/retention.js",
+      "require": "./dist/retention.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0",
+    "test": "vitest",
+    "register-artifact": "tsx scripts/register-artifact.ts",
+    "promote-artifact": "tsx scripts/promote-artifact.ts",
+    "cleanup-artifacts": "tsx scripts/cleanup-artifacts.ts"
+  },
+  "dependencies": {
+    "@agency/database": "workspace:*",
+    "@agency/governance": "workspace:*",
+    "@agency/security": "workspace:*",
+    "zod": "^3.25.0",
+    "semver": "^7.6.0",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "peerDependencies": {
+    "node": ">=22.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "artifacts",
+    "registry",
+    "lifecycle",
+    "promotion",
+    "retention",
+    "agency-platform"
+  ],
+  "author": "trevo",
+  "license": "ISC"
+}
