@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agency-platform.github.io/schemas/repository-classification.json",
+  "title": "Repository Classification Schema",
+  "description": "Schema for repository classification properties used in agency platform governance",
+  "type": "object",
+  "properties": {
+    "business_criticality": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"],
+      "description": "Business impact level if repository is compromised or unavailable",
+      "default": "Medium"
+    },
+    "owner_team": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Primary team responsible for repository maintenance",
+      "examples": ["platform-ops", "client-services", "security-team", "product-team"]
+    },
+    "service_tier": {
+      "type": "string",
+      "enum": ["Platform", "Application", "Library", "Infrastructure"],
+      "description": "Architectural classification of repository purpose",
+      "default": "Application"
+    },
+    "client_name": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Associated client for client-specific repositories",
+      "examples": ["riverside-hotel", "riley-day-care", "the-barber-cave"]
+    },
+    "public_facing": {
+      "type": "boolean",
+      "description": "Whether repository hosts public-facing applications/services",
+      "default": false
+    },
+    "compliance_frameworks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["SOC2", "ISO27001", "HIPAA", "PCI-DSS", "GDPR", "CCPA", "NIST"]
+      },
+      "uniqueItems": true,
+      "description": "Applicable compliance frameworks",
+      "default": []
+    },
+    "data_classification": {
+      "type": "string",
+      "enum": ["Public", "Internal", "Confidential", "Restricted"],
+      "description": "Highest data sensitivity level in repository",
+      "default": "Internal"
+    },
+    "environment": {
+      "type": "string",
+      "enum": ["Development", "Staging", "Production", "Hybrid"],
+      "description": "Primary deployment environment",
+      "default": "Development"
+    },
+    "security_classification": {
+      "type": "string",
+      "enum": ["Standard", "Elevated", "High", "Critical"],
+      "description": "Security requirements level",
+      "default": "Standard"
+    },
+    "tech_stack": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "React", "Next.js", "Node.js", "TypeScript", "Python", "Docker",
+          "PostgreSQL", "Supabase", "Vercel", "AWS", "Azure", "GCP",
+          "Turborepo", "pnpm", "Tailwind CSS", "shadcn/ui", "Inngest"
+        ]
+      },
+      "uniqueItems": true,
+      "description": "Primary technologies used in repository",
+      "default": []
+    },
+    "architecture_pattern": {
+      "type": "string",
+      "enum": ["Monolith", "Microservices", "Serverless", "Library", "Config"],
+      "description": "Architectural pattern of repository",
+      "default": "Library"
+    },
+    "dependencies": {
+      "type": "string",
+      "enum": ["Internal", "External", "Mixed"],
+      "description": "Dependency classification",
+      "default": "Mixed"
+    },
+    "build_system": {
+      "type": "string",
+      "enum": ["Turborepo", "Webpack", "Vite", "Custom"],
+      "description": "Build tooling used",
+      "default": "Turborepo"
+    },
+    "lifecycle_stage": {
+      "type": "string",
+      "enum": ["Development", "Maintenance", "Decommissioning", "Archived"],
+      "description": "Current repository lifecycle stage",
+      "default": "Development"
+    },
+    "last_security_review": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of last security review (ISO 8601 format)"
+    },
+    "review_frequency": {
+      "type": "string",
+      "enum": ["Monthly", "Quarterly", "Semi-annual", "Annual", "As-needed"],
+      "description": "Required review cadence",
+      "default": "Quarterly"
+    },
+    "automated_tests": {
+      "type": "boolean",
+      "description": "Whether automated tests are present",
+      "default": true
+    },
+    "ci_cd_enabled": {
+      "type": "boolean",
+      "description": "Whether CI/CD pipeline is configured",
+      "default": true
+    }
+  },
+  "required": [
+    "business_criticality",
+    "owner_team",
+    "service_tier",
+    "public_facing",
+    "compliance_frameworks",
+    "data_classification",
+    "environment",
+    "security_classification",
+    "lifecycle_stage",
+    "automated_tests",
+    "ci_cd_enabled"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "business_criticality": "Critical",
+      "owner_team": "platform-ops",
+      "service_tier": "Platform",
+      "public_facing": false,
+      "compliance_frameworks": ["SOC2", "ISO27001"],
+      "data_classification": "Internal",
+      "environment": "Production",
+      "security_classification": "High",
+      "lifecycle_stage": "Maintenance",
+      "automated_tests": true,
+      "ci_cd_enabled": true,
+      "tech_stack": ["Node.js", "TypeScript", "PostgreSQL"],
+      "architecture_pattern": "Microservices",
+      "build_system": "Turborepo",
+      "review_frequency": "Quarterly"
+    },
+    {
+      "business_criticality": "High",
+      "owner_team": "client-services",
+      "service_tier": "Application",
+      "client_name": "riverside-hotel",
+      "public_facing": true,
+      "compliance_frameworks": ["SOC2", "ISO27001"],
+      "data_classification": "Confidential",
+      "environment": "Production",
+      "security_classification": "Elevated",
+      "lifecycle_stage": "Development",
+      "automated_tests": true,
+      "ci_cd_enabled": true,
+      "tech_stack": ["React", "Next.js", "TypeScript", "Tailwind CSS"],
+      "architecture_pattern": "Monolith",
+      "build_system": "Turborepo",
+      "review_frequency": "Monthly"
+    }
+  ]
+}

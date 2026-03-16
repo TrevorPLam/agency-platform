@@ -1,0 +1,40 @@
+{
+  "name": "@agency/governance",
+  "version": "0.1.0",
+  "description": "Repository governance and metadata management for agency platform",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "default": "./dist/schema.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "validate-properties": "node dist/validate-properties.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "catalog:",
+    "zod": "catalog:",
+    "jsonschema": "catalog:"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

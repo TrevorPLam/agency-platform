@@ -1,0 +1,231 @@
+name: Repository Governance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run governance checks daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'validate'
+        type: choice
+        options:
+          - validate
+          - apply-policies
+          - audit
+          - report
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  validate-properties:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'validate' || github.event.inputs.action == '' || github.event_name == 'push' || github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate repository properties
+        run: |
+          # Build governance package
+          pnpm run build --filter=@agency/governance
+          
+          # Validate properties against schema
+          pnpm run validate-properties --filter=@agency/governance
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ORGANIZATION: ${{ github.repository_owner }}
+
+  apply-policies:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'apply-policies'
+    needs: validate-properties
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply dynamic policies
+        run: |
+          # Build governance package
+          pnpm run build --filter=@agency/governance
+          
+          # Generate predefined policies
+          node scripts/governance/dynamic-policies.js generate-predefined
+          
+          # Apply policies to matching repositories
+          for policy in policies/*.json; do
+            echo "Applying policy: $policy"
+            node scripts/governance/dynamic-policies.js apply "$policy"
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ORGANIZATION: ${{ github.repository_owner }}
+
+  compliance-check:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'audit' || github.event.inputs.action == '' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run compliance checks
+        run: |
+          # Build governance package
+          pnpm run build --filter=@agency/governance
+          
+          # Run automated compliance checks
+          node scripts/governance/compliance-automation.js check-all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ORGANIZATION: ${{ github.repository_owner }}
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.json
+          retention-days: 30
+
+  risk-assessment:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'audit' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run risk assessment
+        run: |
+          # Build governance package
+          pnpm run build --filter=@agency/governance
+          
+          # Generate risk assessments for all repositories
+          node scripts/governance/risk-assessment.js assess-all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ORGANIZATION: ${{ github.repository_owner }}
+
+      - name: Upload risk assessment report
+        uses: actions/upload-artifact@v4
+        with:
+          name: risk-assessment
+          path: risk-assessment.json
+          retention-days: 30
+
+  generate-report:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'report' || github.event_name == 'schedule'
+    needs: [compliance-check, risk-assessment]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download compliance report
+        uses: actions/download-artifact@v4
+        with:
+          name: compliance-report
+
+      - name: Download risk assessment
+        uses: actions/download-artifact@v4
+        with:
+          name: risk-assessment
+
+      - name: Generate governance report
+        run: |
+          # Generate comprehensive governance report
+          node scripts/governance/generate-report.js \
+            --compliance compliance-report.json \
+            --risk risk-assessment.json \
+            --output governance-report.json
+
+      - name: Upload governance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: governance-report
+          path: governance-report.json
+          retention-days: 90
+
+      - name: Create issue for critical findings
+        if: contains(steps.upload.outputs.artifact-url, 'critical')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('governance-report.json', 'utf8'));
+            
+            if (report.critical_findings.length > 0) {
+              const body = `
+              ## Critical Governance Findings
+              
+              The automated governance scan identified ${report.critical_findings.length} critical issues:
+              
+              ${report.critical_findings.map(f => 
+                `### ${f.title}\n**Repository:** ${f.repository}\n**Severity:** ${f.severity}\n**Description:** ${f.description}\n**Remediation:** ${f.remediation}`
+              ).join('\n\n')}
+              
+              Please review and address these critical findings promptly.
+              `;
+              
+              github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Critical Governance Findings - ${new Date().toISOString().split('T')[0]}`,
+                body: body,
+                labels: ['governance', 'critical', 'security']
+              });
+            }

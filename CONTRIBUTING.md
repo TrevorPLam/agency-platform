@@ -93,6 +93,107 @@ To run **Storybook** for the shared UI component library (after `pnpm tokens:bui
 
 ---
 
+## Repository Governance
+
+This repository uses a comprehensive metadata governance system for automated compliance, risk assessment, and policy enforcement.
+
+### Repository Classification
+
+All repositories must have proper classification properties set:
+
+```bash
+# Apply appropriate template to your repository
+pnpm run manage-properties template <your-repo> <template>
+
+# Available templates: platform, application, library, infrastructure
+```
+
+### Required Properties
+
+- `business_criticality`: Low | Medium | High | Critical
+- `owner_team`: Your team identifier
+- `service_tier`: Platform | Application | Library | Infrastructure
+- `public_facing`: true/false
+- `compliance_frameworks`: Applicable frameworks (SOC2, ISO27001, HIPAA, etc.)
+- `data_classification`: Public | Internal | Confidential | Restricted
+- `environment`: Development | Staging | Production | Hybrid
+- `security_classification`: Standard | Elevated | High | Critical
+- `lifecycle_stage`: Development | Maintenance | Decommissioning | Archived
+- `automated_tests`: true/false
+- `ci_cd_enabled`: true/false
+
+### Governance Commands
+
+```bash
+# Check repository properties
+pnpm run manage-properties get <your-repo>
+
+# Set properties from JSON file
+pnpm run manage-properties set <your-repo> properties.json
+
+# Run compliance checks
+pnpm run compliance-automation check <your-repo>
+
+# Assess repository risk
+pnpm run risk-assessment assess <your-repo>
+
+# View governance status
+pnpm run governance validate
+```
+
+### Automated Policies
+
+Repository properties automatically trigger governance policies:
+
+- **High-risk repositories** (Critical business impact or Restricted data)
+  - Enhanced security requirements
+  - Multiple approval requirements
+  - Monthly security reviews
+
+- **Compliance frameworks** (SOC2, HIPAA, PCI-DSS, etc.)
+  - Framework-specific controls
+  - Automated compliance scanning
+  - Documentation requirements
+
+- **Public-facing applications**
+  - Elevated security classification
+  - Web application security scanning
+  - DDoS protection requirements
+
+### Risk Assessment
+
+Risk scores are calculated automatically based on repository properties. Categories:
+
+- **Critical** (3.5-4.0): Enhanced monitoring, quarterly reviews
+- **High** (2.8-3.4): Monthly reviews, enhanced policies  
+- **Medium** (2.0-2.7): Quarterly reviews, standard policies
+- **Low** (1.0-1.9): Semi-annual reviews, basic policies
+
+### Compliance Requirements
+
+Based on repository classification and compliance frameworks:
+
+- **SOC2**: Access controls, data classification, change management
+- **ISO27001**: Asset management, access control, vulnerability management  
+- **HIPAA**: Administrative safeguards, technical safeguards, audit controls
+- **PCI-DSS**: Data protection, encryption, access controls
+- **GDPR**: Data protection by design, security of processing
+
+### Workflow Automation
+
+Automated workflows trigger based on property changes:
+
+- **Property changes**: Automatic security classification updates
+- **Risk threshold breaches**: Escalation and policy application
+- **Compliance failures**: Issue creation and team notification
+- **Schedule triggers**: Periodic reviews and assessments
+
+### Documentation
+
+See [docs/governance/METADATA_GOVERNANCE.md](docs/governance/METADATA_GOVERNANCE.md) for comprehensive governance documentation.
+
+---
+
 ## Migration workflow
 
 1. **Create** a new migration under `supabase/migrations/` with the next sequential number (e.g. `010_my_feature.sql`).
