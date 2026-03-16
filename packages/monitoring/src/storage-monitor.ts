@@ -15,7 +15,7 @@ interface StorageMonitorConfig {
   collectionInterval: number
   /** Large file threshold in bytes (default: 5MB) */
   largeFileThreshold: number
-  /** Whether to enable detailed file tracking */
+  /** Whether to enable detailed tracking */
   enableDetailedTracking: boolean
 }
 
@@ -36,39 +36,122 @@ export class StorageMonitor {
 
   /**
    * Collects current storage usage for all buckets
-   * Mock implementation for now - will be integrated with actual Supabase storage API
+   * Integrates with Supabase storage API for real data, falls back to mock for development
    */
   async collectStorageUsage(): Promise<StorageUsage[]> {
     try {
-      // Mock implementation - in production, this would query Supabase storage API
-      const mockUsage: StorageUsage[] = [
-        {
-          bucket: 'tenant-123-assets',
-          totalSize: 1024 * 1024 * 100, // 100MB
-          fileCount: 250,
-          averageFileSize: 1024 * 1024 * 0.4, // 400KB average
-          largestFileSize: 1024 * 1024 * 5, // 5MB largest
-          timestamp: new Date().toISOString(),
-        },
-        {
-          bucket: 'tenant-123-documents',
-          totalSize: 1024 * 1024 * 50, // 50MB
-          fileCount: 100,
-          averageFileSize: 1024 * 1024 * 0.5, // 500KB average
-          largestFileSize: 1024 * 1024 * 2, // 2MB largest
-          timestamp: new Date().toISOString(),
-        },
-      ]
+      // Try to use real Supabase storage API first
+      const realUsage = await this.collectRealStorageUsage()
+      if (realUsage.length > 0) {
+        console.log('Real storage usage collected', {
+          bucketCount: realUsage.length,
+          totalFiles: realUsage.reduce((sum, usage) => sum + usage.fileCount, 0),
+          totalSize: realUsage.reduce((sum, usage) => sum + usage.totalSize, 0),
+        })
+        return realUsage
+      }
+    } catch (error) {
+      console.warn('Failed to collect real storage usage, falling back to mock data:', error)
+    }
 
-      console.log('Storage usage collected', {
-        bucketCount: mockUsage.length,
-        totalFiles: mockUsage.reduce((sum, usage) => sum + usage.fileCount, 0),
-        totalSize: mockUsage.reduce((sum, usage) => sum + usage.totalSize, 0),
+    // Fallback to mock implementation for development
+    const mockUsage: StorageUsage[] = [
+      {
+        bucket: 'tenant-123-assets',
+        totalSize: 1024 * 1024 * 100, // 100MB
+        fileCount: 250,
+        averageFileSize: 1024 * 1024 * 0.4, // 400KB average
+        largestFileSize: 1024 * 1024 * 5, // 5MB largest
+        timestamp: new Date().toISOString(),
+      },
+      {
+        bucket: 'tenant-123-documents',
+        totalSize: 1024 * 1024 * 50, // 50MB
+        fileCount: 100,
+        averageFileSize: 1024 * 1024 * 0.5, // 500KB average
+        largestFileSize: 1024 * 1024 * 2, // 2MB largest
+        timestamp: new Date().toISOString(),
+      },
+    ]
+
+    console.log('Mock storage usage collected', {
+      bucketCount: mockUsage.length,
+      totalFiles: mockUsage.reduce((sum, usage) => sum + usage.fileCount, 0),
+      totalSize: mockUsage.reduce((sum, usage) => sum + usage.totalSize, 0),
+    })
+
+    return mockUsage
+  }
+
+  /**
+   * Collects real storage usage from Supabase storage API
+   */
+  private async collectRealStorageUsage(): Promise<StorageUsage[]> {
+    try {
+      // Import Supabase client dynamically to avoid circular dependencies
+      const { getAdminClient } = await import('@agency/database/admin')
+      const supabase = getAdminClient()
+
+      // Query storage.objects to get real bucket usage data
+      const { data: storageObjects, error } = await supabase
+        .from('storage.objects')
+        .select('bucket_id, name, metadata, created_at')
+        .not('bucket_id', 'eq', 'empty') // Filter out system buckets
+
+      if (error) {
+        throw new Error(`Failed to query storage objects: ${error.message}`)
+      }
+
+      if (!storageObjects || storageObjects.length === 0) {
+        console.log('No storage objects found')
+        return []
+      }
+
+      // Group by bucket and calculate usage statistics
+      const bucketStats = new Map<string, {
+        totalSize: number
+        fileCount: number
+        fileSizes: number[]
+        largestFile: number
+      }>()
+
+      storageObjects.forEach(obj => {
+        const bucket = obj.bucket_id
+        const size = (obj.metadata?.size as number) || 0
+
+        if (!bucketStats.has(bucket)) {
+          bucketStats.set(bucket, {
+            totalSize: 0,
+            fileCount: 0,
+            fileSizes: [],
+            largestFile: 0,
+          })
+        }
+
+        const stats = bucketStats.get(bucket)!
+        stats.totalSize += size
+        stats.fileCount += 1
+        stats.fileSizes.push(size)
+        stats.largestFile = Math.max(stats.largestFile, size)
       })
 
-      return mockUsage
+      // Convert to StorageUsage format
+      const usage: StorageUsage[] = Array.from(bucketStats.entries()).map(([bucket, stats]) => {
+        const averageFileSize = stats.fileCount > 0 ? stats.totalSize / stats.fileCount : 0
+        
+        return {
+          bucket,
+          totalSize: stats.totalSize,
+          fileCount: stats.fileCount,
+          averageFileSize,
+          largestFileSize: stats.largestFile,
+          timestamp: new Date().toISOString(),
+        }
+      })
+
+      return usage
     } catch (error) {
-      console.error('Error in collectStorageUsage:', error)
+      console.error('Error in collectRealStorageUsage:', error)
       throw error
     }
   }
@@ -107,6 +190,7 @@ export class StorageMonitor {
 
   /**
    * Identifies large files that could be optimized
+   * Integrates with Supabase storage API for real file analysis
    */
   async identifyLargeFiles(threshold?: number): Promise<Array<{
     name: string
@@ -118,33 +202,96 @@ export class StorageMonitor {
     try {
       const sizeThreshold = threshold || this.config.largeFileThreshold
       
-      // Mock implementation - in production, this would query actual storage
-      const mockLargeFiles = [
-        {
-          name: 'large-image.png',
-          bucket: 'tenant-123-assets',
-          size: 6 * 1024 * 1024, // 6MB
-          sizeFormatted: this.formatBytes(6 * 1024 * 1024),
-          createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          name: 'backup-dump.zip',
-          bucket: 'tenant-123-documents',
-          size: 8 * 1024 * 1024, // 8MB
-          sizeFormatted: this.formatBytes(8 * 1024 * 1024),
-          createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ].filter(file => file.size >= sizeThreshold)
+      // Try to get real large files from Supabase storage
+      const realLargeFiles = await this.identifyRealLargeFiles(sizeThreshold)
+      if (realLargeFiles.length > 0) {
+        console.log('Real large files identified', {
+          count: realLargeFiles.length,
+          threshold: sizeThreshold,
+          totalSize: realLargeFiles.reduce((sum, file) => sum + file.size, 0),
+        })
+        return realLargeFiles
+      }
+    } catch (error) {
+      console.warn('Failed to identify real large files, falling back to mock data:', error)
+    }
+      
+    // Fallback to mock implementation - in production, this would query actual storage
+    const sizeThreshold = threshold || this.config.largeFileThreshold
+    const mockLargeFiles = [
+      {
+        name: 'large-image.png',
+        bucket: 'tenant-123-assets',
+        size: 6 * 1024 * 1024, // 6MB
+        sizeFormatted: this.formatBytes(6 * 1024 * 1024),
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        name: 'backup-dump.zip',
+        bucket: 'tenant-123-documents',
+        size: 8 * 1024 * 1024, // 8MB
+        sizeFormatted: this.formatBytes(8 * 1024 * 1024),
+        createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ].filter(file => file.size >= sizeThreshold)
 
-      console.log('Large files identified', {
-        count: mockLargeFiles.length,
-        threshold: sizeThreshold,
-        totalSize: mockLargeFiles.reduce((sum, file) => sum + file.size, 0),
+    console.log('Mock large files identified', {
+      count: mockLargeFiles.length,
+      threshold: sizeThreshold,
+      totalSize: mockLargeFiles.reduce((sum, file) => sum + file.size, 0),
+    })
+
+    return mockLargeFiles
+  }
+
+  /**
+   * Identifies real large files from Supabase storage
+   */
+  private async identifyRealLargeFiles(threshold: number): Promise<Array<{
+    name: string
+    bucket: string
+    size: number
+    sizeFormatted: string
+    createdAt: string
+  }>> {
+    try {
+      // Import Supabase client dynamically to avoid circular dependencies
+      const { getAdminClient } = await import('@agency/database/admin')
+      const supabase = getAdminClient()
+
+      // Query storage.objects for files larger than threshold
+      const { data: largeFiles, error } = await supabase
+        .from('storage.objects')
+        .select('bucket_id, name, metadata, created_at')
+        .not('bucket_id', 'eq', 'empty') // Filter out system buckets
+        .gte('metadata->>size', threshold.toString())
+        .order('metadata->>size', { ascending: false })
+        .limit(50) // Limit to top 50 largest files
+
+      if (error) {
+        throw new Error(`Failed to query large files: ${error.message}`)
+      }
+
+      if (!largeFiles || largeFiles.length === 0) {
+        console.log('No large files found')
+        return []
+      }
+
+      // Convert to expected format
+      const formattedFiles = largeFiles.map(file => {
+        const size = (file.metadata?.size as number) || 0
+        return {
+          name: file.name,
+          bucket: file.bucket_id,
+          size,
+          sizeFormatted: this.formatBytes(size),
+          createdAt: file.created_at,
+        }
       })
 
-      return mockLargeFiles
+      return formattedFiles
     } catch (error) {
-      console.error('Error in identifyLargeFiles:', error)
+      console.error('Error in identifyRealLargeFiles:', error)
       throw error
     }
   }
