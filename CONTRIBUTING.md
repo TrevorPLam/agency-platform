@@ -24,18 +24,26 @@ This document covers everything you need to get running locally and contribute c
 
    All dependencies use the **catalog** in `pnpm-workspace.yaml` — versions are centralised there. Internal packages use `workspace:*`. Do not add version strings to `package.json` for catalogued packages; use `catalog:` and add the entry to the root catalog if needed. See [docs/PNPM_NOTES.md](./docs/PNPM_NOTES.md) for the `catalogMode: strict` workaround.
 
-3. **Git performance optimization**
+3. **Performance optimization**
 
    ```bash
    # Apply Git performance optimizations for large repositories
-   ./scripts/setup/git-config.sh
+   ./scripts/performance/git-tuning.sh apply standard
    
    # Enable background maintenance
    git maintenance register
    git maintenance start
    
+   # Set up sparse checkout for better performance
+   ./scripts/performance/sparse-checkout.sh init
+   ./scripts/performance/sparse-checkout.sh role frontend
+   
+   # Optimize IDE performance
+   ./scripts/performance/ide-optimization.ts optimize
+   
    # Verify performance
-   ./scripts/benchmark/git-performance.ts
+   ./scripts/performance/git-tuning.sh benchmark
+   ./scripts/performance/dx-monitor.ts health
    ```
 
    For detailed Git performance guidance, see [docs/development/GIT_PERFORMANCE.md](./docs/development/GIT_PERFORMANCE.md).

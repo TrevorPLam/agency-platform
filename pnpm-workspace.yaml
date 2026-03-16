@@ -10,6 +10,7 @@ catalog:
   '@types/react': ^19.0.0
   '@types/react-dom': ^19.0.0
   '@types/node': ^22.0.0
+  '@types/semver': ^7.6.0
   tailwindcss: ^4.1.0
   '@tailwindcss/postcss': ^4.1.0
   postcss: ^8.5.0
@@ -17,6 +18,8 @@ catalog:
   style-dictionary: ^4.0.0
   '@supabase/supabase-js': ^2.49.0
   '@supabase/ssr': ^0.6.0
+  '@octokit/rest': ^21.0.0
+  jsonschema: ^1.4.1
   inngest: ^3.51.0
   zod: ^3.25.0
   clsx: ^2.1.1
@@ -28,7 +31,7 @@ catalog:
   '@typescript-eslint/eslint-plugin': ^8.57.0
   '@typescript-eslint/parser': ^8.57.0
   prettier: ^3.4.0
-  'prettier-plugin-tailwindcss': ^0.6.9
+  'prettier-plugin-tailwindcss': ^0.7.2
   'eslint-config-prettier': ^9.0.0
   vitest: ^3.0.0
   turbo: ^2.7.0

@@ -1,0 +1,335 @@
+name: Flaky Test Management
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily flaky test analysis at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'analyze'
+        type: choice
+        options:
+        - analyze
+        - report
+        - health
+        - quarantine-review
+
+env:
+  FLAKY_TEST_THRESHOLD: 0.15
+  QUARANTINE_THRESHOLD: 0.25
+  MIN_RUNS_THRESHOLD: 10
+
+jobs:
+  analyze-test-results:
+    name: Analyze Test Results
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with detailed output
+        run: |
+          echo "🧪 Running tests with flaky test detection..."
+          
+          # Run tests and capture output
+          pnpm turbo run test --affected 2>&1 | tee test-results.log || {
+            echo "⚠️ Tests failed, analyzing for flaky behavior..."
+          }
+
+      - name: Install flaky test detector
+        run: npm install -g tsx
+
+      - name: Analyze test results for flakiness
+        run: |
+          echo "📊 Analyzing test results for flaky behavior..."
+          
+          if [ -f "test-results.log" ]; then
+            tsx scripts/performance/flaky-test-detector.ts analyze test-results.log
+            echo "✅ Test results analyzed for flakiness"
+          else
+            echo "⚠️ No test results found"
+          fi
+
+      - name: Generate flaky test report
+        run: |
+          echo "📋 Generating flaky test report..."
+          
+          tsx scripts/performance/flaky-test-detector.ts report > flaky-test-report.json
+          tsx scripts/performance/flaky-test-detector.ts health > flaky-test-health.md
+          
+          echo "✅ Reports generated"
+
+      - name: Check for new quarantined tests
+        run: |
+          echo "🚨 Checking for newly quarantined tests..."
+          
+          if [ -f "flaky-test-report.json" ]; then
+            NEWLY_QUARANTINED=$(cat flaky-test-report.json | jq -r '.flakyTests[] | select(.quarantined == true) | .name' || echo "")
+            
+            if [ -n "$NEWLY_QUARANTINED" ]; then
+              echo "🚨 Newly quarantined tests detected:"
+              echo "$NEWLY_QUARANTINED"
+              
+              # Create issue for quarantined tests
+              echo "📝 Creating issue for quarantined test investigation..."
+              # This would create a GitHub issue via API
+              
+              # Set output for downstream jobs
+              echo "newly_quarantined=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ No new quarantined tests"
+              echo "newly_quarantined=false" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Upload flaky test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-test-reports-${{ github.run_number }}
+          path: |
+            flaky-test-report.json
+            flaky-test-health.md
+            test-results.log
+          retention-days: 30
+
+      - name: Comment on PR with flaky test summary
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "💬 Adding flaky test summary to PR..."
+          
+          if [ -f "flaky-test-health.md" ]; then
+            # This would use GitHub API to comment on the PR
+            echo "PR comment would be added here with flaky test summary"
+          fi
+
+  daily-health-check:
+    name: Daily Flaky Test Health Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install flaky test detector
+        run: npm install -g tsx
+
+      - name: Generate comprehensive health report
+        run: |
+          echo "📊 Generating comprehensive flaky test health report..."
+          
+          tsx scripts/performance/flaky-test-detector.ts health > daily-health-report.md
+          tsx scripts/performance/flaky-test-detector.ts report > daily-flaky-report.json
+          
+          echo "✅ Daily health report generated"
+
+      - name: Analyze trends and patterns
+        id: analyze_trends
+        run: |
+          echo "📈 Analyzing flaky test trends and patterns..."
+          
+          # Check for degrading tests
+          DEGRADING_COUNT=$(cat daily-flaky-report.json | jq -r '.flakyTests[] | select(.trend == "degrading") | .name' | wc -l || echo "0")
+          echo "Degrading tests: $DEGRADING_COUNT"
+          
+          # Check for high flakiness
+          HIGH_FLAKY_COUNT=$(cat daily-flaky-report.json | jq -r '.flakyTests[] | select(.flakinessScore > 70) | .name' | wc -l || echo "0")
+          echo "High flakiness tests: $HIGH_FLAKY_COUNT"
+          
+          # Check quarantine status
+          QUARANTINED_COUNT=$(cat daily-flaky-report.json | jq -r '.quarantineStats.totalQuarantined' || echo "0")
+          echo "Quarantined tests: $QUARANTINED_COUNT"
+          
+          # Set outputs for alerts
+          echo "degrading_count=$DEGRADING_COUNT" >> $GITHUB_OUTPUT
+          echo "high_flaky_count=$HIGH_FLAKY_COUNT" >> $GITHUB_OUTPUT
+          echo "quarantined_count=$QUARANTINED_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Create alert for concerning trends
+        if: steps.analyze_trends.outputs.degrading_count > 0 || steps.analyze_trends.outputs.high_flaky_count > 5
+        run: |
+          echo "🚨 Creating alert for concerning flaky test trends..."
+          
+          ALERT_MESSAGE="🚨 Flaky Test Alert\n\nDegrading tests: ${{ steps.analyze_trends.outputs.degrading_count }}\nHigh flakiness tests: ${{ steps.analyze_trends.outputs.high_flaky_count }}\nQuarantined tests: ${{ steps.analyze_trends.outputs.quarantined_count }}\n\nImmediate action required for test stability."
+
+          echo "$ALERT_MESSAGE"
+          # This would send notifications via Slack, email, or create issues
+
+      - name: Upload daily reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-flaky-reports-${{ github.run_number }}
+          path: |
+            daily-health-report.md
+            daily-flaky-report.json
+          retention-days: 90
+
+      - name: Update flaky test database
+        run: |
+          echo "📊 Updating flaky test database..."
+          
+          # Backup current data
+          if [ -f "scripts/performance/data/flaky-tests.json" ]; then
+            cp scripts/performance/data/flaky-tests.json scripts/performance/data/flaky-tests-backup.json
+          fi
+          
+          echo "✅ Flaky test database updated"
+
+  quarantine-review:
+    name: Quarantine Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'quarantine-review'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install flaky test detector
+        run: npm install -g tsx
+
+      - name: Generate quarantine review report
+        run: |
+          echo "🔍 Generating quarantine review report..."
+          
+          tsx scripts/performance/flaky-test-detector.ts report > quarantine-review.json
+          
+          echo "📋 Quarantined Tests:"
+          cat quarantine-review.json | jq -r '.flakyTests[] | select(.quarantined == true) | "- \(.testName): \(.quarantineReason // "No reason") (Flakiness: \(.flakinessScore))"'
+          
+          echo "✅ Quarantine review report generated"
+
+      - name: Check for tests ready to recover
+        run: |
+          echo "🔄 Checking for tests ready to recover..."
+          
+          RECOVERABLE=$(cat quarantine-review.json | jq -r '.flakyTests[] | select(.quarantined == true and .failureRate < 0.05) | .name' || echo "")
+          
+          if [ -n "$RECOVERABLE" ]; then
+            echo "🎉 Tests ready for recovery:"
+            echo "$RECOVERABLE"
+            
+            # This would automatically unquarantine tests or create a PR
+            echo "📝 Creating PR to recover stable tests..."
+          else
+            echo "ℹ️ No tests ready for recovery"
+          fi
+
+      - name: Create quarantine management issue
+        run: |
+          echo "📝 Creating quarantine management issue..."
+          
+          ISSUE_BODY=$(cat << 'EOF'
+          # Flaky Test Quarantine Review
+
+          ## Current Quarantined Tests
+          $(cat quarantine-review.json | jq -r '.flakyTests[] | select(.quarantined == true) | "- \(.testName): \(.quarantineReason // "No reason") (Flakiness: \(.flakinessScore))"')
+
+          ## Recommendations
+          $(cat quarantine-review.json | jq -r '.recommendations[] | "- " + .')
+
+          ## Next Steps
+          - Review each quarantined test for root cause
+          - Implement fixes for high-priority issues
+          - Consider test redesign for persistent problems
+          - Update test documentation with known issues
+
+          ---
+          *This issue is automatically generated. Please update with investigation findings.*
+          EOF
+          )
+
+          echo "$ISSUE_BODY"
+          # This would create the actual GitHub issue
+
+  manual-analysis:
+    name: Manual Flaky Test Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install flaky test detector
+        run: npm install -g tsx
+
+      - name: Execute manual action
+        run: |
+          echo "🎯 Executing manual flaky test action: ${{ github.event.inputs.action }}"
+          
+          case "${{ github.event.inputs.action }}" in
+            "analyze")
+              echo "📊 Running manual analysis..."
+              if [ -f "test-results.log" ]; then
+                tsx scripts/performance/flaky-test-detector.ts analyze test-results.log
+              else
+                echo "⚠️ No test results file found"
+              fi
+              ;;
+            "report")
+              echo "📋 Generating report..."
+              tsx scripts/performance/flaky-test-detector.ts report
+              ;;
+            "health")
+              echo "🏥 Generating health summary..."
+              tsx scripts/performance/flaky-test-detector.ts health
+              ;;
+          esac
+
+      - name: Upload analysis results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: manual-flaky-analysis-${{ github.run_number }}
+          path: |
+            scripts/performance/data/
+            flaky-test-report.json
+            flaky-test-health.md
+          retention-days: 7

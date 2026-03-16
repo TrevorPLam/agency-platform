@@ -1,0 +1,374 @@
+{
+  // File and search exclusions for large monorepo performance
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/out": true,
+    "**/.next": true,
+    "**/.nuxt": true,
+    "**/.vuepress/dist": true,
+    "**/.serverless": true,
+    "**/.fossil": true,
+    "**/.turbo": true,
+    "**/.vercel": true,
+    "**/.cache": true,
+    "**/.tmp": true,
+    "**/coverage": true,
+    "**/test-results": true,
+    "**/playwright-report": true,
+    "**/storybook-static": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/out/**": true,
+    "**/.next/**": true,
+    "**/.nuxt/**": true,
+    "**/.cache/**": true,
+    "**/.tmp/**": true,
+    "**/coverage/**": true,
+    "**/test-results/**": true,
+    "**/playwright-report/**": true,
+    "**/storybook-static/**": true,
+    "**/.turbo/**": true,
+    "**/.vercel/**": true,
+    "**/*.log": true,
+    "**/*.lock": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/out": true,
+    "**/.next": true,
+    "**/.nuxt": true,
+    "**/.cache/**": true,
+    "**/.tmp/**": true,
+    "**/coverage/**": true,
+    "**/test-results/**": true,
+    "**/playwright-report/**": true,
+    "**/storybook-static/**": true,
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true
+  },
+  "search.maxResults": 1000,
+
+  // Editor performance settings
+  "editor.tabSize": 2,
+  "editor.fontSize": 14,
+  "editor.wordWrap": "on",
+  "editor.minimap.enabled": false,
+  "editor.codeLens": false,
+  "editor.lightbulb.enabled": false,
+  "editor.hover.enabled": true,
+  "editor.suggestSelection": "first",
+  "editor.quickSuggestions": {
+    "comments": false,
+    "strings": true,
+    "other": true
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.stickyScroll.enabled": true,
+  "editor.unicodeHighlight.ambiguousCharacters": false,
+
+  // TypeScript and JavaScript performance
+  "typescript.preferences.includeCompletionsForModuleExports": true,
+  "typescript.preferences.includeCompletionsWithInsertText": true,
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "typescript.suggest.autoImports": true,
+  "typescript.suggest.completeFunctionCalls": true,
+  "typescript.updateImportsOnFileMove": "always",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "pollingInterval"
+  },
+
+  // JavaScript performance (mirror TypeScript settings)
+  "javascript.preferences.includeCompletionsForModuleExports": true,
+  "javascript.preferences.includeCompletionsWithInsertText": true,
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "javascript.suggest.autoImports": true,
+  "javascript.suggest.completeFunctionCalls": true,
+  "javascript.updateImportsOnFileMove": "always",
+
+  // Extension management
+  "extensions.autoUpdate": false,
+  "extensions.autoCheckUpdates": false,
+  "extensions.ignoreRecommendations": false,
+
+  // Workbench performance
+  "workbench.editor.enablePreview": false,
+  "workbench.startupEditor": "none",
+  "workbench.colorTheme": "Default Dark+",
+  "workbench.tree.indent": 12,
+  "workbench.list.smoothScrolling": true,
+  "workbench.editor.historyNavigation": true,
+
+  // Memory and performance
+  "workbench.enableExperiments": false,
+  "workbench.settings.enableNaturalLanguageSearch": false,
+  "workbench.tips.enabled": false,
+  "workbench.commandPalette.history": 50,
+  "workbench.commandPalette.preserveCursorPosition": true,
+
+  // Debugging performance
+  "debug.terminal.clearBeforeReusing": true,
+  "debug.console.fontSize": 12,
+  "debug.console.fontSize": 12,
+
+  // Git performance
+  "git.enableSmartCommit": true,
+  "git.autofetch": false,
+  "git.confirmSync": false,
+  "git.postCommitCommand": "none",
+  "git.showInlineOpenFileAction": false,
+  "git.suggestSmartCommit": false,
+  "git.supportGraf": false,
+
+  // Telemetry and privacy
+  "telemetry.enableTelemetry": false,
+  "telemetry.enableCrashReporter": false,
+  "extensions.ignoreRecommendations": false,
+
+  // Language-specific optimizations
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.suggest.showStatusBar": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    },
+    "editor.suggest.showStatusBar": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[toml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Tailwind CSS optimizations
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascriptreact"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["clsx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["classnames\\(([^)]*)\\)", "'([^']*)'"],
+    ["cn\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"],
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]+)[\"'`]"]
+  ],
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+
+  // Emmet optimizations
+  "emmet.includeLanguages": {
+    "typescript": "html",
+    "typescriptreact": "html",
+    "javascript": "html",
+    "javascriptreact": "html"
+  },
+  "emmet.triggerExpansionOnTab": true,
+  "emmet.showAbbreviationSuggestions": true,
+  "emmet.showExpandedAbbreviation": true,
+
+  // File associations for better performance
+  "files.associations": {
+    "*.json": "jsonc",
+    "*.md": "markdown",
+    "*.yml": "yaml",
+    "*.yaml": "yaml",
+    "*.toml": "toml",
+    "*.env": "dotenv",
+    "*.env.*": "dotenv"
+  },
+
+  // Performance monitoring
+  "editor.semanticTokenColorCustomizations": {
+    "enabled": true
+  },
+  "editor.tokenColorCustomizations": {
+    "enabled": true
+  },
+
+  // Multi-cursor and selection performance
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.selectionHighlight": true,
+  "editor.occurrenceHighlight": true,
+
+  // Scrollbar and viewport performance
+  "editor.scrollbar.vertical": "visible",
+  "editor.scrollbar.horizontal": "visible",
+  "editor.scrollbar.verticalScrollbarSize": 10,
+  "editor.scrollbar.horizontalScrollbarSize": 10,
+
+  // Folding performance
+  "editor.folding": true,
+  "editor.foldingStrategy": "indentation",
+  "editor.showFoldingControls": "always",
+  "editor.foldingImportsByDefault": true,
+
+  // minimap performance (disabled above)
+  "editor.minimap.renderCharacters": false,
+  "editor.minimap.maxColumn": 80,
+  "editor.minimap.showSlider": "always",
+
+  // Breadcrumbs performance
+  "editor.breadcrumbs.enabled": true,
+  "editor.breadcrumbs.showIcons": false,
+
+  // Hover and tooltip performance
+  "editor.hover.delay": 300,
+  "editor.hover.sticky": true,
+  "editor.suggest.showStatusBar": true,
+
+  // Completion performance
+  "editor.acceptSuggestionOnCommitCharacter": true,
+  "editor.acceptSuggestionOnEnter": "on",
+  "editor.snippetSuggestions": "top",
+  "editor.wordBasedSuggestions": true,
+  "editor.wordBasedSuggestionsMode": "currentDocument",
+
+  // Error and warning performance
+  "editor.semanticHighlighting.enabled": true,
+  "editor.colorDecorators": true,
+  "problems.decorations.enabled": true,
+
+  // Terminal performance
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.fontSize": 12,
+
+  // Explorer performance
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.js.map",
+    "*.tsx": "${capture}.js, ${capture}.d.ts, ${capture}.js.map",
+    "package.json": "package-lock.json, package-lock.json, yarn.lock, pnpm-lock.yaml, .npmrc",
+    "tsconfig.json": "tsconfig.*.json",
+    "next.config.js": "next.config.*.js",
+    "tailwind.config.js": "tailwind.config.*.js",
+    ".env": ".env.*"
+  },
+
+  // Search performance
+  "search.collapseResults": "always",
+  "search.useIgnoreFiles": true,
+  "search.useParentIgnoreFiles": true,
+  "search.useGlobalIgnoreFiles": true,
+
+  // SCM/Git performance
+  "scm.autoRefresh": true,
+  "scm.diffDecorations": "all",
+  "scm.diffDecorationsGutterVisibility": "hover",
+  "scm.diffDecorationsGutterVisibility": "always",
+  "scm.diffDecorationsGutterVisibility": "none",
+
+  // Debug performance
+  "debug.node.autoAttach": "on",
+  "debug.javascript.autoAttachFilter": "always",
+  "debug.terminal.clearBeforeReusing": true,
+
+  // Task runner performance
+  "task.problemMatchers.neverPrompt": true,
+  "task.quickOpen.history": 50,
+  "task.runOn": "default",
+
+  // Workspace performance
+  "workspace.untitledPreferTemporary": true,
+  "workspace.saveUntitledFiles": false,
+  "workspace.backupHistories": {
+    "workspaces": 5,
+    "folders": 20,
+    "untitledWorkspaces": 2
+  },
+
+  // Language server performance
+  "css.lint.unknownAtRules": "ignore",
+  "css.lint.validProperties": [],
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+
+  // Remote development performance
+  "remote.SSH.configFile": "~/.ssh/config",
+  "remote.SSH.connectTimeout": 30,
+  "remote.SSH.maxReconnectionAttempts": 3,
+  "remote.SSH.remotePlatform": {
+    "linux": "linux",
+    "darwin": "darwin",
+    "windows": "windows"
+  },
+
+  // AI and Copilot performance
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": true,
+    "markdown": true
+  },
+  "github.copilot.advanced": {
+    "inlineSuggest.count": 3,
+    "listCount": 10
+  },
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.editor.suggestSelection": "first",
+  "github.copilot.lint.enabled": true,
+  "github.copilot.lint.rules": {
+    "javascript": {
+      "recommended": true
+    },
+    "typescript": {
+      "recommended": true
+    }
+  }
+}
