@@ -11,7 +11,7 @@
 The monorepo is **structurally complete**: apps (firm, agency-admin, two prospective clients), shared packages (ui, database, analytics, email, booking, design-tokens), Supabase migrations, scaffold script, and CI (build, lint, type-check, RLS tests) are in place. The main gaps are:
 
 1. **CI and compliance** — Table count and RLS tests are out of date for newer tables (bookings, contact_submissions); **two** test files need updates.
-2. **Documentation** — Several docs still reference deleted files (GUIDE.md, TODO.md).
+2. **Documentation** — Most GUIDE.md references have been cleaned up; TODO.md references correctly point to root file.
 3. **Riley Day Care** — Treated as “template with placeholder content”; spec checklist is not executed.
 4. **The Barber Cave** — Middleware protects /dashboard, /login, /signup but those routes do not exist; tenant resolution not called.
 5. **Agency-admin** — No authentication; dashboard is open to anyone. Analytics package is a dependency but **initAnalytics is never called** (no Providers wrapper).
@@ -48,19 +48,19 @@ The monorepo is **structurally complete**: apps (firm, agency-admin, two prospec
 
 ## 2. Documentation: broken references to deleted files
 
-These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The following still reference them:
+These files were referenced but are now located at the repo root: `TODO.md`. The following still reference them:
 
 | Document | Reference |
 |----------|-----------|
-| `SECURITY.md` | “See GUIDE.md §16 for full context” |
-| `docs/BACKGROUND_JOBS.md` | “See also GUIDE.md Phase 7” |
-| `docs/PLAN_AGENCY_DIRECTION.md` | “Update **GUIDE.md** and **TODO.md** …” |
-| `docs/T18_VERIFICATION_PLAYBOOK.md` | “check off … in TODO.md”, “mark T-18 complete (line …) in TODO.md” |
-| `docs/AI_PROMPTING.md` | “mark T-18.08–T-18.11 complete in TODO.md”, “mark T-18 complete” |
-| `docs/ONBOARDING_CHECKLIST.md` | “Document … in … TODO.md T-23 implementation notes” |
-| `PROMPT.md` | “Read all of @TODO.md”, “Update @TODO.md with status” |
+| `SECURITY.md` | "See GUIDE.md §16 for full context" |
+| `docs/operations/BACKGROUND_JOBS.md` | "See also TODO.md Phase 7" |
+| `docs/governance/PLAN_AGENCY_DIRECTION.md` | "Update **TODO.md** …" |
+| `docs/guides/AI_DEVELOPMENT_GUIDE.md` | "check off … in TODO.md", "mark T-18 complete (line …) in TODO.md" |
+| `docs/guides/AI_DEVELOPMENT_GUIDE.md` | "mark T-18.08–T-18.11 complete in TODO.md", "mark T-18 complete" |
+| `docs/guides/CLIENT_ONBOARDING.md` | "Document … in … TODO.md T-23 implementation notes" |
+| `PROMPT.md` | "Read all of @TODO.md", "Update @TODO.md with status" |
 
-**Action:** Either restore `GUIDE.md` and `TODO.md` with minimal content, or update every reference above to a single source of truth (e.g. `docs/ROADMAP.md` or `docs/TASKS.md`), or remove the references if the process is obsolete.
+**Action:** Update `docs/BACKGROUND_JOBS.md` to reference root TODO.md. Other references to TODO.md are already correct.
 
 ---
 
@@ -82,7 +82,7 @@ These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The follow
 ### 3.3 Prospective clients: Riley Day Care (`apps/prospective-clients/riley-day-care`)
 
 - **Implemented:** Full template: home, about, programs, contact (form + `contact_submissions` + email), blog (list + `[slug]`), auth: login, signup, callback, dashboard. Middleware: `resolveTenantFromRequest`, auth redirects (protected /dashboard → /login; auth routes → /dashboard when logged in). `globals.css` imports `../../tokens/riley-day-care.css` (design-tokens client output). Providers initAnalytics('riley-day-care'); auth-analytics identifies/resets on login/logout. Login uses `customer_auth_mappings` + server sign-in; signup uses `createUserForTenant`.
-- **Gap — Placeholder content:** `docs/riley-day-care-spec.md` states the app is “Day Care Template scaffold with Riley Day Care branding and **placeholder content**” and the implementation checklist is **entirely unchecked** (content, pages, forms, blog, tokens, final pass).
+- **Gap — Placeholder content:** `docs/guides/riley-day-care-spec.md` states the app is "Day Care Template scaffold with Riley Day Care branding and **placeholder content**" and the implementation checklist is **entirely unchecked** (content, pages, forms, blog, tokens, final pass).
 - **Action:** When spec content is added, work through the checklist so Riley Day Care matches the spec.
 
 ### 3.4 Prospective clients: The Barber Cave (`apps/prospective-clients/the-barber-cave`)
@@ -144,7 +144,7 @@ These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The follow
 
 - **turbo.json:** build depends on ^build and tokens:build; tokens:build outputs to dist/ and apps/prospective-clients/*/tokens, apps/clients/*/tokens. No test script for apps (firm, agency-admin have no test in package.json).
 - **Root tsconfig.json:** References all packages and all four apps (firm, agency-admin, riley-day-care, the-barber-cave).
-- **.env.local.example:** Contains `NEXT_PUBLIC_TENANT_SLUG=riverside-hotel`. **Stale:** riverside-hotel was replaced by riley-day-care per PLAN_AGENCY_DIRECTION. Should be `riley-day-care` (or similar) and a note that agency-admin may use a different slug or none.
+- **.env.local.example:** Contains `NEXT_PUBLIC_TENANT_SLUG=riley-day-care`. Correctly updated from riverside-hotel to riley-day-care per PLAN_AGENCY_DIRECTION.
 - **.cursor/rules:** base.mdc, frontend.mdc, database.mdc, rls.mdc, tokens.mdc present; no references to deleted GUIDE/TODO.
 
 ---
@@ -159,7 +159,7 @@ These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The follow
 
 ## 10. Design system and governance
 
-- **Governance:** docs/GOVERNANCE.md and docs/VERSIONING.md exist. Research §11a and §15 in RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md; many checklist items are long-term (Figma, i18n, adoption metrics).
+- **Governance:** docs/governance/GOVERNANCE.md and docs/development/VERSIONING.md exist. Research §11a and §15 in RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md; many checklist items are long-term (Figma, i18n, adoption metrics).
 - **Firm/agency-admin theming:** Use hardcoded `:root .dark` in globals.css; only prospective clients consume design-tokens client CSS from `tokens/[slug].css`.
 
 ---
@@ -170,7 +170,7 @@ These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The follow
 
 1. Update **both** `supabase/tests/EXPECTED_TABLE_COUNT.txt` and `supabase/tests/database/00-rls-coverage.sql` to expect **7** tables and add policy assertions for `bookings` and `contact_submissions`.
 2. Add pgTAP isolation tests for `contact_submissions` and `bookings` in `01-tenant-isolation.sql` (and update `plan(N)`).
-3. Fix or remove all references to `GUIDE.md` and `TODO.md` across the repo (or restore minimal files).
+3. Update CODEBASE_ANALYSIS.md to reflect that documentation references are now current.
 4. Update `.env.local.example`: set `NEXT_PUBLIC_TENANT_SLUG=riley-day-care` (or document which app uses which slug).
 
 **Do when you want consistent client behavior:**
@@ -180,7 +180,7 @@ These files were **deleted** (per git status): `GUIDE.md`, `TODO.md`. The follow
 
 **Do when you want a “first real client” (Riley Day Care):**
 
-7. Add full Riley Day Care spec content to `docs/riley-day-care-spec.md` and complete the implementation checklist (content, pages, forms, blog, tokens, navigation).
+7. Add full Riley Day Care spec content to `docs/guides/riley-day-care-spec.md` and complete the implementation checklist (content, pages, forms, blog, tokens, navigation).
 
 **Do when you care about access control and analytics:**
 
