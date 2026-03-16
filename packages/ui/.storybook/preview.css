@@ -1,0 +1,10 @@
+/* Design tokens (run pnpm tokens:build from repo root if missing) */
+@import '../../design-tokens/dist/primitives.css';
+@import '../../design-tokens/dist/semantic.css';
+@import '../../design-tokens/dist/component.css';
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Scan UI package for Tailwind class names */
+@source "../src/**/*.{js,ts,jsx,tsx}";

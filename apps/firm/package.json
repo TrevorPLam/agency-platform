@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
@@ -12,6 +12,9 @@
   "dependencies": {
     "@agency/ui": "workspace:*",
     "@agency/analytics": "workspace:*",
+    "@agency/booking": "workspace:*",
+    "@agency/database": "workspace:*",
+    "@agency/email": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

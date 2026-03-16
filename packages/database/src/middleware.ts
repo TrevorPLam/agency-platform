@@ -40,11 +40,19 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
   const hostname = request.headers.get('host') || ''
   const isDevelopment = process.env.NODE_ENV === 'development'
 
-  // Development mode: use environment variable override
+  // Development mode: resolve tenant by slug so tenantId is always UUID (consistent with production)
   if (isDevelopment && process.env.NEXT_PUBLIC_TENANT_SLUG) {
+    const slug = process.env.NEXT_PUBLIC_TENANT_SLUG
+    const tenant = await resolveTenantBySlug(slug)
+    if (!tenant) {
+      throw new Error(
+        `Unable to resolve tenant for slug: ${slug}. ` +
+          `Ensure the tenant exists in the tenants table and NEXT_PUBLIC_TENANT_SLUG is correct.`
+      )
+    }
     return {
-      tenantId: process.env.NEXT_PUBLIC_TENANT_SLUG,
-      tenantSlug: process.env.NEXT_PUBLIC_TENANT_SLUG,
+      tenantId: tenant.id,
+      tenantSlug: tenant.slug,
       source: 'development',
     }
   }
@@ -63,6 +71,28 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
     tenantId: tenant.id,
     tenantSlug: tenant.slug,
     source: 'hostname',
+  }
+}
+
+/**
+ * Resolves tenant by slug (e.g. for development mode).
+ */
+async function resolveTenantBySlug(slug: string): Promise<{
+  id: string
+  slug: string
+  domain: string
+} | null> {
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin
+      .from('tenants')
+      .select('id, slug, domain')
+      .eq('slug', slug)
+      .single()
+    return data
+  } catch (error) {
+    console.error('Error resolving tenant by slug:', error)
+    return null
   }
 }
 

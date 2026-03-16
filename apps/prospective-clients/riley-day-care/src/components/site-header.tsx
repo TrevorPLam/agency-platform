@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { cn } from '@agency/ui'
+import { cn, ThemeToggle } from '@agency/ui'
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -16,7 +16,7 @@ export function SiteHeader() {
         <Link href="/" className="text-brand-primary text-lg font-semibold">
           Riley Day Care
         </Link>
-        <nav className="flex gap-6">
+        <nav className="flex items-center gap-6">
           {navLinks.map(({ href, label }) => (
             <Link
               key={href}
@@ -28,6 +28,7 @@ export function SiteHeader() {
               {label}
             </Link>
           ))}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

@@ -37,5 +37,5 @@ Never put primitives in @theme {} — it generates redundant utilities for every
 5. Using theme() in CSS — use var(--token-name) only
 
 ## Client tokens
-- Per-client files: tokens/clients/[slug].json; compiled to apps/clients/[slug]/tokens/[slug].css
+- Per-client files: tokens/clients/[slug].json; compiled to **either** apps/prospective-clients/[slug]/tokens/[slug].css **or** apps/clients/[slug]/tokens/[slug].css depending on where the app lives (see packages/design-tokens/scripts/build-clients.ts).
 - Build: pnpm tokens:build (runs from design-tokens package; see scripts/build-clients.ts and sd.config.ts)

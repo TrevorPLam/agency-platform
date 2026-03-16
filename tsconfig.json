@@ -11,6 +11,8 @@
     { "path": "./packages/database" },
     { "path": "./packages/analytics" },
     { "path": "./packages/design-tokens" },
+    { "path": "./packages/booking" },
+    { "path": "./packages/email" },
     { "path": "./apps/firm" },
     { "path": "./apps/agency-admin" },
     { "path": "./apps/prospective-clients/riley-day-care" },

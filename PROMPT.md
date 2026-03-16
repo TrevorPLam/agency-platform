@@ -1,6 +1,6 @@
 # PROMPT.md
 
-1. Read all of @TODO.md for the highest priority open/active task.
+1. Read TODO.md for the task list and highest priority open/active task.
 
 <stop> Execute step one. </stop>
 
@@ -40,7 +40,7 @@
 
 <stop> Execute step eight. </stop>
 
-9. Update @TODO.md with status and implementation notes.
+9. Update TODO.md with status and implementation notes.
 
 <stop> Execute step nine. </stop>
 

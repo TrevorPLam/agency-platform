@@ -1,0 +1,46 @@
+{
+  "motion": {
+    "semantic": {
+      "hover": {
+        "duration": {
+          "$type": "duration",
+          "$value": "{motion.primitive.duration.fast}"
+        },
+        "easing": {
+          "$type": "cubicBezier",
+          "$value": "{motion.primitive.easing.ease-out}"
+        }
+      },
+      "focus": {
+        "duration": {
+          "$type": "duration",
+          "$value": "{motion.primitive.duration.fast}"
+        },
+        "easing": {
+          "$type": "cubicBezier",
+          "$value": "{motion.primitive.easing.ease-out}"
+        }
+      },
+      "modal": {
+        "duration": {
+          "$type": "duration",
+          "$value": "{motion.primitive.duration.slow}"
+        },
+        "easing": {
+          "$type": "cubicBezier",
+          "$value": "{motion.primitive.easing.ease-spring}"
+        }
+      },
+      "page": {
+        "duration": {
+          "$type": "duration",
+          "$value": "{motion.primitive.duration.slower}"
+        },
+        "easing": {
+          "$type": "cubicBezier",
+          "$value": "{motion.primitive.easing.ease-in-out}"
+        }
+      }
+    }
+  }
+}

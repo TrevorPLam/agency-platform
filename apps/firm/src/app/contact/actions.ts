@@ -1,5 +1,8 @@
 'use server'
 
+import { getAdminClient } from '@agency/database/admin'
+import { sendContactNotification } from '@agency/email'
+
 export type ContactFormState = {
   success: boolean
   message: string
@@ -17,8 +20,29 @@ export async function submitContactForm(
     return { success: false, message: 'Please fill in all fields.' }
   }
 
-  // TODO: Wire to Resend, SendGrid, or Supabase (e.g. contact_submissions table)
-  await new Promise((r) => setTimeout(r, 500))
+  const admin = getAdminClient()
+  const { error: insertError } = await admin.from('contact_submissions').insert({
+    tenant_id: null,
+    source: 'firm',
+    name,
+    email,
+    message,
+  })
+
+  if (insertError) {
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+
+  const { success: emailOk, error: emailErr } = await sendContactNotification({
+    source: 'firm',
+    name,
+    email,
+    message,
+  })
+  if (!emailOk && emailErr) {
+    // Submission saved; email failed (log but don't fail the form)
+    console.error('Contact notification email failed:', emailErr)
+  }
 
   return { success: true, message: 'Thank you! We will be in touch soon.' }
 }

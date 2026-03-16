@@ -1,6 +1,6 @@
 # Agency Platform — Architectural Overview
 
-Single-page reference for the monorepo structure, isolation model, and scaling decision points. For step-by-step setup and contribution rules, see [CONTRIBUTING.md](../CONTRIBUTING.md). For the full build guide, see [GUIDE.md](../GUIDE.md).
+Single-page reference for the monorepo structure, isolation model, and scaling decision points. For step-by-step setup, contribution rules, and build/deploy, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ---
 
@@ -50,6 +50,28 @@ Security is structural: tenant identity comes from `app_metadata`, never `user_m
 
 ---
 
+## Content strategy / Headless CMS
+
+Client content (copy, blog posts, landing sections) is today managed in code or in-app. For multi-client scale and non-developer edits, a **headless CMS** is the recommended single source of truth: one platform, project or tenant per client, content delivered via API to each app.
+
+**When to introduce:** When client content grows beyond static pages or when marketing needs to update copy without code deploys. Not required for Phase 1; consider before or at Phase 2 (50+ clients) or when onboarding content-heavy clients.
+
+**Options:** Multi-tenant or project-per-client offerings (e.g. Caisy, Crystallize, Webiny, BCMS) support tenant/project isolation, shared infrastructure, and duplicate-from-template onboarding. Choose based on self-hosted vs SaaS, pricing, and framework integrations. The monorepo stays the consumer: each app fetches content by tenant/slug; no CMS-specific code in shared packages until a shared client is added.
+
+---
+
+## Component structure
+
+Shared UI lives in `packages/ui` and follows **Atomic Design** (atoms → molecules → organisms). Templates and pages stay in apps.
+
+- **Atoms** (`packages/ui/src/components/atoms/`): Primitives with single responsibility—Button, Input, Label, Badge. Keep dumb and styleable; use design tokens only.
+- **Molecules** (`packages/ui/src/components/molecules/`): Groups of atoms—Card, Dialog, Sheet, DropdownMenu. Encapsulate accessibility and sensible defaults; molecules may use atoms.
+- **Organisms** (`packages/ui/src/components/organisms/`): Sections combining molecules/atoms; add loading/empty/error here. Shared organisms go here when a pattern repeats across apps; app-specific ones (e.g. SiteHeader, ContactForm) stay in `apps/*/src/components`.
+
+See `packages/ui/src/components/README.md` for rules and when to promote a pattern. Use the hierarchy as a guide, not dogma.
+
+---
+
 ## Scaling phase triggers
 
 The current build targets **Phase 1** (0–50 clients). Transitions are triggered by measurable signals that persist for **10 consecutive days** (no one-off spikes).
@@ -78,13 +100,23 @@ Before considering Phase 2: run `EXPLAIN ANALYZE` on RLS queries; add indexes if
 - **Database:** Shared schema + RLS + Redis tenant/config cache (e.g. `tenant:{slug}:config`, 300s TTL).
 - **Tenant resolution:** Redis lookup with fallback to Supabase.
 
+**Future: tenant config cache.** When approaching Phase 2, add a small placeholder for tenant config (e.g. in `packages/database` or a dedicated package) so Redis (or similar) can be wired without re-architecting. The cache key pattern `tenant:{slug}:config` with a short TTL keeps tenant metadata and feature flags off the critical path while RLS remains the source of truth for data access.
+
+**Smoke / E2E tests.** Only `@agency/database` has unit tests today. As client count grows, consider one Playwright (or similar) smoke test per app type (e.g. firm home, agency-admin dashboard, one client login + dashboard) run in CI to guard regressions. Not required for Phase 1; add when you want higher confidence before releases.
+
 ### Phase 2 → 3 triggers
 
 - p95 query time (with cache warm) >300ms for 10 days.
 - Any tenant requires HIPAA/SOC2 → dedicated Supabase project / BAA (do not wait).
 - One tenant consistently >20% DB CPU → move that tenant first.
 
-Phase 3 (schema-per-tenant, 200+ clients) requires a second engineer for safe dual-write and migration; see GUIDE.md §19 for the full expand–contract pattern.
+Phase 3 (schema-per-tenant, 200+ clients) requires a second engineer for safe dual-write and migration; see [CONTRIBUTING.md](../CONTRIBUTING.md) and [docs/RENDERING.md](./RENDERING.md) for build and rendering options.
+
+---
+
+## Rendering
+
+Apps use the Next.js App Router. By default, routes are static where no dynamic APIs (`cookies()`, `headers()`, `searchParams`) are used; routes that need per-request data are dynamic. Tenant identity is resolved in middleware or layout (e.g. `NEXT_PUBLIC_TENANT_SLUG` per deployment). For per-route control (static, ISR, dynamic, or Partial Prerendering), see [docs/RENDERING.md](./RENDERING.md) and [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §8a.
 
 ---
 

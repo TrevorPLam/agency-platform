@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createSupabaseServerClient } from '@agency/database'
+import {
+  createSupabaseServerClient,
+  resolveTenantFromRequest,
+} from '@agency/database'
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -20,6 +23,15 @@ export async function middleware(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  try {
+    const tenant = await resolveTenantFromRequest(request)
+    response.headers.set('x-tenant-id', tenant.tenantId)
+    response.headers.set('x-tenant-slug', tenant.tenantSlug)
+    response.headers.set('x-tenant-source', tenant.source)
+  } catch {
+    // No tenant resolved (e.g. hostname not in tenants table); continue without tenant headers
+  }
 
   const pathname = request.nextUrl.pathname
   const isProtected = pathname.startsWith('/dashboard')

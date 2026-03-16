@@ -1,0 +1,77 @@
+{
+  "motion": {
+    "primitive": {
+      "duration": {
+        "instant": {
+          "$type": "duration",
+          "$value": "0ms",
+          "$description": "No animation"
+        },
+        "fast": {
+          "$type": "duration",
+          "$value": "100ms",
+          "$description": "Hover, focus, small UI feedback"
+        },
+        "normal": {
+          "$type": "duration",
+          "$value": "200ms",
+          "$description": "Buttons, dropdowns, toggles"
+        },
+        "slow": {
+          "$type": "duration",
+          "$value": "300ms",
+          "$description": "Modals, sheets, overlays"
+        },
+        "slower": {
+          "$type": "duration",
+          "$value": "500ms",
+          "$description": "Page transitions, large layout"
+        }
+      },
+      "easing": {
+        "ease-in": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0.4, 0, 1, 1)",
+          "$description": "Decelerate"
+        },
+        "ease-out": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0, 0, 0.2, 1)",
+          "$description": "Accelerate"
+        },
+        "ease-in-out": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "$description": "Symmetric"
+        },
+        "ease-spring": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+          "$description": "Overshoot for modals/drawers"
+        },
+        "ease-bounce": {
+          "$type": "cubicBezier",
+          "$value": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+          "$description": "Bounce effect"
+        }
+      },
+      "stagger": {
+        "fast": {
+          "$type": "duration",
+          "$value": "30ms",
+          "$description": "Tight stagger between items"
+        },
+        "normal": {
+          "$type": "duration",
+          "$value": "50ms",
+          "$description": "Default stagger"
+        },
+        "slow": {
+          "$type": "duration",
+          "$value": "100ms",
+          "$description": "Wider stagger"
+        }
+      }
+    }
+  }
+}

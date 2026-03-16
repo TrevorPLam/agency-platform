@@ -9,7 +9,7 @@
 ## Creating a test user (T-15.05)
 
 1. Ensure local Supabase is running: `npx supabase start` (and that `riley-day-care` tenant exists, e.g. from seed).
-2. From repo root, set env vars (e.g. copy from `apps/clients/riley-day-care/.env.local`):
+2. From repo root, set env vars (e.g. copy from `apps/prospective-clients/riley-day-care/.env.local`):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
 3. Build the database package if needed: `pnpm turbo run build --filter=@agency/database`

@@ -89,7 +89,7 @@ pnpm turbo run build --affected
 
 ### 10. Timing and bottlenecks
 
-- Record wall-clock time for the full onboarding. Target: under 2 hours. Document any bottlenecks (e.g. token build, DB seed, Vercel config) in this checklist or in TODO.md T-23 implementation notes.
+- Record wall-clock time for the full onboarding. Target: under 2 hours. Document any bottlenecks (e.g. token build, DB seed, Vercel config) in this checklist or in TODO.md.
 
 ---
 

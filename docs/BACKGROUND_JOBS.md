@@ -1,6 +1,6 @@
 # Background Jobs — Inngest
 
-This document captures the decision to use Inngest for durable background workflows, the checkpointing configuration, and the 260s/300s timing requirement. See also GUIDE.md Phase 7.
+This document captures the decision to use Inngest for durable background workflows, the checkpointing configuration, and the 260s/300s timing requirement.
 
 ## Why Inngest (not `after()` or BullMQ)
 

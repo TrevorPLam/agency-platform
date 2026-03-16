@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path to public, extensions;
 
-select plan(7);
+select plan(9);
 
 -- Schema-wide: RLS enabled on every table in public (no Basejump dependency)
 select is(
@@ -19,8 +19,8 @@ select is(
 -- Guardrail: exact table count (update when adding migrations)
 select is(
   (select count(*)::int from pg_tables where schemaname = 'public'),
-  5,
-  'Expected exactly 5 tables in public schema'
+  7,
+  'Expected exactly 7 tables in public schema'
 );
 
 -- tenants: single SELECT policy (own row only)
@@ -71,6 +71,31 @@ select policies_are(
   'customer_auth_mappings',
   array['Users read own customer_auth_mappings'],
   'customer_auth_mappings has own-read SELECT policy'
+);
+
+-- bookings: all four operations (tenant-scoped)
+select policies_are(
+  'public',
+  'bookings',
+  array[
+    'Tenants select own bookings',
+    'Tenants insert own bookings',
+    'Tenants update own bookings',
+    'Tenants delete own bookings'
+  ],
+  'bookings has SELECT, INSERT, UPDATE, DELETE policies'
+);
+
+-- contact_submissions: SELECT, UPDATE, DELETE (no INSERT for anon/authenticated; service-role only)
+select policies_are(
+  'public',
+  'contact_submissions',
+  array[
+    'Tenants select own contact submissions',
+    'Tenants update own contact submissions',
+    'Tenants delete own contact submissions'
+  ],
+  'contact_submissions has SELECT, UPDATE, DELETE policies'
 );
 
 select * from finish();

@@ -1,5 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
 
+/** ISR: revalidate this marketing page every 60 seconds. See docs/RENDERING.md. */
+export const revalidate = 60
+
 export const metadata = {
   title: 'Services',
   description: 'Strategy, design, and growth marketing services from our agency.',

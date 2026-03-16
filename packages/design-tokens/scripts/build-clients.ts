@@ -1,3 +1,4 @@
+import { existsSync } from 'fs'
 import fs from 'fs/promises'
 import path from 'path'
 import StyleDictionary from 'style-dictionary'
@@ -48,9 +49,6 @@ function formatTokenValue(
   return `${spaces}${cssVarName}: ${formattedValue};`
 }
 
-/** Slugs that live under apps/prospective-clients (demo/test). All others go to apps/clients (production). */
-const PROSPECTIVE_SLUGS = ['riley-day-care', 'the-barber-cave']
-
 async function buildClientTokens() {
   try {
     const clientsDir = path.join(process.cwd(), 'tokens', 'clients')
@@ -62,16 +60,14 @@ async function buildClientTokens() {
 
     console.log(`🔍 Found ${clientJsonFiles.length} client token files`)
 
-    // Build each client's tokens
+    // Build each client's tokens; output dir derived from app location (no hardcoded slug list)
     for (const clientFile of clientJsonFiles) {
       const clientName = clientFile.replace('.json', '')
       const clientTokenPath = path.join(clientsDir, clientFile)
-      const appSubdir = PROSPECTIVE_SLUGS.includes(clientName) ? 'prospective-clients' : 'clients'
+      const prospectivePath = path.join(appsRoot, 'prospective-clients', clientName)
+      const appSubdir = existsSync(prospectivePath) ? 'prospective-clients' : 'clients'
       const clientOutputDir = path.join(appsRoot, appSubdir, clientName, 'tokens')
 
-      await fs.mkdir(clientOutputDir, { recursive: true })
-
-      // Create output directory
       await fs.mkdir(clientOutputDir, { recursive: true })
 
       // Read client tokens

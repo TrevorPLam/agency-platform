@@ -9,6 +9,8 @@ on:
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  # Required for --affected in detached HEAD or when base branch is not checked out
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
 
 defaults:
   run:

@@ -16,6 +16,8 @@
     "db:seed-user": "tsx scripts/create-test-user.ts",
     "format": "prettier --write \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore",
+    "changeset": "changeset",
+    "version": "changeset version",
     "preinstall": "npx only-allow pnpm"
   },
   "keywords": [
@@ -29,6 +31,7 @@
   "license": "ISC",
   "devDependencies": {
     "@agency/database": "workspace:*",
+    "@changesets/cli": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
     "tsx": "catalog:",

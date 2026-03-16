@@ -1,4 +1,5 @@
 import { getAdminClient } from '@agency/database/admin'
+import { sendEmail } from '@agency/email'
 import { inngest } from '../client'
 
 function slugify(name: string): string {
@@ -7,6 +8,14 @@ function slugify(name: string): string {
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
 }
 
 export const onboardingWorkflow = inngest.createFunction(
@@ -36,8 +45,12 @@ export const onboardingWorkflow = inngest.createFunction(
     })
 
     await step.run('send-welcome-email', async () => {
-      // Stub: real implementation will use Resend/SendGrid in a later task
-      console.log('[INNGEST] Welcome email stub:', { to: clientEmail, clientName })
+      const { success, error } = await sendEmail({
+        to: clientEmail,
+        subject: `Welcome to the agency, ${clientName}`,
+        html: `<p>Hi ${escapeHtml(clientName)},</p><p>Welcome! We're excited to have you on board. If you have any questions, just reply to this email.</p>`,
+      })
+      if (!success) throw new Error(`Welcome email failed: ${error ?? 'unknown'}`)
       return { sent: true }
     })
 
@@ -49,8 +62,12 @@ export const onboardingWorkflow = inngest.createFunction(
 
     if (!profileEvent) {
       await step.run('send-followup', async () => {
-        // Stub: 7-day timeout follow-up nudge
-        console.log('[INNGEST] Follow-up email stub:', { to: clientEmail, clientName })
+        const { success, error } = await sendEmail({
+          to: clientEmail,
+          subject: `Quick follow-up, ${clientName}`,
+          html: `<p>Hi ${escapeHtml(clientName)},</p><p>We noticed you haven't completed your profile yet. Need any help? Reply to this email and we'll get back to you.</p>`,
+        })
+        if (!success) throw new Error(`Follow-up email failed: ${error ?? 'unknown'}`)
         return { sent: true }
       })
     }

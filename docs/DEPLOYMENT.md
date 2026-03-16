@@ -2,6 +2,28 @@
 
 This document covers the project-per-client deployment model, the Vercel Pro to Enterprise cost cliff at 9 clients, middleware routing as a cost mitigation, and operational steps for deploying agency platform apps to Vercel.
 
+## One Vercel project per app
+
+Each deployable app in the monorepo gets its **own Vercel project**: one root directory, one build, one set of environment variables. Do not deploy multiple apps from a single Vercel project (except when using the optional single-project middleware model below).
+
+| App type | Root directory example |
+| -------- | ----------------------- |
+| Agency marketing site | `apps/firm` |
+| Internal admin | `apps/agency-admin` |
+| Demo / prospective client | `apps/prospective-clients/<slug>` (e.g. `riley-day-care`, `the-barber-cave`) |
+| Production client | `apps/clients/<slug>` |
+
+**Build command:** Run from the **repository root** with a Turborepo filter so shared packages are built first, e.g. `pnpm turbo run build --filter=@agency/<app-name>` (e.g. `@agency/firm`, `@agency/agency-admin`, `@agency/riley-day-care`). **Output directory:** leave default (`.next` for Next.js) or set to the app’s `.next` path. **Environment variables:** set per project; for client apps include `NEXT_PUBLIC_TENANT_SLUG` (e.g. `riley-day-care`).
+
+## Deployment matrix (quick reference)
+
+| Approach | Root Directory | Build Command | Cost (approx.) | When to use |
+| -------- | -------------- | ------------- | -------------- | ----------- |
+| **One project per app** | `apps/prospective-clients/<slug>` or `apps/clients/<slug>` or `apps/agency-admin` | From repo root: `pnpm turbo run build --filter=@agency/<slug>` | ~\$45 (1 client) → ~\$1,560 (8) → **cliff at 9** (~\$1,810) | Default. First 8–9 clients; per-client isolation and rollback. |
+| **Single project + middleware** | One app that routes by hostname (see §Middleware pattern below) | Same Turborepo filter for that single app | ~\$60/month regardless of client count | When approaching 9 clients or to avoid Enterprise; trade per-client isolation for cost. |
+
+For **each Vercel project** (project-per-client model): set Root Directory to the app path above; set Build Command to run from repository root with the correct `--filter=@agency/<name>`; configure env vars per project (see §Environment variables per project). For the **single-project middleware** option, see §Middleware Routing as Cost Mitigation and the middleware pattern below.
+
 ## Project-per-Client Model
 
 Each client app has its own Vercel project: its own environment variables, deployment history, and rollback points. We use one project for `@agency/riley-day-care` (or `@agency/the-barber-cave`) and a separate project for `@agency/agency-admin`. Current client apps live under `apps/prospective-clients/`; production clients will use `apps/clients/`.
@@ -10,6 +32,29 @@ Each client app has its own Vercel project: its own environment variables, deplo
 - **Build:** Always run the build from the monorepo root via Turborepo so upstream packages are built first. Do not run `cd apps/prospective-clients/[slug] && next build` (or `apps/clients/[slug]` for production) from the app directory alone.
 
 This is the recommended model for a solo developer and for the first 8–9 clients. Switch to the single-project middleware model (or negotiate Vercel Enterprise) when approaching the cost cliff below.
+
+## Subdomains for prospective clients
+
+**Firm domain:** `www.yourdedicatedmarketer.com` (root: `yourdedicatedmarketer.com`).
+
+To show client demos under your firm domain (e.g. `riley-day-care.yourdedicatedmarketer.com`, `the-barber-cave.yourdedicatedmarketer.com`), use subdomains with the **project-per-client** model. No app code change is required — tenant resolution is already implemented in `packages/database` middleware (`resolveTenantFromRequest`), which matches hostname to the `tenants` table (exact `domain` match, or subdomain segment → `slug`).
+
+**Steps:**
+
+1. **DNS:** At your registrar, add a CNAME (or A/AAAA) for each subdomain. Point each to the Vercel target shown when you add the domain in the Vercel project (e.g. `riley-day-care.yourdedicatedmarketer.com` → the target for the `@agency/riley-day-care` project). There is no single wildcard when using one project per app; each subdomain is tied to one Vercel project.
+
+2. **Vercel:** In each project (firm, agency-admin, each prospective client), go to Settings → Domains and add the corresponding custom domain (e.g. `www.yourdedicatedmarketer.com` for the firm app, `riley-day-care.yourdedicatedmarketer.com` for the riley-day-care app, `admin.yourdedicatedmarketer.com` for agency-admin).
+
+3. **Supabase:** In production, set `tenants.domain` to the full hostname for each client (e.g. `riley-day-care.yourdedicatedmarketer.com`) so resolution is explicit, or rely on the built-in subdomain→slug match (first segment of hostname is matched to `tenants.slug`).
+
+**Example mapping:**
+
+| App              | Example URL                                | Vercel project (Root Directory)                    |
+| -----------------|--------------------------------------------|-----------------------------------------------------|
+| Firm             | `www.yourdedicatedmarketer.com`            | `apps/firm`                                        |
+| Agency admin     | `admin.yourdedicatedmarketer.com`           | `apps/agency-admin`                                |
+| Riley Day Care   | `riley-day-care.yourdedicatedmarketer.com`  | `apps/prospective-clients/riley-day-care`           |
+| The Barber Cave  | `the-barber-cave.yourdedicatedmarketer.com` | `apps/prospective-clients/the-barber-cave`         |
 
 ## Vercel Pro → Enterprise Cliff at 9 Clients
 
@@ -66,7 +111,7 @@ export const config = {
 }
 ```
 
-See the main Agency Platform Guide §14 for full context and the recommended app layout under this model.
+See docs/ARCHITECTURE.md for full context and the recommended app layout under this model.
 
 ## Operational Details
 

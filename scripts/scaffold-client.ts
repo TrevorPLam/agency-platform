@@ -27,6 +27,22 @@ function readTemplate(root: string, ...pathSegments: string[]): string {
   return readFileSync(filePath, 'utf-8')
 }
 
+/** Copy a template file into the app dir, replacing riley-day-care with slug. pathSegments are relative to templateRoot (e.g. 'src', 'app', '(auth)', 'login', 'page.tsx'). */
+function copyTemplateFile(
+  templateRoot: string,
+  appDir: string,
+  slug: string,
+  ...pathSegments: string[]
+): void {
+  const content = readTemplate(templateRoot, ...pathSegments).replace(
+    /riley-day-care/g,
+    slug
+  )
+  const outPath = join(appDir, 'src', 'app', ...pathSegments.slice(2)) // pathSegments: src, app, ...
+  mkdirSync(join(outPath, '..'), { recursive: true })
+  writeFileSync(outPath, content)
+}
+
 async function main() {
   console.log('\n🏗  Agency Platform — Client Scaffolder\n')
 
@@ -114,8 +130,17 @@ async function main() {
 
   writeFileSync(
     join(appDir, 'src', 'middleware.ts'),
-    readTemplate(templateRoot, 'src', 'middleware.ts')
+    readTemplate(templateRoot, 'src', 'middleware.ts').replace(/riley-day-care/g, slug)
   )
+
+  // Copy (auth) route group and dashboard so new clients have login/signup/dashboard
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'login', 'page.tsx')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'login', 'actions.ts')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'signup', 'page.tsx')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'signup', 'actions.ts')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'callback', 'route.ts')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', 'dashboard', 'page.tsx')
+  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', 'actions', 'auth.ts')
 
   const providersContent = readTemplate(templateRoot, 'src', 'components', 'providers.tsx').replace(
     /riley-day-care/g,
@@ -165,6 +190,19 @@ async function main() {
     },
   }
   writeFileSync(join(tokenDir, `${slug}.json`), JSON.stringify(placeholderTokens, null, 2))
+
+  // Add new app to root tsconfig.json references
+  const rootTsconfigPath = join(root, 'tsconfig.json')
+  const rootTsconfig = JSON.parse(readFileSync(rootTsconfigPath, 'utf-8')) as {
+    references?: Array<{ path: string }>
+  }
+  const refPath = `./apps/${appSubdir}/${slug}`
+  if (!rootTsconfig.references) rootTsconfig.references = []
+  if (!rootTsconfig.references.some((r) => r.path === refPath)) {
+    rootTsconfig.references.push({ path: refPath })
+    rootTsconfig.references.sort((a, b) => a.path.localeCompare(b.path))
+    writeFileSync(rootTsconfigPath, JSON.stringify(rootTsconfig, null, 2))
+  }
 
   execSync('pnpm install', { cwd: root, stdio: 'pipe', encoding: 'utf-8' })
 

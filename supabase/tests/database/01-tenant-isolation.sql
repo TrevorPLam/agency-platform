@@ -5,7 +5,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path to public, extensions;
 
-select plan(12);
+select plan(20);
 
 -- Tenants and users (reuse existing UUIDs from 02/03)
 insert into public.tenants (id, slug, domain, name, industry)
@@ -31,6 +31,16 @@ values
   ('10000000-0000-0000-0000-000000000001'::uuid, 'Post A1', 'post-a1', 'A1', true),
   ('20000000-0000-0000-0000-000000000002'::uuid, 'Post B1', 'post-b1', 'B1', true)
 on conflict (tenant_id, slug) do nothing;
+
+insert into public.bookings (tenant_id, email)
+values
+  ('10000000-0000-0000-0000-000000000001'::uuid, 'a@tenant-a.test'),
+  ('20000000-0000-0000-0000-000000000002'::uuid, 'b@tenant-b.test');
+
+insert into public.contact_submissions (tenant_id, source, name, email, message)
+values
+  ('10000000-0000-0000-0000-000000000001'::uuid, 'tenant-a', 'User A', 'a@tenant-a.test', 'Message A'),
+  ('20000000-0000-0000-0000-000000000002'::uuid, 'tenant-b', 'User B', 'b@tenant-b.test', 'Message B');
 
 set local role authenticated;
 
@@ -106,6 +116,43 @@ select is_empty(
 select is_empty(
   $$select 1 from public.tenants where id = '10000000-0000-0000-0000-000000000001'::uuid$$,
   'tenant B cannot SELECT other tenant row'
+);
+
+-- bookings: tenant A cannot see/update/delete/insert cross-tenant
+select set_config('request.jwt.claims', '{"sub":"a0000000-0000-0000-0000-000000000001","app_metadata":{"tenant_id":"10000000-0000-0000-0000-000000000001"}}', true);
+select is_empty(
+  $$select 1 from public.bookings where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid$$,
+  'tenant A cannot SELECT cross-tenant bookings'
+);
+select is_empty(
+  $$with u as (update public.bookings set email = 'x' where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid returning 1) select * from u$$,
+  'tenant A cannot UPDATE cross-tenant bookings'
+);
+select is_empty(
+  $$with d as (delete from public.bookings where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid returning 1) select * from d$$,
+  'tenant A cannot DELETE cross-tenant bookings'
+);
+select throws_ok(
+  $$insert into public.bookings (tenant_id, email) values ('20000000-0000-0000-0000-000000000002'::uuid, 'a@test.com')$$,
+  '42501'
+);
+
+-- contact_submissions: tenant A cannot see/update/delete B's; INSERT as authenticated not allowed (service-role only)
+select is_empty(
+  $$select 1 from public.contact_submissions where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid$$,
+  'tenant A cannot SELECT cross-tenant contact_submissions'
+);
+select is_empty(
+  $$with u as (update public.contact_submissions set status = 'closed' where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid returning 1) select * from u$$,
+  'tenant A cannot UPDATE cross-tenant contact_submissions'
+);
+select is_empty(
+  $$with d as (delete from public.contact_submissions where tenant_id = '20000000-0000-0000-0000-000000000002'::uuid returning 1) select * from d$$,
+  'tenant A cannot DELETE cross-tenant contact_submissions'
+);
+select throws_ok(
+  $$insert into public.contact_submissions (tenant_id, source, name, email, message) values ('20000000-0000-0000-0000-000000000002'::uuid, 'test', 'X', 'x@test.com', 'msg')$$,
+  '42501'
 );
 
 select * from finish();

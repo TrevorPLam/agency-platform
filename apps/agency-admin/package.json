@@ -13,6 +13,7 @@
     "@agency/ui": "workspace:*",
     "@agency/database": "workspace:*",
     "@agency/analytics": "workspace:*",
+    "@agency/email": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

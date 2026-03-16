@@ -16,8 +16,8 @@
 /supabase/migrations/ @trevo
 /supabase/tests/database/ @trevo
 
-# Client applications - per-client ownership
-/apps/clients/riverside-hotel/ @trevo
+# Client applications - production clients (when added)
+/apps/clients/ @trevo
 
 # Agency admin application
 /apps/agency-admin/ @trevo

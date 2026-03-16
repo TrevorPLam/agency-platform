@@ -6,7 +6,7 @@ This document covers everything you need to get running locally and contribute c
 
 ## Prerequisites and first-run setup
 
-1. **Install required tools** (see [TOOLCHAIN.md](./TOOLCHAIN.md) and T-01 in TODO.md):
+1. **Install required tools** (see [TOOLCHAIN.md](./TOOLCHAIN.md)):
    - Node.js 22.x LTS: `nvm install 22 && nvm use 22`
    - pnpm 10.x: `npm install -g pnpm@latest`
    - Turborepo: `pnpm add -g turbo` (or `npm install -g turbo`)
@@ -63,13 +63,17 @@ pnpm tokens:build
 
 | Port  | Service                   |
 | ----- | ------------------------- |
-| 3000  | riley-day-care client app |
+| 3000  | firm (agency marketing)   |
 | 3001  | agency-admin app          |
+| 3002  | riley-day-care client app |
+| 3003  | the-barber-cave client app |
 | 54321 | Supabase API              |
 | 54323 | Supabase Studio           |
 | 8288  | Inngest dev UI            |
 
-Other apps (e.g. firm, the-barber-cave) get ports assigned by Turborepo when running `pnpm dev`; check the terminal output.
+To run a single app: `pnpm turbo run dev --filter=@agency/<name>` (e.g. `--filter=@agency/firm`).
+
+To run **Storybook** for the shared UI component library (after `pnpm tokens:build`): `pnpm turbo run storybook --filter=@agency/ui`, or from `packages/ui`: `pnpm storybook`. Build static docs with `pnpm build-storybook` from `packages/ui`.
 
 ---
 
@@ -135,6 +139,18 @@ This overwrites `packages/database/src/types.ts`. Commit the updated file. CI wi
 - **Fix:** `pnpm format` (writes Prettier output to all supported files).
 
 Prettier is enforced in CI. Use the repo's `prettier.config.mjs` (semi: false, singleQuote: true, trailingComma: 'es5', printWidth: 100). Tailwind class names are auto-sorted via `prettier-plugin-tailwindcss`. See [.prettierignore](./.prettierignore) for exclusions.
+
+---
+
+## Style drift prevention
+
+Prefer **design tokens** over arbitrary Tailwind values: use token-based spacing, colors, and typography (e.g. from `@agency/design-tokens`) instead of arbitrary values like `w-[17px]` or `text-[#abc]` where an equivalent token exists. This keeps client sites aligned with the design system and makes global changes safe. An optional ESLint rule (e.g. `eslint-plugin-tailwindcss` with `flat/recommended`, or a custom rule limiting arbitrary values) can be added to enforce this; see [packages/eslint-config](./packages/eslint-config) and [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) (style drift prevention).
+
+---
+
+## Versioning and releases
+
+Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets** for changelogs and semver bumps. When your PR changes one of these packages, add a changeset from the repo root: `pnpm changeset` (choose packages and bump type, then commit the new file under `.changeset/`). To apply changesets and update versions/changelogs before a release: `pnpm version`. Full policy (semver meaning, breaking vs non-breaking, support window) is in [docs/VERSIONING.md](./docs/VERSIONING.md). See also [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §3a.
 
 ---
 

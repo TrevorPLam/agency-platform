@@ -29,7 +29,7 @@ For local development against this stack, set in each app’s `.env.local`:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY=<local anon key from supabase start output>`
 - `SUPABASE_SERVICE_ROLE_KEY=<local service role key from supabase start output>`
 
-To satisfy T-11 Definition of Done when developing locally, set these to the local API URL and keys printed by `supabase start` in both `apps/clients/riley-day-care/.env.local` and `apps/agency-admin/.env.local`.
+To satisfy T-11 Definition of Done when developing locally, set these to the local API URL and keys printed by `supabase start` in both `apps/prospective-clients/riley-day-care/.env.local` and `apps/agency-admin/.env.local`. (Production clients live under `apps/clients/<slug>`.)
 
 When not using local Supabase, point these to the production project (current setup).
 

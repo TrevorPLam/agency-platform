@@ -28,3 +28,14 @@
   --color-semantic-interactive-primary-active: oklch(0.75 0.22 198.41);
   --color-semantic-interactive-primary-disabled: oklch(0.31 0.02 198.41);
 }
+
+/* Respect prefers-reduced-motion (WCAG 2.3.3 AAA) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -67,7 +67,7 @@ apps/
 
 ### Phase 4: Documentation and template option
 
-- Update **GUIDE.md** and **TODO.md** to Option A layout, Riley Day Care as first real client, and “Day Care Template” as the current template approach.
+- Document the Option A layout (e.g. in docs/CODEBASE_ANALYSIS.md or docs/ARCHITECTURE.md); Riley Day Care as first real client, and “Day Care Template” as the current template approach.
 - When you’re ready, document how new “day care” clients are created (e.g. “scaffold from riley-day-care” or a dedicated day-care template in the scaffold script).
 
 ---

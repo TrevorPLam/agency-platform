@@ -1,6 +1,6 @@
 # Security — Five Attack Vectors
 
-This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See GUIDE.md §16 for full context.
+This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See docs/ARCHITECTURE.md and docs/MULTI_TENANT_AUTH.md for full context.
 
 ---
 
@@ -67,8 +67,8 @@ grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" --include="*.
 **Baseline review (T-22.06):**
 
 - `apps/agency-admin/src/inngest/functions/onboarding.ts` — Uses `event.data.tenantId` (trusted Inngest payload) for tenants upsert; no user-supplied tenant.
-- `apps/clients/riley-day-care/src/app/(auth)/signup/actions.ts` — Tenant from `NEXT_PUBLIC_TENANT_SLUG` + `.eq('slug', slug)`; then `tenant.id` for createUserForTenant. Tenant verified before use.
-- `apps/clients/riley-day-care/src/app/(auth)/login/actions.ts` — Same tenant resolution; `.eq('tenant_id', tenant.id)` and `.eq('real_email', realEmail)` on `customer_auth_mappings`.
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/signup/actions.ts` — Tenant from `NEXT_PUBLIC_TENANT_SLUG` + `.eq('slug', slug)`; then `tenant.id` for createUserForTenant. Tenant verified before use. (Production clients live under `apps/clients/<slug>`.)
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts` — Same tenant resolution; `.eq('tenant_id', tenant.id)` and `.eq('real_email', realEmail)` on `customer_auth_mappings`.
 - No Route Handlers use the admin client without tenant scoping. Callback and Inngest routes use anon client or Inngest only.
 
 ---

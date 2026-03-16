@@ -72,6 +72,88 @@ export type Database = {
           },
         ]
       }
+      bookings: {
+        Row: {
+          id: string
+          tenant_id: string
+          created_at: string
+          name: string | null
+          email: string
+          requested_at: string | null
+          service_slug: string | null
+          message: string | null
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          created_at?: string
+          name?: string | null
+          email: string
+          requested_at?: string | null
+          service_slug?: string | null
+          message?: string | null
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          created_at?: string
+          name?: string | null
+          email?: string
+          requested_at?: string | null
+          service_slug?: string | null
+          message?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'bookings_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      contact_submissions: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          source: string
+          name: string
+          email: string
+          message: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          source: string
+          name: string
+          email: string
+          message: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          source?: string
+          name?: string
+          email?: string
+          message?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'contact_submissions_tenant_id_fkey'
+            columns: ['tenant_id']
+            isOneToOne: false
+            referencedRelation: 'tenants'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       customer_auth_mappings: {
         Row: {
           auth_email: string
