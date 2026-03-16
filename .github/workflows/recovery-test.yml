@@ -1,0 +1,317 @@
+name: Recovery Testing
+
+on:
+  schedule:
+    # Run recovery tests daily at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Specific region to test (optional)'
+        required: false
+        type: string
+      test_type:
+        description: 'Type of test to run'
+        required: false
+        type: choice
+        options:
+          - automated
+          - manual
+          - full-restore
+        default: automated
+  workflow_call:
+    inputs:
+      region:
+        required: false
+        type: string
+      test_type:
+        required: false
+        type: string
+        default: automated
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  recovery-test:
+    name: Recovery Testing
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      issues: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Azure CLI
+        uses: azure/login@v2
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup GCP CLI
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ env.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          version: 'latest'
+
+      - name: Create test directories
+        run: |
+          mkdir -p logs
+          mkdir -p tmp/recovery-test
+
+      - name: Run backup validation
+        run: |
+          echo "Starting backup validation..."
+          chmod +x scripts/backup/validate-backups.sh
+          if [ -n "${{ inputs.region }}" ]; then
+            ./scripts/backup/validate-backups.sh --region "${{ inputs.region }}"
+          else
+            ./scripts/backup/validate-backups.sh
+          fi
+
+      - name: Test GitHub API recovery
+        run: |
+          echo "Testing GitHub API recovery..."
+          ./scripts/test/github-api-recovery.sh
+
+      - name: Test regional recovery
+        run: |
+          echo "Testing regional recovery..."
+          chmod +x scripts/test/regional-recovery.sh
+          if [ -n "${{ inputs.region }}" ]; then
+            ./scripts/test/regional-recovery.sh --region "${{ inputs.region }}"
+          else
+            ./scripts/test/regional-recovery.sh
+          fi
+
+      - name: Test restore procedures
+        run: |
+          echo "Testing restore procedures..."
+          chmod +x scripts/test/restore-procedures.sh
+          case "${{ inputs.test_type || 'automated' }}" in
+            "automated")
+              ./scripts/test/restore-procedures.sh --automated
+              ;;
+            "manual")
+              ./scripts/test/restore-procedures.sh --manual
+              ;;
+            "full-restore")
+              ./scripts/test/restore-procedures.sh --full-restore
+              ;;
+          esac
+
+      - name: Test communication protocols
+        run: |
+          echo "Testing communication protocols..."
+          chmod +x scripts/test/communication-protocols.sh
+          ./scripts/test/communication-protocols.sh --dry-run
+
+      - name: Validate cross-region consistency
+        run: |
+          echo "Validating cross-region consistency..."
+          chmod +x scripts/test/cross-region-consistency.sh
+          ./scripts/test/cross-region-consistency.sh
+
+      - name: Generate test report
+        run: |
+          echo "Generating test report..."
+          chmod +x scripts/test/generate-test-report.sh
+          ./scripts/test/generate-test-report.sh
+
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: recovery-test-results
+          path: |
+            logs/
+            tmp/recovery-test/
+            reports/
+          retention-days: 30
+
+      - name: Send Slack notification
+        if: always()
+        run: |
+          echo "Sending Slack notification..."
+          chmod +x scripts/communication/send-slack-notification.sh
+          ./scripts/communication/send-slack-notification.sh \
+            --workflow "recovery-test" \
+            --status "${{ job.status }}" \
+            --region "${{ inputs.region || 'all' }}" \
+            --test-type "${{ inputs.test_type || 'automated' }}"
+
+      - name: Update metrics dashboard
+        if: success()
+        run: |
+          echo "Updating metrics dashboard..."
+          chmod +x scripts/monitoring/update-metrics.sh
+          ./scripts/monitoring/update-metrics.sh --test recovery-test
+
+      - name: Cleanup test environment
+        if: always()
+        run: |
+          echo "Cleaning up test environment..."
+          rm -rf tmp/recovery-test
+          echo "Test environment cleaned up successfully"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: recovery-test
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run security scan
+        run: |
+          echo "Running security scan on recovery procedures..."
+          # Check for exposed credentials
+          if grep -rE "AWS_ACCESS_KEY|AZURE_CLIENT|GCP_SA_KEY" \
+            --include="*.sh" --include="*.ts" --include="*.js" \
+            scripts/backup/ scripts/test/ scripts/communication/ 2>/dev/null; then
+            echo "WARNING: Potential credential exposure found"
+            exit 1
+          fi
+          
+          # Check for hardcoded secrets
+          if grep -rE "password|secret|token.*=" \
+            --include="*.sh" --include="*.ts" --include="*.js" \
+            scripts/backup/ scripts/test/ scripts/communication/ 2>/dev/null; then
+            echo "WARNING: Potential hardcoded secrets found"
+            exit 1
+          fi
+          
+          echo "Security scan completed successfully"
+
+  performance-test:
+    name: Performance Test
+    runs-on: ubuntu-latest
+    needs: recovery-test
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run performance tests
+        run: |
+          echo "Running performance tests..."
+          chmod +x scripts/test/performance-test.sh
+          ./scripts/test/performance-test.sh
+
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-test-results
+          path: reports/performance/
+          retention-days: 30
+
+  compliance-check:
+    name: Compliance Check
+    runs-on: ubuntu-latest
+    needs: recovery-test
+    if: success()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run compliance checks
+        run: |
+          echo "Running compliance checks..."
+          chmod +x scripts/test/compliance-check.sh
+          ./scripts/test/compliance-check.sh
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: reports/compliance/
+          retention-days: 90
+
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [recovery-test, security-scan, performance-test, compliance-check]
+    if: failure()
+    
+    steps:
+      - name: Send failure notification
+        run: |
+          echo "Sending failure notification..."
+          # This would send email, Slack, or other notifications
+          echo "Recovery testing failed - check logs for details"
+
+  notify-success:
+    name: Notify on Success
+    runs-on: ubuntu-latest
+    needs: [recovery-test, security-scan, performance-test, compliance-check]
+    if: success()
+    
+    steps:
+      - name: Send success notification
+        run: |
+          echo "Sending success notification..."
+          # This would send success notifications
+          echo "All recovery tests passed successfully"

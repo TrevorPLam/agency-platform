@@ -1,0 +1,322 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-16T00:00:00Z",
+  "repository": {
+    "name": "TrevorPLam/agency-platform",
+    "type": "monorepo",
+    "primaryRegion": "us-east-1"
+  },
+  "regions": [
+    {
+      "name": "us-east-1",
+      "type": "primary",
+      "provider": "aws",
+      "location": "Northern Virginia, USA",
+      "backupFrequency": "continuous",
+      "retentionDays": 30,
+      "storage": {
+        "type": "s3",
+        "bucket": "agency-platform-backup-us-east-1",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "networking": {
+        "directConnect": true,
+        "bandwidthGbps": 10,
+        "latencyMs": 50
+      },
+      "compliance": ["SOC2", "ISO27001", "GDPR"],
+      "contact": {
+        "team": "devops@agency.com",
+        "emergency": "+1-555-DEVOPS"
+      }
+    },
+    {
+      "name": "us-west-2",
+      "type": "secondary",
+      "provider": "aws",
+      "location": "Oregon, USA",
+      "backupFrequency": "daily",
+      "retentionDays": 30,
+      "storage": {
+        "type": "s3",
+        "bucket": "agency-platform-backup-us-west-2",
+        "encryption": "AES256",
+        "versioning": true
+      },
+      "networking": {
+        "directConnect": true,
+        "bandwidthGbps": 10,
+        "latencyMs": 100
+      },
+      "compliance": ["SOC2", "ISO27001"],
+      "contact": {
+        "team": "devops@agency.com",
+        "emergency": "+1-555-DEVOPS"
+      }
+    },
+    {
+      "name": "west-europe",
+      "type": "tertiary",
+      "provider": "azure",
+      "location": "Netherlands",
+      "backupFrequency": "weekly",
+      "retentionDays": 90,
+      "storage": {
+        "type": "blob",
+        "container": "agency-platform-backup-west-europe",
+        "encryption": "Microsoft-managed",
+        "versioning": true
+      },
+      "networking": {
+        "directConnect": true,
+        "bandwidthGbps": 5,
+        "latencyMs": 200
+      },
+      "compliance": ["GDPR", "SOC2", "ISO27001"],
+      "contact": {
+        "team": "devops@agency.com",
+        "emergency": "+31-20-DEVOPS"
+      }
+    },
+    {
+      "name": "asia-southeast1",
+      "type": "quaternary",
+      "provider": "gcp",
+      "location": "Singapore",
+      "backupFrequency": "monthly",
+      "retentionDays": 365,
+      "storage": {
+        "type": "cloud-storage",
+        "bucket": "agency-platform-backup-asia-southeast1",
+        "encryption": "Google-managed",
+        "versioning": true
+      },
+      "networking": {
+        "directConnect": true,
+        "bandwidthGbps": 2,
+        "latencyMs": 300
+      },
+      "compliance": ["PDPA", "SOC2", "ISO27001"],
+      "contact": {
+        "team": "devops@agency.com",
+        "emergency": "+65-DEVOPS"
+      }
+    }
+  ],
+  "backupConfiguration": {
+    "gitRepository": {
+      "includeMetadata": true,
+      "includeLFS": true,
+      "includeWikis": true,
+      "includeIssues": true,
+      "includePullRequests": true,
+      "includeReleases": true,
+      "exclude": [
+        "node_modules/**",
+        ".next/**",
+        "dist/**",
+        "build/**",
+        "*.log",
+        ".env.local"
+      ]
+    },
+    "compression": {
+      "enabled": true,
+      "algorithm": "gzip",
+      "level": 6
+    },
+    "encryption": {
+      "enabled": true,
+      "algorithm": "AES256",
+      "keyRotation": "quarterly"
+    },
+    "verification": {
+      "checksumAlgorithm": "SHA256",
+      "integrityCheck": true,
+      "consistencyCheck": true
+    }
+  },
+  "alerts": {
+    "email": {
+      "enabled": true,
+      "recipients": [
+        "devops@agency.com",
+        "security@agency.com"
+      ],
+      "templates": {
+        "backupSuccess": "backup-success",
+        "backupFailure": "backup-failure",
+        "integrityFailure": "integrity-failure"
+      }
+    },
+    "slack": {
+      "enabled": true,
+      "webhook": "${SLACK_WEBHOOK_URL}",
+      "channels": [
+        "#alerts",
+        "#devops"
+      ],
+      "mentions": [
+        "@devops-team",
+        "@security-team"
+      ]
+    },
+    "thresholds": {
+      "backupAgeHours": 48,
+      "storageUtilizationPercent": 80,
+      "failureRatePercent": 5,
+      "integrityCheckFailures": 1
+    }
+  },
+  "retention": {
+    "daily": {
+      "count": 30,
+      "regions": ["us-east-1", "us-west-2"]
+    },
+    "weekly": {
+      "count": 12,
+      "regions": ["west-europe"]
+    },
+    "monthly": {
+      "count": 12,
+      "regions": ["asia-southeast1"]
+    }
+  },
+  "testing": {
+    "automated": {
+      "enabled": true,
+      "schedule": "daily",
+      "regions": ["us-west-2"]
+    },
+    "manual": {
+      "schedule": "quarterly",
+      "regions": ["all"],
+      "fullRestore": true
+    }
+  },
+  "compliance": {
+    "frameworks": ["SOC2", "ISO27001", "GDPR", "PDPA"],
+    "audit": {
+      "frequency": "quarterly",
+      "scope": "all-regions",
+      "reporting": true
+    },
+    "dataProtection": {
+      "encryptionAtRest": true,
+      "encryptionInTransit": true,
+      "accessControls": true,
+      "auditLogging": true
+    }
+  },
+  "costManagement": {
+    "budgetAlerts": {
+      "enabled": true,
+      "thresholdPercent": 80,
+      "recipients": ["finance@agency.com", "devops@agency.com"]
+    },
+    "optimization": {
+      "lifecycleManagement": true,
+      "compression": true,
+      "deduplication": true,
+      "tieredStorage": true
+    },
+    "reporting": {
+      "frequency": "monthly",
+      "recipients": ["finance@agency.com", "devops@agency.com", "management@agency.com"]
+    }
+  },
+  "disasterRecovery": {
+    "rto": {
+      "critical": "1h",
+      "high": "4h",
+      "medium": "8h",
+      "low": "24h"
+    },
+    "rpo": {
+      "critical": "15m",
+      "high": "1h",
+      "medium": "4h",
+      "low": "24h"
+    },
+    "scenarios": [
+      {
+        "name": "regional-outage",
+        "severity": "high",
+        "recoveryRegion": "us-west-2",
+        "automatedFailover": true
+      },
+      {
+        "name": "continental-disaster",
+        "severity": "critical",
+        "recoveryRegion": "west-europe",
+        "automatedFailover": false
+      },
+      {
+        "name": "global-disaster",
+        "severity": "critical",
+        "recoveryRegion": "asia-southeast1",
+        "automatedFailover": false
+      }
+    ]
+  },
+  "monitoring": {
+    "metrics": [
+      "backupSuccessRate",
+      "backupDuration",
+      "storageUtilization",
+      "dataTransferRate",
+      "integrityCheckResults",
+      "crossRegionLatency"
+    ],
+    "dashboards": [
+      {
+        "name": "backup-overview",
+        "refreshInterval": "5m",
+        "alerts": true
+      },
+      {
+        "name": "regional-status",
+        "refreshInterval": "1m",
+        "alerts": true
+      }
+    ],
+    "logging": {
+      "level": "INFO",
+      "retention": "90d",
+      "format": "json"
+    }
+  },
+  "security": {
+    "accessControl": {
+      "iam": {
+        "roleBasedAccess": true,
+        "leastPrivilege": true,
+        "mfaRequired": true
+      },
+      "network": {
+        "vpcEndpoints": true,
+        "firewallRules": true,
+        "ddosProtection": true
+      }
+    },
+    "encryption": {
+      "atRest": {
+        "enabled": true,
+        "algorithm": "AES256",
+        "keyManagement": "cloud-provider"
+      },
+      "inTransit": {
+        "enabled": true,
+        "protocol": "TLS1.2",
+        "certificateManagement": "auto"
+      }
+    },
+    "audit": {
+      "enabled": true,
+      "scope": "all-actions",
+      "retention": "1y",
+      "alerts": true
+    }
+  }
+}

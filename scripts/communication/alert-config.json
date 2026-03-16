@@ -1,0 +1,398 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-16T00:00:00Z",
+  "routing": {
+    "rules": [
+      {
+        "id": "critical-backup-failure",
+        "name": "Critical Backup Failure",
+        "conditions": [
+          {
+            "field": "type",
+            "operator": "equals",
+            "value": "backup-failure"
+          },
+          {
+            "field": "severity",
+            "operator": "equals",
+            "value": "critical"
+          }
+        ],
+        "actions": [
+          {
+            "type": "slack",
+            "target": "incidents",
+            "template": "{getSeverityEmoji(severity)} **CRITICAL BACKUP FAILURE**\n\n**Alert ID:** {alert.id}\n**Type:** {alert.type}\n**Source:** {alert.source}\n\n**Message:** {alert.message}\n**Timestamp:** {alert.timestamp}\n\n**Immediate Action Required:**\n- Investigate backup system\n- Check storage availability\n- Prepare recovery procedures\n\n*This is a critical alert requiring immediate attention*"
+          },
+          {
+            "type": "email",
+            "target": "devops@agency.com,security@agency.com",
+            "template": "CRITICAL BACKUP FAILURE\n\nAlert ID: {alert.id}\nType: {alert.type}\nSource: {alert.source}\nMessage: {alert.message}\nTimestamp: {alert.timestamp}\n\nImmediate action required. Check backup systems and prepare recovery procedures."
+          },
+          {
+            "type": "escalation",
+            "target": "management",
+            "template": "Critical backup failure requiring management attention"
+          }
+        ],
+        "enabled": true,
+        "priority": 100
+      },
+      {
+        "id": "high-security-alert",
+        "name": "High Security Alert",
+        "conditions": [
+          {
+            "field": "type",
+            "operator": "equals",
+            "value": "security-alert"
+          },
+          {
+            "field": "severity",
+            "operator": "equals",
+            "value": "high"
+          }
+        ],
+        "actions": [
+          {
+            "type": "slack",
+            "target": "security",
+            "template": "{getSeverityEmoji(severity)} **SECURITY ALERT**\n\n**Alert ID:** {alert.id}\n**Type:** {alert.type}\n**Source:** {alert.source}\n\n**Message:** {alert.message}\n**Timestamp:** {alert.timestamp}\n\n**Security Actions Required:**\n- Review security logs\n- Check for unauthorized access\n- Verify system integrity\n\n*Security team has been notified*"
+          },
+          {
+            "type": "email",
+            "target": "security@agency.com",
+            "template": "SECURITY ALERT\n\nAlert ID: {alert.id}\nType: {alert.type}\nSource: {alert.source}\nMessage: {alert.message}\nTimestamp: {alert.timestamp}\n\nSecurity team investigation required."
+          }
+        ],
+        "enabled": true,
+        "priority": 90
+      },
+      {
+        "id": "medium-storage-warning",
+        "name": "Medium Storage Warning",
+        "conditions": [
+          {
+            "field": "type",
+            "operator": "equals",
+            "value": "storage-warning"
+          },
+          {
+            "field": "severity",
+            "operator": "equals",
+            "value": "medium"
+          }
+        ],
+        "actions": [
+          {
+            "type": "slack",
+            "target": "devops",
+            "template": "{getSeverityEmoji(severity)} **Storage Warning**\n\n**Alert ID:** {alert.id}\n**Type:** {alert.type}\n**Source:** {alert.source}\n\n**Message:** {alert.message}\n**Timestamp:** {alert.timestamp}\n\n**Recommended Actions:**\n- Monitor storage utilization\n- Plan storage cleanup\n- Review retention policies"
+          }
+        ],
+        "enabled": true,
+        "priority": 50
+      },
+      {
+        "id": "low-system-notification",
+        "name": "Low System Notification",
+        "conditions": [
+          {
+            "field": "severity",
+            "operator": "equals",
+            "value": "low"
+          }
+        ],
+        "actions": [
+          {
+            "type": "slack",
+            "target": "alerts",
+            "template": "{getSeverityEmoji(severity)} **System Notification**\n\n**Alert ID:** {alert.id}\n**Type:** {alert.type}\n**Message:** {alert.message}\n**Timestamp:** {alert.timestamp}"
+          }
+        ],
+        "enabled": true,
+        "priority": 10
+      }
+    ],
+    "escalation": [
+      {
+        "id": "critical-escalation",
+        "name": "Critical Incident Escalation",
+        "triggerConditions": [
+          {
+            "field": "severity",
+            "operator": "equals",
+            "value": "critical"
+          },
+          {
+            "field": "status",
+            "operator": "equals",
+            "value": "pending"
+          }
+        ],
+        "escalationSteps": [
+          {
+            "delay": 5,
+            "actions": [
+              {
+                "type": "slack",
+                "target": "incidents",
+                "template": "⏰ **ESCALATION WARNING**\n\nCritical alert {alert.id} has not been acknowledged for 5 minutes.\n\n**Current Status:** {alert.status}\n**Original Message:** {alert.message}\n\n*Escalation will occur in 10 minutes if no action is taken*"
+              }
+            ]
+          },
+          {
+            "delay": 15,
+            "actions": [
+              {
+                "type": "email",
+                "target": "management@agency.com",
+                "template": "CRITICAL INCIDENT ESCALATION\n\nAlert ID: {alert.id}\nType: {alert.type}\nMessage: {alert.message}\nTimestamp: {alert.timestamp}\n\nThis critical alert has not been acknowledged for 15 minutes and requires immediate management attention."
+              },
+              {
+                "type": "slack",
+                "target": "incidents",
+                "template": "🚨 **ESCALATION TRIGGERED**\n\nCritical alert {alert.id} has been escalated to management.\n\n**Management has been notified**\n*Immediate action required*"
+              }
+            ]
+          }
+        ],
+        "enabled": true
+      }
+    ],
+    "throttling": {
+      "enabled": true,
+      "rules": [
+        {
+          "alertType": "storage-warning",
+          "maxPerPeriod": 3,
+          "periodMinutes": 60,
+          "action": "aggregate"
+        },
+        {
+          "alertType": "backup-failure",
+          "maxPerPeriod": 5,
+          "periodMinutes": 60,
+          "action": "delay"
+        },
+        {
+          "alertType": "security-alert",
+          "maxPerPeriod": 10,
+          "periodMinutes": 60,
+          "action": "none"
+        }
+      ]
+    }
+  },
+  "channels": {
+    "slack": {
+      "webhook": "${SLACK_WEBHOOK_URL}",
+      "channels": {
+        "incidents": "#incidents",
+        "alerts": "#alerts",
+        "devops": "#devops",
+        "security": "#security"
+      },
+      "rateLimit": {
+        "messagesPerMinute": 60,
+        "burstLimit": 120
+      }
+    },
+    "email": {
+      "smtp": {
+        "host": "smtp.agency.com",
+        "port": 587,
+        "secure": false
+      },
+      "templates": {
+        "backup-success": "Backup completed successfully",
+        "backup-failure": "Backup failed - immediate attention required",
+        "security-alert": "Security alert - investigation required",
+        "storage-warning": "Storage utilization warning",
+        "incident-notification": "Incident notification"
+      }
+    },
+    "sms": {
+      "provider": "twilio",
+      "apiKey": "${TWILIO_API_KEY}",
+      "rateLimit": {
+        "messagesPerHour": 100
+      }
+    }
+  },
+  "stakeholders": [
+    {
+      "id": "devops-lead",
+      "name": "DevOps Lead",
+      "role": "devops",
+      "contact": {
+        "email": "devops@agency.com",
+        "phone": "+1-555-DEVOPS",
+        "slack": "@devops-lead"
+      },
+      "availability": {
+        "timezone": "UTC",
+        "workingHours": {
+          "start": "09:00",
+          "end": "17:00"
+        },
+        "onCallSchedule": {
+          "rotation": "weekly",
+          "current": "devops-lead"
+        }
+      },
+      "preferences": {
+        "channels": ["slack", "email", "sms"],
+        "severityThreshold": "medium",
+        "quietHours": {
+          "start": "22:00",
+          "end": "06:00"
+        }
+      }
+    },
+    {
+      "id": "security-lead",
+      "name": "Security Lead",
+      "role": "security",
+      "contact": {
+        "email": "security@agency.com",
+        "phone": "+1-555-SECURITY",
+        "slack": "@security-lead"
+      },
+      "availability": {
+        "timezone": "UTC",
+        "workingHours": {
+          "start": "09:00",
+          "end": "17:00"
+        },
+        "onCallSchedule": {
+          "rotation": "weekly",
+          "current": "security-lead"
+        }
+      },
+      "preferences": {
+        "channels": ["slack", "email", "sms"],
+        "severityThreshold": "low"
+      }
+    },
+    {
+      "id": "management",
+      "name": "Management Team",
+      "role": "management",
+      "contact": {
+        "email": "management@agency.com",
+        "slack": "@management"
+      },
+      "availability": {
+        "timezone": "UTC",
+        "workingHours": {
+          "start": "09:00",
+          "end": "17:00"
+        }
+      },
+      "preferences": {
+        "channels": ["email"],
+        "severityThreshold": "critical"
+      }
+    }
+  ],
+  "templates": {
+    "slack": {
+      "incident-header": "{getSeverityEmoji(severity)} **{alert.title}**\n\n**Alert ID:** {alert.id}\n**Type:** {alert.type}\n**Severity:** {alert.severity}\n**Source:** {alert.source}\n**Timestamp:** {alert.timestamp}\n\n**Message:** {alert.message}",
+      "incident-footer": "\n\n**Actions Required:**\n- Acknowledge receipt\n- Investigate issue\n- Update status\n\n*This is an automated alert from the Incident Response System*",
+      "escalation-warning": "⏰ **ESCALATION WARNING**\n\nAlert {alert.id} has not been acknowledged.\n\n**Time Remaining:** {timeRemaining}\n**Current Status:** {alert.status}\n\n*Escalation will occur if no action is taken*",
+      "resolution-notice": "✅ **INCIDENT RESOLVED**\n\n**Alert ID:** {alert.id}\n**Resolution Time:** {resolutionTime}\n**Actions Taken:** {actionsTaken}\n\n*Incident has been successfully resolved*"
+    },
+    "email": {
+      "subject": "{alert.severity.toUpperCase()}: {alert.title}",
+      "header": "Alert Notification\n\nAlert ID: {alert.id}\nType: {alert.type}\nSeverity: {alert.severity}\nSource: {alert.source}\nTimestamp: {alert.timestamp}\n\nMessage:\n{alert.message}",
+      "footer": "\n\nThis is an automated alert. Please respond according to the incident response procedures.\n\nFor questions, contact the DevOps team at devops@agency.com"
+    },
+    "sms": {
+      "critical": "CRITICAL: {alert.title}. ID: {alert.id}. Immediate action required.",
+      "high": "HIGH: {alert.title}. ID: {alert.id}. Attention required.",
+      "medium": "MED: {alert.title}. ID: {alert.id}. Monitor required.",
+      "low": "LOW: {alert.title}. ID: {alert.id}."
+    }
+  },
+  "integration": {
+    "monitoring": {
+      "prometheus": {
+        "enabled": true,
+        "endpoint": "http://prometheus:9090",
+        "rules": [
+          "backup_failure == 1",
+          "storage_utilization > 80",
+          "security_events > 0"
+        ]
+      },
+      "grafana": {
+        "enabled": true,
+        "endpoint": "http://grafana:3000",
+        "dashboard": "alert-routing"
+      }
+    },
+    "incidentManagement": {
+      "jira": {
+        "enabled": true,
+        "endpoint": "https://agency.atlassian.net",
+        "project": "INC",
+        "autoCreate": true
+      },
+      "pagerduty": {
+        "enabled": false,
+        "serviceKey": "${PAGERDUTY_SERVICE_KEY}"
+      }
+    }
+  },
+  "performance": {
+    "metrics": [
+      "alert_processing_time",
+      "delivery_success_rate",
+      "escalation_rate",
+      "throttling_rate"
+    ],
+    "monitoring": {
+      "enabled": true,
+      "interval": 60,
+      "retention": "7d"
+    }
+  },
+  "security": {
+    "authentication": {
+      "required": true,
+      "methods": ["oauth2", "api-key"]
+    },
+    "authorization": {
+      "roleBasedAccess": true,
+      "leastPrivilege": true
+    },
+    "audit": {
+      "enabled": true,
+      "logLevel": "INFO",
+      "retention": "90d"
+    }
+  },
+  "maintenance": {
+    "window": {
+      "start": "02:00",
+      "end": "04:00",
+      "timezone": "UTC",
+      "days": ["sunday"]
+    },
+    "notifications": {
+      "advance": 24,
+      "channels": ["email"]
+    }
+  },
+  "testing": {
+    "enabled": true,
+    "schedule": "daily",
+    "scenarios": [
+      "critical-backup-failure",
+      "high-security-alert",
+      "medium-storage-warning",
+      "escalation-flow"
+    ]
+  }
+}
