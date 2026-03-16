@@ -220,6 +220,105 @@ Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets*
 
 ---
 
+## 🌿 Branch Naming Conventions
+
+All branches must follow our naming conventions to maintain organization and enable automation:
+
+### ✅ Valid Branch Name Patterns
+- `feature/branch-name` - New features
+- `feat/branch-name` - New features (short)
+- `fix/branch-name` - Bug fixes
+- `bugfix/branch-name` - Bug fixes (long)
+- `hotfix/branch-name` - Critical fixes
+- `release/branch-name` - Release preparation
+- `rel/branch-name` - Release preparation (short)
+- `chore/branch-name` - Maintenance tasks
+- `docs/branch-name` - Documentation changes
+- `style/branch-name` - Code style changes
+- `refactor/branch-name` - Code refactoring
+- `test/branch-name` - Test additions
+- `deploy/branch-name` - Deployment configurations
+
+### 📝 Branch Name Rules
+- Use lowercase letters, numbers, and hyphens only
+- No spaces or special characters except hyphens
+- Be descriptive but concise
+- Examples: `feature/user-authentication`, `fix/login-bug`, `hotfix/security-patch`
+
+### 🔧 Branch Validation
+Branch names are automatically validated by GitHub Actions. Invalid branch names will be rejected with helpful feedback.
+
+---
+
+## 📋 Pull Request Templates
+
+Use our comprehensive PR templates to ensure all required information is included:
+
+### 📝 Required Information
+- Related issue numbers
+- Clear description of changes
+- Type of change (bug fix, feature, etc.)
+- Testing checklist
+- Security considerations
+- Documentation updates
+
+### 🎯 PR Types
+- 🐛 Bug fix
+- ✨ New feature
+- 💥 Breaking change
+- 📚 Documentation update
+- 🛠️ Refactor
+- 🔧 Configuration change
+- 🧪 Test addition
+
+### 📊 Review Process
+All PRs must pass:
+- Format check (`pnpm format:check`)
+- Linting (`pnpm lint`)
+- Type checking (`pnpm type-check`)
+- Tests (`pnpm test`)
+- Security scans
+- RLS tests (if database changes)
+
+---
+
+## 🧹 Branch Maintenance
+
+### 📅 Stale Branch Cleanup
+- Stale branches (90+ days inactive) are automatically cleaned up weekly
+- Branches with open PRs are protected from deletion
+- Owners are notified before branch deletion
+- Protected branches: `main`, `develop`, `staging`, `production`
+
+### 🔄 Merge Queue
+- High-traffic branches use merge queues to prevent conflicts
+- PRs are validated in queue order
+- Failed PRs are automatically removed from queue
+- Queue health is monitored continuously
+
+---
+
+## 📦 Dependency Management
+
+### 🤖 Automated Updates
+- **Daily**: Production dependency updates
+- **Weekly**: Development dependency updates
+- **Weekly**: GitHub Actions updates
+- **Security**: Immediate vulnerability fixes
+
+### 🔍 Dependency Reports
+- Comprehensive dependency reports generated weekly
+- Security vulnerability monitoring
+- License compliance checking
+- Update recommendations
+
+### 📋 Update Categories
+- 🟢 **Patch updates**: Auto-merged if tests pass
+- 🟡 **Minor updates**: Require review
+- 🔴 **Major updates**: Require planning and testing
+
+---
+
 ## Day-to-day workflow summary
 
 1. Start Supabase and run `supabase db reset` if migrations changed.
@@ -227,3 +326,4 @@ Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets*
 3. Run `pnpm dev` for apps; run Inngest dev server in a separate terminal if working on background jobs.
 4. Before committing: `pnpm format:check`, and after migration changes: `pnpm db:generate-types` and commit `types.ts`.
 5. Open a PR; CI runs affected build, lint, type-check, test, format check, security scans, types drift check, and RLS tests.
+6. Follow branch naming conventions and use PR templates for consistency.

@@ -1,0 +1,474 @@
+name: Cost Monitoring
+
+on:
+  schedule:
+    # Run every hour to collect cost metrics
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      tenant_id:
+        description: 'Specific tenant ID to monitor (optional)'
+        required: false
+        type: string
+  push:
+    branches: [main]
+    paths:
+      - 'packages/monitoring/**'
+      - '.github/workflows/monitor-costs.yml'
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  collect-metrics:
+    name: Collect Cost Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build monitoring package
+        run: pnpm --filter @agency/monitoring build
+
+      - name: Start Supabase
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      
+      - name: Start Supabase Services
+        run: |
+          supabase start
+          supabase db reset
+
+      - name: Collect Storage Metrics
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+          TENANT_ID: ${{ github.event.inputs.tenant_id || '' }}
+        run: |
+          node -e "
+          const { StorageMonitor } = require('./packages/monitoring/dist/index.js');
+          const monitor = new StorageMonitor();
+          
+          async function collectStorageMetrics() {
+            try {
+              const tenantId = process.env.TENANT_ID || 'default-tenant';
+              const usage = await monitor.collectStorageUsage();
+              const metrics = await monitor.convertToCostMetrics(usage, tenantId);
+              
+              console.log('Storage metrics collected:', JSON.stringify(metrics, null, 2));
+              
+              // Store metrics in database
+              const { getAdminClient } = require('./packages/database/dist/admin.js');
+              const admin = getAdminClient();
+              
+              const { error } = await admin.from('cost_metrics').insert({
+                tenant_id: tenantId,
+                storage_usage: metrics.storageUsage,
+                cicd_runtime: metrics.cicdRuntime,
+                bandwidth_usage: metrics.bandwidthUsage,
+                total_cost: metrics.totalCost,
+                currency: metrics.currency,
+                timestamp: metrics.timestamp,
+                period: metrics.period,
+                metadata: metrics.metadata
+              });
+              
+              if (error) {
+                console.error('Error storing storage metrics:', error);
+                process.exit(1);
+              }
+              
+              console.log('Storage metrics stored successfully');
+            } catch (error) {
+              console.error('Error collecting storage metrics:', error);
+              process.exit(1);
+            }
+          }
+          
+          collectStorageMetrics();
+          "
+
+      - name: Collect CI/CD Metrics
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORGANIZATION: ${{ github.repository_owner }}
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+          TENANT_ID: ${{ github.event.inputs.tenant_id || '' }}
+        run: |
+          node -e "
+          const { CicdCostMonitor } = require('./packages/monitoring/dist/index.js');
+          
+          async function collectCicdMetrics() {
+            try {
+              const tenantId = process.env.TENANT_ID || 'default-tenant';
+              const monitor = new CicdCostMonitor({
+                organization: process.env.ORGANIZATION,
+                githubToken: process.env.GITHUB_TOKEN
+              });
+              
+              const usage = await monitor.collectCicdUsage();
+              const metrics = await monitor.convertToCostMetrics(usage, tenantId);
+              
+              console.log('CI/CD metrics collected:', JSON.stringify(metrics, null, 2));
+              
+              // Store metrics in database
+              const { getAdminClient } = require('./packages/database/dist/admin.js');
+              const admin = getAdminClient();
+              
+              const { error } = await admin.from('cost_metrics').insert({
+                tenant_id: tenantId,
+                storage_usage: metrics.storageUsage,
+                cicd_runtime: metrics.cicdRuntime,
+                bandwidth_usage: metrics.bandwidthUsage,
+                total_cost: metrics.totalCost,
+                currency: metrics.currency,
+                timestamp: metrics.timestamp,
+                period: metrics.period,
+                metadata: metrics.metadata
+              });
+              
+              if (error) {
+                console.error('Error storing CI/CD metrics:', error);
+                process.exit(1);
+              }
+              
+              console.log('CI/CD metrics stored successfully');
+            } catch (error) {
+              console.error('Error collecting CI/CD metrics:', error);
+              process.exit(1);
+            }
+          }
+          
+          collectCicdMetrics();
+          "
+
+      - name: Generate Optimization Recommendations
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+          TENANT_ID: ${{ github.event.inputs.tenant_id || '' }}
+        run: |
+          node -e "
+          const { CostOptimizationEngine, StorageMonitor, CicdCostMonitor } = require('./packages/monitoring/dist/index.js');
+          const { getAdminClient } = require('./packages/database/dist/admin.js');
+          
+          async function generateRecommendations() {
+            try {
+              const tenantId = process.env.TENANT_ID || 'default-tenant';
+              const admin = getAdminClient();
+              
+              // Get recent metrics
+              const { data: metrics, error: metricsError } = await admin
+                .from('cost_metrics')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+                .order('timestamp', { ascending: false });
+              
+              if (metricsError) {
+                console.error('Error fetching metrics:', metricsError);
+                process.exit(1);
+              }
+              
+              // Get storage and CI/CD usage
+              const storageMonitor = new StorageMonitor();
+              const cicdMonitor = new CicdCostMonitor({
+                organization: process.env.ORGANIZATION,
+                githubToken: process.env.GITHUB_TOKEN
+              });
+              
+              const [storageUsage, cicdUsage] = await Promise.all([
+                storageMonitor.collectStorageUsage(),
+                cicdMonitor.collectCicdUsage()
+              ]);
+              
+              const engine = new CostOptimizationEngine();
+              const recommendations = await engine.generateRecommendations({
+                costMetrics: metrics,
+                storageUsage,
+                cicdUsage,
+                tenantId
+              });
+              
+              console.log(\`Generated \${recommendations.length} recommendations\`);
+              
+              // Store recommendations in database
+              for (const rec of recommendations) {
+                const { error } = await admin.from('optimization_recommendations').insert({
+                  tenant_id: rec.tenantId,
+                  category: rec.category,
+                  title: rec.title,
+                  description: rec.description,
+                  estimated_savings: rec.estimatedSavings,
+                  difficulty: rec.difficulty,
+                  priority: rec.priority,
+                  status: rec.status,
+                  created_at: rec.createdAt,
+                  review_by: rec.reviewBy
+                });
+                
+                if (error) {
+                  console.error('Error storing recommendation:', error);
+                }
+              }
+              
+              console.log('Recommendations stored successfully');
+            } catch (error) {
+              console.error('Error generating recommendations:', error);
+              process.exit(1);
+            }
+          }
+          
+          generateRecommendations();
+          "
+
+      - name: Check Budget Alerts
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+          TENANT_ID: ${{ github.event.inputs.tenant_id || '' }}
+        run: |
+          node -e "
+          const { CostAlertEngine } = require('./packages/monitoring/dist/index.js');
+          const { getAdminClient } = require('./packages/database/dist/admin.js');
+          
+          async function checkAlerts() {
+            try {
+              const tenantId = process.env.TENANT_ID || 'default-tenant';
+              const admin = getAdminClient();
+              
+              // Get recent metrics
+              const { data: metrics, error: metricsError } = await admin
+                .from('cost_metrics')
+                .select('*')
+                .eq('tenant_id', tenantId)
+                .gte('timestamp', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+                .order('timestamp', { ascending: false });
+              
+              if (metricsError) {
+                console.error('Error fetching metrics for alerts:', metricsError);
+                process.exit(1);
+              }
+              
+              const alertEngine = new CostAlertEngine();
+              const triggeredAlerts = await alertEngine.checkAlerts(metrics);
+              
+              if (triggeredAlerts.length > 0) {
+                console.log(\`\${triggeredAlerts.length} alerts triggered\`);
+                
+                // Update last triggered time for alerts
+                for (const alert of triggeredAlerts) {
+                  const { error } = await admin
+                    .from('budget_alerts')
+                    .update({ last_triggered: alert.lastTriggered })
+                    .eq('id', alert.id);
+                  
+                  if (error) {
+                    console.error('Error updating alert trigger time:', error);
+                  }
+                }
+              } else {
+                console.log('No alerts triggered');
+              }
+              
+            } catch (error) {
+              console.error('Error checking alerts:', error);
+              process.exit(1);
+            }
+          }
+          
+          checkAlerts();
+          "
+
+      - name: Generate Cost Report
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+        run: |
+          node -e "
+          const { getAdminClient } = require('./packages/database/dist/admin.js');
+          
+          async function generateReport() {
+            try {
+              const admin = getAdminClient();
+              
+              // Get cost summary for all tenants
+              const { data: tenants, error: tenantsError } = await admin
+                .from('tenants')
+                .select('id, name');
+              
+              if (tenantsError) {
+                console.error('Error fetching tenants:', tenantsError);
+                process.exit(1);
+              }
+              
+              console.log('=== COST MONITORING REPORT ===');
+              console.log('Generated at:', new Date().toISOString());
+              console.log('');
+              
+              let totalCost = 0;
+              let totalStorage = 0;
+              let totalCicd = 0;
+              
+              for (const tenant of tenants) {
+                const { data: summary } = await admin
+                  .rpc('get_tenant_cost_summary', { p_tenant_id: tenant.id, p_days: 7 });
+                
+                if (summary && summary.length > 0) {
+                  const data = summary[0];
+                  console.log(\`Tenant: \${tenant.name || tenant.id}\`);
+                  console.log(\`  Total Cost (7 days): $\${data.total_cost.toFixed(2)}\`);
+                  console.log(\`  Storage Cost: $\${data.storage_cost.toFixed(2)}\`);
+                  console.log(\`  CI/CD Cost: $\${data.cicd_cost.toFixed(2)}\`);
+                  console.log(\`  Bandwidth Cost: $\${data.bandwidth_cost.toFixed(2)}\`);
+                  console.log(\`  Trend: \${data.trend_direction} (\${data.trend_percentage.toFixed(1)}%)\`);
+                  console.log('');
+                  
+                  totalCost += data.total_cost;
+                  totalStorage += data.storage_cost;
+                  totalCicd += data.cicd_cost;
+                }
+              }
+              
+              console.log('=== SUMMARY ===');
+              console.log(\`Total Cost (all tenants): $\${totalCost.toFixed(2)}\`);
+              console.log(\`Total Storage Cost: $\${totalStorage.toFixed(2)}\`);
+              console.log(\`Total CI/CD Cost: $\${totalCicd.toFixed(2)}\`);
+              console.log('');
+              
+              // Get active alerts count
+              const { data: alerts } = await admin
+                .from('budget_alerts')
+                .select('id')
+                .eq('active', true);
+              
+              console.log(\`Active Budget Alerts: \${alerts?.length || 0}\`);
+              
+              // Get pending recommendations count
+              const { data: recommendations } = await admin
+                .from('optimization_recommendations')
+                .select('id')
+                .eq('status', 'pending');
+              
+              console.log(\`Pending Recommendations: \${recommendations?.length || 0}\`);
+              console.log('');
+              console.log('=== END REPORT ===');
+              
+            } catch (error) {
+              console.error('Error generating report:', error);
+              process.exit(1);
+            }
+          }
+          
+          generateReport();
+          "
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup
+
+  cost-alerts:
+    name: Check Cost Alerts
+    runs-on: ubuntu-latest
+    needs: collect-metrics
+    if: always() && needs.collect-metrics.result == 'success'
+    
+    steps:
+      - name: Send Alert Notifications
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+        run: |
+          echo "Alert notifications would be sent here"
+          echo "Slack: ${SLACK_WEBHOOK_URL:+configured}"
+          echo "Teams: ${TEAMS_WEBHOOK_URL:+configured}"
+          echo "Email: ${ADMIN_EMAIL:+configured}"
+
+  cleanup:
+    name: Cleanup Old Data
+    runs-on: ubuntu-latest
+    needs: collect-metrics
+    if: always() && needs.collect-metrics.result == 'success'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase
+        run: |
+          supabase start
+
+      - name: Cleanup Old Metrics (90 days)
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_LOCAL_SERVICE_ROLE }}
+        run: |
+          node -e "
+          const { getAdminClient } = require('./packages/database/dist/admin.js');
+          
+          async function cleanup() {
+            try {
+              const admin = getAdminClient();
+              
+              // Delete old cost metrics (older than 90 days)
+              const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+              
+              const { error: metricsError } = await admin
+                .from('cost_metrics')
+                .delete()
+                .lt('timestamp', cutoffDate);
+              
+              if (metricsError) {
+                console.error('Error cleaning up metrics:', metricsError);
+              } else {
+                console.log('Old cost metrics cleaned up');
+              }
+              
+              // Delete old recommendations (completed or dismissed, older than 30 days)
+              const recCutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+              
+              const { error: recError } = await admin
+                .from('optimization_recommendations')
+                .delete()
+                .in('status', ['completed', 'dismissed'])
+                .lt('created_at', recCutoffDate);
+              
+              if (recError) {
+                console.error('Error cleaning up recommendations:', recError);
+              } else {
+                console.log('Old recommendations cleaned up');
+              }
+              
+            } catch (error) {
+              console.error('Error during cleanup:', error);
+            }
+          }
+          
+          cleanup();
+          "
+
+      - name: Stop Supabase
+        if: always()
+        run: supabase stop --no-backup

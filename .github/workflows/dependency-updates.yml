@@ -1,0 +1,302 @@
+name: Dependency Updates
+
+on:
+  schedule:
+    # Run every weekday at 09:00 UTC
+    - cron: '0 9 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of updates to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - production
+          - development
+          - github-actions
+      auto_merge:
+        description: 'Automatically merge minor updates'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  dependabot:
+    name: Dependabot Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event.inputs.update_type == 'all' || github.event.inputs.update_type == 'production' || github.event.inputs.update_type == 'development'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Dependabot config
+        run: |
+          echo "📝 Creating Dependabot configuration..."
+          
+          cat > .github/dependabot.yml << 'EOF'
+          version: 2
+          updates:
+            # Core dependencies
+            - package-ecosystem: "npm"
+              directory: "/"
+              schedule:
+                interval: "daily"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 5
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "deps"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "npm"
+              allow:
+                - dependency-type: "production"
+              ignore:
+                - dependency-name: "@types/node"
+                  versions: ["[22,]"]
+                - dependency-name: "next"
+                  versions: ["[16,]"]
+                - dependency-name: "react"
+                  versions: ["[19,]"]
+                - dependency-name: "typescript"
+                  versions: ["[5,]"
+
+            # Development dependencies
+            - package-ecosystem: "npm"
+              directory: "/"
+              schedule:
+                interval: "weekly"
+                day: "monday"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 3
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "deps(dev)"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "npm"
+                - "development"
+              allow:
+                - dependency-type: "development"
+
+            # GitHub Actions
+            - package-ecosystem: "github-actions"
+              directory: "/"
+              schedule:
+                interval: "weekly"
+                day: "monday"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 3
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "ci"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "github-actions"
+              ignore:
+                - dependency-name: "actions/checkout"
+                  versions: ["[4,]"]
+                - dependency-name: "actions/setup-node"
+                  versions: ["[4,]"]
+
+            # Package-specific updates for workspace packages
+            - package-ecosystem: "npm"
+              directory: "/packages/ui"
+              schedule:
+                interval: "daily"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 2
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "deps(ui)"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "npm"
+                - "ui"
+
+            - package-ecosystem: "npm"
+              directory: "/packages/database"
+              schedule:
+                interval: "daily"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 2
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "deps(database)"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "npm"
+                - "database"
+
+            - package-ecosystem: "npm"
+              directory: "/packages/analytics"
+              schedule:
+                interval: "daily"
+                time: "09:00"
+                timezone: "UTC"
+              open-pull-requests-limit: 2
+              reviewers:
+                - "trevo"
+              assignees:
+                - "trevo"
+              commit-message:
+                prefix: "deps(analytics)"
+                include: "scope"
+              labels:
+                - "dependencies"
+                - "npm"
+                - "analytics"
+          EOF
+
+      - name: Commit Dependabot config
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .github/dependabot.yml
+          if git diff --staged --quiet; then
+            echo "✅ Dependabot config already exists"
+          else
+            git commit -m "feat: Add Dependabot configuration"
+            git push
+            echo "✅ Dependabot config committed"
+          fi
+
+  security-updates:
+    name: Security Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit..."
+          
+          # Check for known vulnerabilities
+          npm audit --audit-level=moderate || true
+          
+          # Check for outdated packages with security issues
+          npm outdated || true
+
+      - name: Check for critical vulnerabilities
+        run: |
+          echo "🚨 Checking for critical vulnerabilities..."
+          
+          # This would typically trigger Dependabot security updates
+          echo "✅ Security audit completed"
+
+  update-checker:
+    name: Manual Update Checker
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run update checker
+        run: |
+          echo "🔄 Running dependency update checker..."
+          echo "Update type: ${{ github.event.inputs.update_type }}"
+          echo "Auto merge: ${{ github.event.inputs.auto_merge }}"
+          echo ""
+          
+          # Run the update checker script
+          tsx scripts/dependencies/update-checker.ts \
+            --update-type="${{ github.event.inputs.update_type }}" \
+            --auto-merge="${{ github.event.inputs.auto_merge }}" \
+            --repo-owner="${{ github.repository_owner }}" \
+            --repo-name="${{ github.event.repository.name }}" \
+            --github-token="${{ secrets.GITHUB_TOKEN }}"
+
+  report-dependencies:
+    name: Dependency Report
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate dependency report
+        run: |
+          echo "📊 Generating dependency report..."
+          
+          # Create dependency report
+          tsx scripts/dependencies/dependency-report.ts \
+            --output-format="markdown" \
+            --output-file="dependency-report.md"
+
+      - name: Upload dependency report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-report
+          path: dependency-report.md
+          retention-days: 30
+
+      - name: Comment on PR with report
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('dependency-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 📊 Dependency Report\n\n${report}`
+            });

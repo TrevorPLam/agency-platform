@@ -1,0 +1,115 @@
+name: Stale Branch Cleanup
+
+on:
+  schedule:
+    # Run every Monday at 10:00 UTC
+    - cron: '0 10 * * 1'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (no actual deletion)'
+        required: false
+        default: true
+        type: boolean
+      days_threshold:
+        description: 'Days of inactivity before considering a branch stale'
+        required: false
+        default: '90'
+        type: string
+
+env:
+  DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
+  DAYS_THRESHOLD: ${{ github.event.inputs.days_threshold || '90' }}
+  PROTECTED_BRANCHES: 'main,develop,staging,production'
+
+jobs:
+  cleanup-stale-branches:
+    name: Cleanup Stale Branches
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          npm install -g tsx
+          if [ -f "package.json" ]; then
+            npm install
+          fi
+
+      - name: Run stale branch cleanup
+        run: |
+          echo "🧹 Starting stale branch cleanup..."
+          echo "Dry run: $DRY_RUN"
+          echo "Days threshold: $DAYS_THRESHOLD"
+          echo "Protected branches: $PROTECTED_BRANCHES"
+          echo ""
+          
+          # Run the cleanup script
+          tsx scripts/maintenance/cleanup-branches.ts \
+            --days-threshold="$DAYS_THRESHOLD" \
+            --protected-branches="$PROTECTED_BRANCHES" \
+            --dry-run="$DRY_RUN" \
+            --repo-owner="${{ github.repository_owner }}" \
+            --repo-name="${{ github.event.repository.name }}" \
+            --github-token="${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Create cleanup summary
+        if: always()
+        run: |
+          echo "## 🧹 Stale Branch Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run**: $DRY_RUN" >> $GITHUB_STEP_SUMMARY
+          echo "- **Days Threshold**: $DAYS_THRESHOLD" >> $GITHUB_STEP_SUMMARY
+          echo "- **Protected Branches**: $PROTECTED_BRANCHES" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check the job logs above for detailed cleanup results." >> $GITHUB_STEP_SUMMARY
+
+  notify-branch-owners:
+    name: Notify Branch Owners
+    runs-on: ubuntu-latest
+    needs: cleanup-stale-branches
+    if: github.event.inputs.dry_run == 'false'
+    permissions:
+      pull-requests: write
+      issues: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          npm install -g tsx
+          if [ -f "package.json" ]; then
+            npm install
+          fi
+
+      - name: Send notifications
+        run: |
+          echo "📧 Sending notifications to branch owners..."
+          
+          tsx scripts/maintenance/notify-branch-owners.ts \
+            --repo-owner="${{ github.repository_owner }}" \
+            --repo-name="${{ github.event.repository.name }}" \
+            --github-token="${{ secrets.GITHUB_TOKEN }}" \
+            --days-threshold="$DAYS_THRESHOLD"

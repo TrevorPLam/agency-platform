@@ -1,0 +1,200 @@
+name: Branch Name Validation
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+env:
+  # Branch naming patterns
+  FEATURE_PATTERN: '^(feature|feat)/[a-z0-9-]+$'
+  FIX_PATTERN: '^(fix|bugfix)/[a-z0-9-]+$'
+  HOTFIX_PATTERN: '^hotfix/[a-z0-9-]+$'
+  RELEASE_PATTERN: '^(release|rel)/[a-z0-9.-]+$'
+  CHORE_PATTERN: '^(chore|docs|style|refactor|test)/[a-z0-9-]+$'
+  DEPLOY_PATTERN: '^deploy/[a-z0-9-]+$'
+
+jobs:
+  validate-branch-name:
+    name: Validate Branch Name
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+    
+    steps:
+      - name: Extract branch name
+        id: branch-name
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Branch name: $BRANCH_NAME"
+
+      - name: Validate branch naming convention
+        run: |
+          BRANCH_NAME="${{ steps.branch-name.outputs.branch }}"
+          echo "Validating branch name: $BRANCH_NAME"
+          
+          # Skip validation for main branch
+          if [ "$BRANCH_NAME" = "main" ]; then
+            echo "✅ Main branch - skipping validation"
+            exit 0
+          fi
+          
+          # Check against allowed patterns
+          if [[ "$BRANCH_NAME" =~ $FEATURE_PATTERN ]]; then
+            echo "✅ Valid feature branch name"
+          elif [[ "$BRANCH_NAME" =~ $FIX_PATTERN ]]; then
+            echo "✅ Valid fix branch name"
+          elif [[ "$BRANCH_NAME" =~ $HOTFIX_PATTERN ]]; then
+            echo "✅ Valid hotfix branch name"
+          elif [[ "$BRANCH_NAME" =~ $RELEASE_PATTERN ]]; then
+            echo "✅ Valid release branch name"
+          elif [[ "$BRANCH_NAME" =~ $CHORE_PATTERN ]]; then
+            echo "✅ Valid chore branch name"
+          elif [[ "$BRANCH_NAME" =~ $DEPLOY_PATTERN ]]; then
+            echo "✅ Valid deploy branch name"
+          else
+            echo "❌ Invalid branch name: $BRANCH_NAME"
+            echo ""
+            echo "Branch names must follow one of these patterns:"
+            echo "  • feature/branch-name"
+            echo "  • feat/branch-name"
+            echo "  • fix/branch-name"
+            echo "  • bugfix/branch-name"
+            echo "  • hotfix/branch-name"
+            echo "  • release/branch-name"
+            echo "  • rel/branch-name"
+            echo "  • chore/branch-name"
+            echo "  • docs/branch-name"
+            echo "  • style/branch-name"
+            echo "  • refactor/branch-name"
+            echo "  • test/branch-name"
+            echo "  • deploy/branch-name"
+            echo ""
+            echo "Branch name rules:"
+            echo "  • Use lowercase letters, numbers, and hyphens only"
+            echo "  • No spaces or special characters except hyphens"
+            echo "  • Be descriptive but concise"
+            echo "  • Examples: feature/user-authentication, fix/login-bug, hotfix/security-patch"
+            echo ""
+            echo "To rename your branch:"
+            echo "  git checkout -b new-branch-name"
+            echo "  git push origin new-branch-name"
+            echo "  git branch -d old-branch-name"
+            echo "  git push origin --delete old-branch-name"
+            exit 1
+          fi
+
+  validate-pr-branch:
+    name: Validate PR Branch Name
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Extract PR branch name
+        id: pr-branch-name
+        run: |
+          BRANCH_NAME=${{ github.head_ref }}
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "PR branch name: $BRANCH_NAME"
+
+      - name: Validate PR branch naming convention
+        run: |
+          BRANCH_NAME="${{ steps.pr-branch-name.outputs.branch }}"
+          echo "Validating PR branch name: $BRANCH_NAME"
+          
+          # Check against allowed patterns
+          if [[ "$BRANCH_NAME" =~ $FEATURE_PATTERN ]]; then
+            echo "✅ Valid feature branch name"
+          elif [[ "$BRANCH_NAME" =~ $FIX_PATTERN ]]; then
+            echo "✅ Valid fix branch name"
+          elif [[ "$BRANCH_NAME" =~ $HOTFIX_PATTERN ]]; then
+            echo "✅ Valid hotfix branch name"
+          elif [[ "$BRANCH_NAME" =~ $RELEASE_PATTERN ]]; then
+            echo "✅ Valid release branch name"
+          elif [[ "$BRANCH_NAME" =~ $CHORE_PATTERN ]]; then
+            echo "✅ Valid chore branch name"
+          elif [[ "$BRANCH_NAME" =~ $DEPLOY_PATTERN ]]; then
+            echo "✅ Valid deploy branch name"
+          else
+            echo "❌ Invalid PR branch name: $BRANCH_NAME"
+            echo ""
+            echo "PR branch names must follow one of these patterns:"
+            echo "  • feature/branch-name"
+            echo "  • feat/branch-name"
+            echo "  • fix/branch-name"
+            echo "  • bugfix/branch-name"
+            echo "  • hotfix/branch-name"
+            echo "  • release/branch-name"
+            echo "  • rel/branch-name"
+            echo "  • chore/branch-name"
+            echo "  • docs/branch-name"
+            echo "  • style/branch-name"
+            echo "  • refactor/branch-name"
+            echo "  • test/branch-name"
+            echo "  • deploy/branch-name"
+            echo ""
+            echo "Branch name rules:"
+            echo "  • Use lowercase letters, numbers, and hyphens only"
+            echo "  • No spaces or special characters except hyphens"
+            echo "  • Be descriptive but concise"
+            echo "  • Examples: feature/user-authentication, fix/login-bug, hotfix/security-patch"
+            echo ""
+            echo "Please rename your branch before creating a PR:"
+            echo "  git checkout -b new-branch-name"
+            echo "  git push origin new-branch-name"
+            echo "  # Then create a new PR from the new branch"
+            exit 1
+          fi
+
+      - name: Comment on PR with branch name feedback
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            const comment = `
+            ## 🚫 Branch Name Validation Failed
+            
+            The branch name \`${branchName}\` does not follow our naming conventions.
+            
+            ### ✅ Valid Branch Name Patterns:
+            - \`feature/branch-name\` - New features
+            - \`feat/branch-name\` - New features (short)
+            - \`fix/branch-name\` - Bug fixes
+            - \`bugfix/branch-name\` - Bug fixes (long)
+            - \`hotfix/branch-name\` - Critical fixes
+            - \`release/branch-name\` - Release preparation
+            - \`rel/branch-name\` - Release preparation (short)
+            - \`chore/branch-name\` - Maintenance tasks
+            - \`docs/branch-name\` - Documentation changes
+            - \`style/branch-name\` - Code style changes
+            - \`refactor/branch-name\` - Code refactoring
+            - \`test/branch-name\` - Test additions
+            - \`deploy/branch-name\` - Deployment configurations
+            
+            ### 📝 Branch Name Rules:
+            - Use lowercase letters, numbers, and hyphens only
+            - No spaces or special characters except hyphens
+            - Be descriptive but concise
+            - Examples: \`feature/user-authentication\`, \`fix/login-bug\`, \`hotfix/security-patch\`
+            
+            ### 🔧 How to Fix:
+            \`\`\`bash
+            # Rename your branch
+            git checkout -b feature/descriptive-name
+            git push origin feature/descriptive-name
+            
+            # Update your PR to use the new branch
+            # Or create a new PR from the new branch
+            \`\`\`
+            
+            Please rename your branch and update this PR to continue.
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
