@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
 import { captureServerEvent } from '@agency/analytics/server'
+import { validateTenantAccess } from '@/lib/auth'
 
 // Helper function to resolve tenant slug from tenant_id
 async function getTenantSlug(tenantId: string): Promise<string | null> {
@@ -19,14 +20,21 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = getAdminClient()
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
     
     // Get query parameters
     const searchParams = request.nextUrl.searchParams
-    const tenantId = searchParams.get('tenant_id')
+    const requestedTenantId = searchParams.get('tenant_id')
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
     
+    // For platform admins, allow specifying tenant_id in query params
+    // For regular users, always use their assigned tenant
+    const tenantId = auth.isPlatformAdmin && requestedTenantId 
+      ? requestedTenantId 
+      : auth.tenantId
+
     if (!tenantId) {
       return NextResponse.json(
         { error: 'Tenant ID is required' },
@@ -35,6 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
+    const admin = getAdminClient()
     let query = admin
       .from('optimization_recommendations')
       .select('*')
@@ -98,6 +107,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(recommendations)
   } catch (error) {
     console.error('Error in optimization recommendations API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -107,11 +133,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
+    
     const admin = getAdminClient()
     const body = await request.json()
     
     const {
-      tenantId,
+      tenantId: requestedTenantId,
       category,
       title,
       description,
@@ -121,6 +150,12 @@ export async function POST(request: NextRequest) {
       status = 'pending',
       reviewBy,
     } = body
+
+    // For platform admins, allow specifying tenant_id in body
+    // For regular users, always use their assigned tenant
+    const tenantId = auth.isPlatformAdmin && requestedTenantId 
+      ? requestedTenantId 
+      : auth.tenantId
 
     if (!tenantId || !category || !title || !description) {
       return NextResponse.json(
@@ -227,6 +262,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(recommendation, { status: 201 })
   } catch (error) {
     console.error('Error in optimization recommendations POST API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -236,6 +288,9 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
+    
     const admin = getAdminClient()
     const body = await request.json()
     
@@ -257,11 +312,35 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Update recommendation status
+    // CRITICAL SECURITY FIX: First verify the recommendation belongs to the user's tenant
+    // This prevents IDOR attacks where users could modify recommendations from other tenants
+    const { data: existingRec, error: fetchError } = await admin
+      .from('optimization_recommendations')
+      .select('tenant_id, id')
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !existingRec) {
+      return NextResponse.json(
+        { error: 'Recommendation not found' },
+        { status: 404 }
+      )
+    }
+
+    // Verify tenant access: Platform admins can access any, regular users only their own
+    if (!auth.isPlatformAdmin && existingRec.tenant_id !== auth.tenantId) {
+      return NextResponse.json(
+        { error: 'Forbidden: Cannot access recommendation from other tenant' },
+        { status: 403 }
+      )
+    }
+
+    // Update recommendation status with tenant-scoped guard
     const { data, error } = await admin
       .from('optimization_recommendations')
       .update({ status })
       .eq('id', id)
+      .eq('tenant_id', auth.isPlatformAdmin ? existingRec.tenant_id : auth.tenantId) // Extra tenant guard
       .select()
       .single()
 
@@ -310,6 +389,23 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(recommendation)
   } catch (error) {
     console.error('Error in optimization recommendations PATCH API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

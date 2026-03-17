@@ -456,23 +456,47 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10: API authorization and tenant isolation hardening (agency-admin costs)
+## [x] TASK-10: API authorization and tenant isolation hardening (agency-admin costs)
 
 **Why:** Current cost routes trust client-provided `tenant_id` and are vulnerable to cross-tenant access/mutation.
 
 **Definition of Done**
-- All `apps/agency-admin/src/app/api/costs/*` handlers derive tenant scope from authenticated session (`app_metadata.tenant_id`) or a validated platform-admin path.
-- No route authorizes tenant scope from query params/body alone.
-- `recommendations` PATCH includes tenant-scoped update guards (no update by `id` alone).
-- API handlers enforce auth directly (not only middleware redirect behavior).
-- Validation remains in place, but authorization is the primary gate.
+- All `apps/agency-admin/src/app/api/costs/*` handlers derive tenant scope from authenticated session (`app_metadata.tenant_id`) or a validated platform-admin path. ✅
+- No route authorizes tenant scope from query params/body alone. ✅
+- `recommendations` PATCH includes tenant-scoped update guards (no update by `id` alone). ✅
+- API handlers enforce auth directly (not only middleware redirect behavior). ✅
+- Validation remains in place, but authorization is the primary gate. ✅
 
-**Target Files**
-- `apps/agency-admin/src/app/api/costs/summary/route.ts`
-- `apps/agency-admin/src/app/api/costs/metrics/route.ts`
-- `apps/agency-admin/src/app/api/costs/alerts/route.ts`
-- `apps/agency-admin/src/app/api/costs/recommendations/route.ts`
-- `packages/database/src/middleware.ts` (documentation/guard usage notes if needed)
+**Implementation Notes:**
+- ✅ **Created Authentication Foundation**: New `@agency/admin/src/lib/auth.ts` with secure authentication patterns
+- ✅ **Session-Based Tenant Resolution**: All APIs now extract `tenant_id` from `app_metadata.tenant_id` (never `user_metadata`)
+- ✅ **Platform Admin Support**: Platform admins can access any tenant data, regular users only their assigned tenant
+- ✅ **Defense-in-Depth Security**: Authentication-first approach with proper error codes (401/403)
+- ✅ **IDOR Vulnerability Fixed**: Recommendations PATCH now verifies tenant ownership before updates
+- ✅ **Tenant-Scoped Queries**: All database queries include proper tenant scoping
+- ✅ **Security Documentation**: Added comprehensive authentication patterns to database middleware
+
+**Critical Security Fixes Applied:**
+1. **Cross-tenant data access prevention**: APIs no longer trust client-provided tenant_id
+2. **Authentication enforcement**: All routes validate session before any data access
+3. **Platform admin validation**: Proper admin role checking with email-based allowlist
+4. **PATCH method hardening**: Tenant ownership verification prevents IDOR attacks
+5. **Error handling improvements**: Proper HTTP status codes for auth failures
+
+**Target Files** - COMPLETED
+- `apps/agency-admin/src/lib/auth.ts` ✅ (new authentication foundation)
+- `apps/agency-admin/src/app/api/costs/summary/route.ts` ✅ (hardened authentication)
+- `apps/agency-admin/src/app/api/costs/metrics/route.ts` ✅ (hardened authentication)
+- `apps/agency-admin/src/app/api/costs/alerts/route.ts` ✅ (hardened authentication)
+- `apps/agency-admin/src/app/api/costs/recommendations/route.ts` ✅ (hardened authentication + IDOR fix)
+- `packages/database/src/middleware.ts` ✅ (security documentation added)
+
+**Security Impact:**
+- **Eliminated cross-tenant data access vulnerability**
+- **Prevented IDOR attacks on recommendation updates**
+- **Implemented proper authentication-first security model**
+- **Added platform admin oversight capabilities**
+- **Established reusable authentication patterns for future APIs**
 
 ---
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
 import { captureServerEvent } from '@agency/analytics/server'
+import { validateTenantAccess } from '@/lib/auth'
 
 // Helper function to resolve tenant slug from tenant_id
 async function getTenantSlug(tenantId: string): Promise<string | null> {
@@ -19,12 +20,19 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = getAdminClient()
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
     
-    // Get current tenant from request context
+    // Get tenant ID from authenticated user (not from query params)
     const searchParams = request.nextUrl.searchParams
-    const tenantId = searchParams.get('tenant_id')
+    const requestedTenantId = searchParams.get('tenant_id')
     
+    // For platform admins, allow specifying tenant_id in query params
+    // For regular users, always use their assigned tenant
+    const tenantId = auth.isPlatformAdmin && requestedTenantId 
+      ? requestedTenantId 
+      : auth.tenantId
+
     if (!tenantId) {
       return NextResponse.json(
         { error: 'Tenant ID is required' },
@@ -33,6 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get cost summary for the tenant
+    const admin = getAdminClient()
     const { data, error } = await admin
       .rpc('get_tenant_cost_summary', { 
         p_tenant_id: tenantId, 
@@ -92,6 +101,23 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error in cost summary API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

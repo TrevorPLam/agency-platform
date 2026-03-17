@@ -11,6 +11,45 @@ export interface TenantResolution {
 }
 
 /**
+ * AUTHENTICATION AND AUTHORIZATION PATTERNS
+ * 
+ * For API routes that require authentication and tenant isolation,
+ * always use the following patterns:
+ * 
+ * 1. Server-side authentication:
+ *    import { verifySession, validateTenantAccess } from '@/lib/auth'
+ *    const auth = await validateTenantAccess(request)
+ * 
+ * 2. Extract tenant_id from app_metadata (never user_metadata):
+ *    const tenantId = auth.tenantId // From app_metadata.tenant_id
+ * 
+ * 3. Platform admin checks:
+ *    if (auth.isPlatformAdmin) {
+ *      // Allow cross-tenant access
+ *    }
+ * 
+ * 4. Database queries must include tenant scoping:
+ *    .eq('tenant_id', tenantId)
+ * 
+ * 5. For updates by ID, first verify ownership:
+ *    const { data: existing } = await admin
+ *      .from('table')
+ *      .select('tenant_id')
+ *      .eq('id', id)
+ *      .single()
+ *    
+ *    if (!auth.isPlatformAdmin && existing?.tenant_id !== auth.tenantId) {
+ *      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+ *    }
+ * 
+ * SECURITY NOTES:
+ * - Never trust client-provided tenant_id for authorization
+ * - Always derive tenant context from authenticated session
+ * - Use app_metadata.tenant_id (user_metadata can be modified by users)
+ * - Return 401 for unauthenticated, 403 for unauthorized
+ */
+
+/**
  * Resolves tenant information from incoming request.
  *
  * This function implements multi-tenant resolution using multiple strategies:

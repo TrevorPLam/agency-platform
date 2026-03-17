@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
 import { captureServerEvent } from '@agency/analytics/server'
+import { validateTenantAccess } from '@/lib/auth'
 
 // Helper function to resolve tenant slug from tenant_id
 async function getTenantSlug(tenantId: string): Promise<string | null> {
@@ -19,14 +20,21 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = getAdminClient()
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
     
     // Get query parameters
     const searchParams = request.nextUrl.searchParams
-    const tenantId = searchParams.get('tenant_id')
+    const requestedTenantId = searchParams.get('tenant_id')
     const period = searchParams.get('period') || 'daily'
     const days = parseInt(searchParams.get('days') || '30')
     
+    // For platform admins, allow specifying tenant_id in query params
+    // For regular users, always use their assigned tenant
+    const tenantId = auth.isPlatformAdmin && requestedTenantId 
+      ? requestedTenantId 
+      : auth.tenantId
+
     if (!tenantId) {
       return NextResponse.json(
         { error: 'Tenant ID is required' },
@@ -38,6 +46,7 @@ export async function GET(request: NextRequest) {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
 
     // Fetch metrics for the tenant
+    const admin = getAdminClient()
     const { data, error } = await admin
       .from('cost_metrics')
       .select('*')
@@ -89,6 +98,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(metrics)
   } catch (error) {
     console.error('Error in cost metrics API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -98,11 +124,14 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate and validate tenant access
+    const auth = await validateTenantAccess(request)
+    
     const admin = getAdminClient()
     const body = await request.json()
     
     const {
-      tenantId,
+      tenantId: requestedTenantId,
       storageUsage = 0,
       cicdRuntime = 0,
       bandwidthUsage = 0,
@@ -111,6 +140,12 @@ export async function POST(request: NextRequest) {
       period = 'daily',
       metadata = {},
     } = body
+
+    // For platform admins, allow specifying tenant_id in body
+    // For regular users, always use their assigned tenant
+    const tenantId = auth.isPlatformAdmin && requestedTenantId 
+      ? requestedTenantId 
+      : auth.tenantId
 
     if (!tenantId) {
       return NextResponse.json(
@@ -177,6 +212,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(metric, { status: 201 })
   } catch (error) {
     console.error('Error in cost metrics POST API:', error)
+    
+    // Return appropriate error codes based on error type
+    if (error instanceof Error) {
+      if (error.message.includes('Unauthorized')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 401 }
+        )
+      }
+      if (error.message.includes('Forbidden')) {
+        return NextResponse.json(
+          { error: error.message },
+          { status: 403 }
+        )
+      }
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -2,6 +2,13 @@
 
 Multi-client marketing agency monorepo. Each client is isolated by tenant_id at the database layer (Row-Level Security). Shared code lives in packages/. Client-specific code lives in apps/clients/[slug]/.
 
+## User-Information
+
+- User has no formal software development experience or education. 
+- User develops repositories 100% through agentic coding as a "solo-developer."
+- User prefers best practices and highest standards. 
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns. 
+
 ## Task-Based Navigation
 
 **For database work**: Read @.agents/database.md  
