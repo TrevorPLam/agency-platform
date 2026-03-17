@@ -189,6 +189,189 @@ Phase 3 (schema-per-tenant, 200+ clients) requires a second engineer for safe du
 
 ---
 
+## Experimentation Layer
+
+The platform includes a comprehensive A/B testing and experimentation framework built on the PICOT (Population, Intervention, Control, Outcome, Time) framework. This enables data-driven optimization for all client sites while maintaining strict tenant isolation.
+
+### Architecture Overview
+
+The experimentation system consists of five core components:
+
+1. **Database Schema** - Multi-tenant experiment storage with RLS
+2. **Feature Flags** - Variant assignment and configuration
+3. **Analytics Integration** - PostHog event tracking and statistical analysis
+4. **Admin Interface** - Experiment management and results visualization
+5. **Privacy Layer** - GDPR-compliant user pseudonymization
+
+### Database Schema Design
+
+#### Core Tables
+
+- **`experiments`** - Master experiment records with PICOT framework fields
+- **`experiment_variants`** - Control and treatment variants with configuration
+- **`experiment_assignments`** - User-to-variant mappings (pseudonymized)
+- **`experiment_metrics`** - Statistical results and confidence intervals
+- **`experiment_events`** - Audit trail and event tracking
+
+#### Multi-Tenant Isolation
+
+All tables include `tenant_id` with RLS policies ensuring:
+- Experiments are isolated per tenant
+- User assignments never cross tenant boundaries
+- Analytics data respects tenant privacy settings
+- Admin access is scoped to tenant ownership
+
+### Feature Flag Integration
+
+The system integrates with PostHog's feature flag capabilities:
+
+- **Variant Assignment** - Consistent hashing-based user assignment
+- **Configuration Payloads** - JSON-based variant configurations
+- **Traffic Splitting** - Percentage-based traffic allocation
+- **Real-time Updates** - Instant variant changes without deployment
+
+#### Assignment Algorithm
+
+```sql
+-- Simplified assignment logic
+SELECT variant_id FROM experiment_variants 
+WHERE experiment_id = ? AND traffic_percentage >= (hash(user_id) % 100)
+ORDER BY is_control DESC, traffic_percentage DESC
+LIMIT 1;
+```
+
+### Privacy & Compliance
+
+#### GDPR Compliance
+
+- **User Pseudonymization** - SHA-256 hashing of user identifiers
+- **Data Minimization** - Only essential experiment data collected
+- **Consent Management** - Opt-out mechanisms available
+- **Data Retention** - Automatic cleanup after experiment completion
+
+#### Privacy-Preserving Design
+
+```sql
+-- Pseudonymization function
+CREATE OR REPLACE FUNCTION public.get_user_experiment_pseudonym(user_id TEXT, tenant_id UUID)
+RETURNS TEXT AS $$
+BEGIN
+  RETURN encode(sha256(user_id || tenant_id::TEXT || 'experiment_salt'), 'hex');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+```
+
+### Statistical Analysis
+
+#### Significance Testing
+
+- **Primary Metrics** - Conversion rates, click-through rates, revenue
+- **Statistical Tests** - T-tests, chi-square, Mann-Whitney U
+- **Confidence Intervals** - 95% CI for all variant comparisons
+- **Sample Size Calculation** - Power analysis for experiment planning
+
+#### Real-time Metrics
+
+- **Live Results** - Updated metrics during experiment execution
+- **Guardrail Metrics** - Performance, accessibility, error rates
+- **Segment Analysis** - Device, geography, traffic source breakdowns
+
+### Admin Interface
+
+#### Experiment Management
+
+- **PICOT Hypothesis Builder** - Guided experiment creation
+- **Variant Configuration** - Visual variant setup with JSON payloads
+- **Traffic Controls** - Percentage allocation and ramp schedules
+- **Status Management** - Draft → Running → Paused → Completed workflow
+
+#### Results Visualization
+
+- **Statistical Significance Indicators** - Clear p-value displays
+- **Confidence Intervals** - Visual range representations
+- **Lift Calculations** - Relative and absolute impact measurements
+- **Trend Analysis** - Time-series performance tracking
+
+### Integration Patterns
+
+#### Client Site Integration
+
+```typescript
+// Example: Feature flag usage in client code
+const { variant, config } = await assignExperimentVariant({
+  experimentKey: 'homepage-hero-2024-q1',
+  userId: user.id,
+  tenantId: tenant.id
+});
+
+// Render variant-specific content
+if (variant === 'variant_a') {
+  return <HeroVideo config={config} />;
+} else {
+  return <HeroImage config={config} />;
+}
+```
+
+#### Analytics Integration
+
+```typescript
+// Example: Event tracking with experiment context
+analytics.track('cta_clicked', {
+  experiment_id: experiment.id,
+  variant_key: variant.key,
+  conversion_value: 99.00,
+  user_segment: 'mobile'
+});
+```
+
+### Scaling Considerations
+
+#### Performance Optimization
+
+- **Caching** - Redis-based assignment result caching
+- **Batch Processing** - Bulk metric calculations
+- **Async Event Processing** - Non-blocking analytics updates
+- **Database Indexing** - Optimized queries for high traffic
+
+#### Multi-Tenant Scaling
+
+- **Horizontal Scaling** - Tenant-based database sharding
+- **Resource Isolation** - Per-tenant rate limiting
+- **Compliance Boundaries** - HIPAA/SOC2 tenant separation
+- **Cross-Tenant Analytics** - Aggregated anonymous insights
+
+### Experiment Lifecycle
+
+#### Planning Phase
+
+1. **Hypothesis Development** - PICOT framework application
+2. **Sample Size Calculation** - Power analysis for duration
+3. **Variant Design** - Control and treatment configurations
+4. **Success Criteria** - Primary and secondary metrics definition
+
+#### Execution Phase
+
+1. **Technical Implementation** - Feature flag integration
+2. **Quality Assurance** - Cross-browser and device testing
+3. **Gradual Rollout** - Phased traffic increase
+4. **Monitoring Setup** - Real-time metric tracking
+
+#### Analysis Phase
+
+1. **Statistical Analysis** - Significance testing and confidence intervals
+2. **Segment Analysis** - Performance across user segments
+3. **Guardrail Review** - Performance and accessibility impacts
+4. **Business Impact** - ROI and conversion lift calculations
+
+#### Implementation Phase
+
+1. **Winner Selection** - Statistically significant variant identification
+2. **Full Rollout** - 100% traffic allocation to winning variant
+3. **Documentation** - Learnings and insights capture
+4. **Next Experiment Planning** - Sequential optimization roadmap
+
+---
+
 ## Rendering
 
 Apps use the Next.js App Router. By default, routes are static where no dynamic APIs (`cookies()`, `headers()`, `searchParams`) are used; routes that need per-request data are dynamic. Tenant identity is resolved in middleware or layout (e.g. `NEXT_PUBLIC_TENANT_SLUG` per deployment). For per-route control (static, ISR, dynamic, or Partial Prerendering), see [docs/development/RENDERING.md](../development/RENDERING.md) and [docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](../research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §8a.

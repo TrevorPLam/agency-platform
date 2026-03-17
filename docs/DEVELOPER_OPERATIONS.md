@@ -256,46 +256,65 @@ For large tables where index creation might block writes:
 
 ### Core Web Vitals Tracking
 
-The agency platform includes comprehensive performance monitoring with Core Web Vitals tracking:
+The agency platform includes comprehensive performance monitoring with Core Web Vitals tracking across all applications:
 
 ```bash
-# View performance dashboard (agency-admin)
-pnpm dev --filter=@agency/agency-admin
-# Navigate to /performance
+# Start development server with monitoring
+pnpm dev --filter=@agency/firm
+# Monitoring is automatically enabled in all apps
 
-# Check performance budgets during build
-pnpm build --filter=@agency/firm
-# Performance reports saved to .next/performance-reports/
+# View Web Vitals in browser console
+# Look for "Performance alert:" messages for budget violations
 
-# Run performance tests
-pnpm test:performance
-
-# Check performance alerts
-pnpm performance:alerts
+# Check performance data in analytics dashboard
+# Data is automatically sent to PostHog with consent
 ```
+
+**Current Implementation Status:**
+- ✅ Real-user monitoring enabled across all apps
+- ✅ Performance budget enforcement with alerting
+- ✅ Tenant-isolated metrics collection
+- ✅ Device and connection context capture
+- ✅ Integration with PostHog analytics
+- ✅ 2026 Core Web Vitals standards (LCP, INP, CLS, FCP, TTFB)
 
 ### Performance Budgets
 
-Performance budgets are enforced at build time to prevent regressions:
+Performance budgets are enforced at runtime with real-user monitoring:
 
+**Default Budget Thresholds:**
 - **LCP**: ≤ 2.5s (Loading performance)
 - **INP**: ≤ 200ms (Responsiveness) 
 - **CLS**: ≤ 0.1 (Visual stability)
-- **Bundle Size**: ≤ 244KB (JavaScript)
-- **Image Size**: ≤ 500KB (Optimization)
+- **FCP**: ≤ 1.8s (First contentful paint)
+- **TTFB**: ≤ 800ms (Server response)
+
+**Mobile-Specific Budgets:**
+- **LCP**: ≤ 3.0s (More lenient for mobile)
+- **INP**: ≤ 300ms (Mobile interaction responsiveness)
+- **CLS**: ≤ 0.15 (Mobile visual stability)
+
+**Strict Budgets (Optional):**
+- **LCP**: ≤ 1.5s (High-performance targets)
+- **INP**: ≤ 100ms (Excellent responsiveness)
+- **CLS**: ≤ 0.05 (Exceptional visual stability)
 
 ### Monitoring Setup
 
-Add to your app providers:
+Performance monitoring is automatically enabled in all applications through the provider system:
 
 ```typescript
+// Already implemented in apps/*/src/components/providers.tsx
 import { useWebVitals, usePerformanceBudgetPresets } from '@agency/monitoring'
 
 function PerformanceMonitor({ tenantId }: { tenantId: string }) {
   const monitor = useWebVitals({
     tenantId,
     enableRealUserMonitoring: true,
-    onAlert: (alert) => console.warn('Performance alert:', alert),
+    onAlert: (alert) => {
+      console.warn('Performance alert:', alert)
+      // Production: Send to monitoring system
+    },
   })
 
   const { getDefaultBudgets, addBudget } = usePerformanceBudgets(monitor)
@@ -309,16 +328,33 @@ function PerformanceMonitor({ tenantId }: { tenantId: string }) {
 }
 ```
 
+**Available Budget Presets:**
+- `getDefaultBudgets()` - Standard performance budgets
+- `getMobileBudgets()` - Mobile-specific budgets
+- `getStrictBudgets()` - High-performance targets
+
 ### Performance Alerts
 
-Automated alerting for performance regressions:
+Real-time alerting for performance regressions with intelligent cooldown:
 
-- **Low**: 1 violation, 1-hour cooldown
+**Alert Severity Levels:**
+- **Low**: Single budget violation, 1-hour cooldown
 - **Medium**: 3 violations, 30-minute cooldown  
 - **High**: 5 violations, 15-minute cooldown
-- **Critical**: 1 violation, 5-minute cooldown
+- **Critical**: Any CLS violation, 5-minute cooldown
 
-Alert channels: Webhook, Email, Slack, SMS
+**Alert Data Includes:**
+- Metric name and current value
+- Budget threshold and violation count
+- Tenant ID and page URL
+- Device category and connection type
+- Timestamp and rating
+
+**Alert Channels (Production):**
+- Console warnings (development)
+- PostHog events (analytics)
+- Webhook endpoints (configurable)
+- Email notifications (configurable)
 
 ### Performance Optimization
 

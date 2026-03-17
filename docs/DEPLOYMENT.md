@@ -158,6 +158,101 @@ With remote cache, unchanged packages show as cache hits in the build log and re
 
 Add these in Vercel project environment variables when you want stronger cache reliability and security.
 
+---
+
+## Performance Monitoring Deployment
+
+### Core Web Vitals Configuration
+
+Performance monitoring is automatically enabled in all deployed applications. No additional configuration is required for basic monitoring.
+
+**Environment Variables for Enhanced Monitoring:**
+
+- `NEXT_PUBLIC_PERFORMANCE_MONITORING=true` — Enable detailed performance tracking
+- `PERFORMANCE_ALERT_WEBHOOK` — Webhook URL for performance alert notifications
+- `PERFORMANCE_BUDGET_MODE` — `default` | `mobile` | `strict` (defaults to `default`)
+
+### Production Performance Tracking
+
+All deployed applications automatically collect:
+
+- **Core Web Vitals**: LCP, INP, CLS, FCP, TTFB with 2026 standards
+- **Device Context**: Mobile, tablet, desktop categorization  
+- **Network Context**: Connection type and speed information
+- **Geographic Data**: Region-based performance insights
+- **User Journey**: Page-by-page performance tracking
+
+### Performance Budget Enforcement
+
+Production deployments enforce performance budgets with real-user monitoring:
+
+```bash
+# Performance budget violations trigger alerts automatically
+# Alerts are sent to PostHog and configured webhook endpoints
+
+# Monitor performance regressions in production
+# Check PostHog dashboard for "web_vitals" events
+# Filter by tenant, device, and connection type
+```
+
+### Alert Configuration
+
+**Production Alert Channels:**
+- PostHog events (automatic)
+- Webhook notifications (if configured)
+- Email alerts (if configured)
+
+**Alert Thresholds:**
+- LCP > 2.5s (mobile: 3.0s, strict: 1.5s)
+- INP > 200ms (mobile: 300ms, strict: 100ms)  
+- CLS > 0.1 (mobile: 0.15, strict: 0.05)
+
+### Performance Optimization Checklist
+
+Before deploying to production:
+
+1. **Image Optimization**
+   - All images optimized and properly sized
+   - WebP format with fallbacks
+   - Lazy loading for below-fold images
+
+2. **Bundle Optimization**
+   - Code splitting implemented
+   - Tree shaking enabled
+   - Unused dependencies removed
+
+3. **Font Optimization**
+   - Preload critical fonts
+   - Font display: swap strategy
+   - Minimal font variants
+
+4. **Network Optimization**
+   - HTTP/2 enabled
+   - Resource caching configured
+   - CDN distribution active
+
+### Monitoring Dashboard Access
+
+Performance data is available in:
+- **PostHog**: Events → `web_vitals` (tenant-filtered)
+- **Vercel Analytics**: Speed Insights tab
+- **Custom Dashboard**: Agency admin performance section
+
+### Performance SLA Targets
+
+**Production Performance Targets:**
+- **LCP**: ≤ 2.5s for 75% of users
+- **INP**: ≤ 200ms for 75% of users  
+- **CLS**: ≤ 0.1 for 75% of users
+- **FCP**: ≤ 1.8s for 75% of users
+- **TTFB**: ≤ 800ms for 75% of users
+
+**Alert Escalation:**
+- **Level 1**: Single violation (console + PostHog)
+- **Level 2**: 3 violations in 1 hour (webhook)
+- **Level 3**: 5 violations in 30 minutes (email + webhook)
+- **Critical**: CLS violations (immediate notification)
+
 ## Inngest integration
 
 Use the Inngest integration in the Vercel Marketplace so that `INNGEST_SIGNING_KEY` and `INNGEST_EVENT_KEY` are injected automatically. After deployment, confirm that `/api/inngest` is reachable and that the Inngest dashboard shows the app as connected.

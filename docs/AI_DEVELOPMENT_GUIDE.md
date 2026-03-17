@@ -21,6 +21,7 @@ Comprehensive guide for AI coding agents (Cursor, Windsurf, etc.) working in the
   - `@agency/analytics` — PostHog client/server
   - `@agency/design-tokens` — Style Dictionary v4; primitive/semantic/component + per-client tokens
   - `@agency/booking` — Embeddable booking widget types, schema (Zod), and widget component
+  - `@agency/ai-content-ops` — AI-assisted content operations with brand voice training and approval workflows
   - `@agency/typescript-config`, `@agency/eslint-config` — Shared configs
 - **`supabase/`** — Migrations and pgTAP tests. Tenant isolation is enforced via RLS; `tenant_id` in JWT `app_metadata` only.
 - **`scripts/`** — `scaffold-client.ts` (run with `pnpm scaffold`) creates a new client app and updates root `tsconfig.json`.
@@ -315,6 +316,190 @@ Agent governance is automated through specialized scripts:
 - **`packages/governance/src/risk.ts`**: Agent risk assessment engine
 
 ---
+
+## AI Content Operations
+
+The agency platform includes a comprehensive AI content operations system (`@agency/ai-content-ops`) that enables safe, brand-consistent AI-assisted content generation with human oversight and compliance guardrails.
+
+### Core Components
+
+#### Brand Voice Training
+- **BrandVoiceTrainer**: Analyzes existing content to extract brand voice patterns
+- **ContentAnalyzer**: Validates content alignment with brand guidelines
+- **Training Documents**: Store approved content for AI learning
+
+#### Content Generation Pipeline
+- **AIContentGenerator**: Multi-provider AI content generation (OpenAI, Anthropic)
+- **SafetyEngine**: Multi-layered safety checks (PII, toxicity, bias, accuracy)
+- **ContentFilter**: Real-time content filtering and blocking
+
+#### Approval Workflows
+- **WorkflowEngine**: Configurable approval workflows with role-based access
+- **WorkflowAutomation**: Auto-approval, timeout handling, bulk operations
+- **Review System**: Human review checkpoints with feedback and escalation
+
+#### Safety & Compliance
+- **PII Detection**: Identifies and blocks personal information
+- **Toxicity Check**: Detects harmful or inappropriate content
+- **Bias Detection**: Identifies biased language and stereotypes
+- **Compliance Reports**: Generates compliance documentation for audits
+
+### Usage Patterns
+
+#### Basic Content Generation
+```typescript
+import { AIContentOpsSystem } from '@agency/ai-content-ops'
+
+const system = new AIContentOpsSystem({
+  tenantId: 'your-tenant-id',
+  aiProvider: 'openai',
+  openai: { apiKey: process.env.OPENAI_API_KEY },
+  safety: { enablePIIDetection: true, enableToxicityCheck: true },
+  compliance: { autoApproveLowRisk: true, requireLegalForHighRisk: true }
+})
+
+const content = await system.generateContent({
+  title: 'New Blog Post',
+  contentType: 'blog_post',
+  prompt: 'Write about the benefits of AI in marketing',
+  brandVoiceId: 'brand-voice-uuid',
+  riskLevel: 'medium'
+})
+```
+
+#### Brand Voice Training
+```typescript
+// Add training documents
+await system.addTrainingDocument({
+  id: 'doc-1',
+  tenantId: 'tenant-uuid',
+  title: 'About Us Page',
+  content: 'Our company helps businesses grow...',
+  contentType: 'landing_page',
+  quality: 'excellent',
+  isApproved: true
+})
+
+// Create brand voice from documents
+const brandVoice = await system.createBrandVoice(
+  'tenant-uuid',
+  'Professional Brand Voice',
+  ['doc-1', 'doc-2', 'doc-3'],
+  'Professional and authoritative tone for B2B content'
+)
+```
+
+#### Workflow Management
+```typescript
+// Submit review for content
+await system.submitReview(
+  'content-request-uuid',
+  'reviewer-uuid',
+  'approve',
+  'Content matches brand voice and meets quality standards'
+)
+
+// Get workflow status
+const status = system.getWorkflowStatus('content-request-uuid')
+```
+
+### Safety Configuration
+
+#### PII Detection Thresholds
+```typescript
+const safetyConfig = {
+  piiThreshold: 0.8,        // Block if 80%+ confidence PII detected
+  toxicityThreshold: 0.7,  // Block if 70%+ confidence toxicity detected
+  biasThreshold: 0.8       // Flag if 80%+ confidence bias detected
+}
+```
+
+#### Risk-Based Workflows
+- **Low Risk**: Auto-approval for internal memos and drafts
+- **Medium Risk**: Brand review required for blog posts and social media
+- **High Risk**: Brand + compliance review for landing pages and marketing materials
+- **Critical Risk**: Full review including legal approval for press releases
+
+### Admin Interface
+
+Access the AI content operations dashboard at `/ai-content` in the agency admin panel:
+
+- **Overview**: Usage analytics, success rates, cost tracking
+- **Content Generation**: Monitor and manage content requests
+- **Workflows**: Configure approval workflows and review processes
+- **Brand Voice**: Train and manage AI brand voice models
+- **Safety & Compliance**: Monitor safety checks and compliance reports
+
+### Best Practices
+
+#### Content Generation
+1. **Start with clear prompts**: Provide specific requirements and context
+2. **Use appropriate risk levels**: Match content type to risk assessment
+3. **Include brand voice**: Always specify brand voice ID for consistency
+4. **Review generated content**: Never publish without human review
+
+#### Brand Voice Training
+1. **Use high-quality training data**: Only approved, well-written content
+2. **Diverse content types**: Include various content formats and topics
+3. **Regular updates**: Retrain brand voice with new content periodically
+4. **Quality control**: Review and remove low-quality training documents
+
+#### Safety & Compliance
+1. **Enable all safety checks**: PII, toxicity, bias, and accuracy checks
+2. **Review compliance reports**: Regular compliance audits and documentation
+3. **Monitor costs**: Track usage and set appropriate limits
+4. **Human oversight**: Never fully automate content publication
+
+### Integration Examples
+
+#### React Hook Integration
+```typescript
+import { useContentGeneration } from '@agency/ai-content-ops/client'
+
+function ContentGenerator() {
+  const { generateContent, loading, error } = useContentGeneration({
+    tenantId: 'your-tenant-id',
+    aiProvider: 'openai',
+    openai: { apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY }
+  })
+
+  const handleGenerate = async () => {
+    const result = await generateContent({
+      title: 'New Blog Post',
+      contentType: 'blog_post',
+      prompt: 'Write about digital marketing trends',
+      brandVoiceId: 'brand-voice-uuid',
+      riskLevel: 'medium'
+    })
+    
+    if (result) {
+      console.log('Generated content:', result.generatedContent?.content)
+    }
+  }
+}
+```
+
+#### API Route Integration
+```typescript
+// app/api/ai-content/generate/route.ts
+import { AIContentOpsSystem } from '@agency/ai-content-ops'
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  const system = new AIContentOpsSystem(getConfig())
+  const body = await request.json()
+  
+  try {
+    const result = await system.generateContent(body)
+    return NextResponse.json(result)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
+  }
+}
+```
 
 ## Useful Commands
 
