@@ -18,7 +18,10 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,css,md,json}\" --ignore-path .gitignore",
     "changeset": "changeset",
     "version": "changeset version",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "capture-knowledge": "tsx scripts/knowledge/capture.ts",
+    "map-expertise": "tsx scripts/knowledge/expertise-map.ts",
+    "search-knowledge": "tsx scripts/knowledge/search.ts"
   },
   "keywords": [
     "monorepo",

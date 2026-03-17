@@ -1,0 +1,400 @@
+name: Knowledge Management
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'capture'
+        type: choice
+        options:
+          - capture
+          - index
+          - audit
+          - all
+
+env:
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+  TURBO_SCM_BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+
+jobs:
+  capture-knowledge:
+    name: Capture Knowledge
+    runs-on: ubuntu-latest
+    if: github.event.action == 'capture' || github.event.action == 'all' || github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build knowledge package
+        run: pnpm --filter @agency/knowledge build
+      
+      - name: Capture knowledge from commits
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, capture recent commits
+            pnpm capture-knowledge commits --since "1 week ago" --limit 20 --output knowledge-captures.json
+          else
+            # For pushes and scheduled runs, capture more commits
+            pnpm capture-knowledge commits --since "1 month ago" --limit 100 --output knowledge-captures.json
+          fi
+      
+      - name: Capture knowledge from code
+        run: pnpm capture-knowledge code --output code-captures.json
+      
+      - name: Merge captures
+        run: |
+          jq -s 'add' knowledge-captures.json code-captures.json > all-captures.json
+          echo "Total knowledge items captured:"
+          jq length all-captures.json
+      
+      - name: Store knowledge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: knowledge-captures-${{ github.run_number }}
+          path: |
+            all-captures.json
+            knowledge-captures.json
+            code-captures.json
+          retention-days: 30
+
+  map-expertise:
+    name: Map Expertise
+    runs-on: ubuntu-latest
+    if: github.event.action == 'index' || github.event.action == 'all' || github.event_name == 'schedule'
+    needs: capture-knowledge
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build knowledge package
+        run: pnpm --filter @agency/knowledge build
+      
+      - name: Download knowledge captures
+        uses: actions/download-artifact@v4
+        with:
+          name: knowledge-captures-${{ github.run_number }}
+      
+      - name: Map repository expertise
+        run: |
+          pnpm map-expertise repository --output expertise-profiles.json --format json
+          echo "Expertise profiles generated:"
+          jq length expertise-profiles.json
+      
+      - name: Analyze expertise distribution
+        run: |
+          pnpm map-expertise analyze --output expertise-analysis.json
+          echo "Expertise analysis completed"
+      
+      - name: Store expertise artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: expertise-profiles-${{ github.run_number }}
+          path: |
+            expertise-profiles.json
+            expertise-analysis.json
+          retention-days: 30
+
+  audit-knowledge:
+    name: Audit Knowledge Quality
+    runs-on: ubuntu-latest
+    if: github.event.action == 'audit' || github.event.action == 'all' || github.event_name == 'schedule'
+    needs: capture-knowledge
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Build knowledge package
+        run: pnpm --filter @agency/knowledge build
+      
+      - name: Download knowledge captures
+        uses: actions/download-artifact@v4
+        with:
+          name: knowledge-captures-${{ github.run_number }}
+      
+      - name: Run knowledge quality audit
+        run: |
+          # Create audit script
+          cat > audit-knowledge.ts << 'EOF'
+          #!/usr/bin/env tsx
+          
+          import { readFile, writeFile } from 'fs/promises'
+          
+          interface KnowledgeCapture {
+            id: string
+            title: string
+            content: string
+            quality: {
+              clarity: number
+              accuracy: number
+              completeness: number
+              relevance: number
+              overall: number
+            }
+            category: string
+            expertise: string
+            tags: string[]
+            timestamp: string
+            author: string
+          }
+          
+          interface AuditResult {
+            itemId: string
+            issues: AuditIssue[]
+            score: number
+            recommendations: string[]
+            status: 'passed' | 'warning' | 'failed'
+          }
+          
+          interface AuditIssue {
+            type: string
+            severity: string
+            description: string
+            suggestion: string
+          }
+          
+          async function main() {
+            const captures: KnowledgeCapture[] = JSON.parse(await readFile('all-captures.json', 'utf-8'))
+            const results: AuditResult[] = []
+            
+            for (const capture of captures) {
+              const issues: AuditIssue[] = []
+              
+              // Quality checks
+              if (capture.quality.overall < 70) {
+                issues.push({
+                  type: 'quality',
+                  severity: 'high',
+                  description: 'Low overall quality score',
+                  suggestion: 'Improve content clarity, accuracy, or completeness'
+                })
+              }
+              
+              if (capture.quality.clarity < 60) {
+                issues.push({
+                  type: 'clarity',
+                  severity: 'medium',
+                  description: 'Poor clarity score',
+                  suggestion: 'Add clearer explanations and structure'
+                })
+              }
+              
+              if (capture.quality.completeness < 60) {
+                issues.push({
+                  type: 'completeness',
+                  severity: 'medium',
+                  description: 'Incomplete content',
+                  suggestion: 'Add more comprehensive information'
+                })
+              }
+              
+              // Content checks
+              if (capture.content.length < 100) {
+                issues.push({
+                  type: 'length',
+                  severity: 'medium',
+                  description: 'Content too short',
+                  suggestion: 'Add more detailed information'
+                })
+              }
+              
+              if (capture.tags.length === 0) {
+                issues.push({
+                  type: 'tagging',
+                  severity: 'low',
+                  description: 'No tags provided',
+                  suggestion: 'Add relevant tags for better discoverability'
+                })
+              }
+              
+              const status = issues.length === 0 ? 'passed' : 
+                           issues.some(i => i.severity === 'high') ? 'failed' : 'warning'
+              
+              const score = Math.max(0, 100 - (issues.length * 10))
+              
+              results.push({
+                itemId: capture.id,
+                issues,
+                score,
+                recommendations: issues.map(i => i.suggestion),
+                status
+              })
+            }
+            
+            const auditReport = {
+              timestamp: new Date().toISOString(),
+              totalItems: captures.length,
+              results,
+              summary: {
+                passed: results.filter(r => r.status === 'passed').length,
+                warnings: results.filter(r => r.status === 'warning').length,
+                failed: results.filter(r => r.status === 'failed').length,
+                averageScore: results.reduce((sum, r) => sum + r.score, 0) / results.length
+              }
+            }
+            
+            await writeFile('knowledge-audit.json', JSON.stringify(auditReport, null, 2))
+            
+            console.log('Knowledge audit completed:')
+            console.log(`  Total items: ${auditReport.totalItems}`)
+            console.log(`  Passed: ${auditReport.summary.passed}`)
+            console.log(`  Warnings: ${auditReport.summary.warnings}`)
+            console.log(`  Failed: ${auditReport.summary.failed}`)
+            console.log(`  Average score: ${auditReport.summary.averageScore.toFixed(1)}`)
+          }
+          
+          main().catch(console.error)
+          EOF
+          
+          tsx audit-knowledge.ts
+      
+      - name: Store audit results
+        uses: actions/upload-artifact@v4
+        with:
+          name: knowledge-audit-${{ github.run_number }}
+          path: knowledge-audit.json
+          retention-days: 30
+      
+      - name: Comment PR with audit results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const auditReport = JSON.parse(fs.readFileSync('knowledge-audit.json', 'utf8'));
+              
+              const comment = `## 🔍 Knowledge Management Audit Results
+              
+              **Summary:**
+              - 📊 Total items: ${auditReport.totalItems}
+              - ✅ Passed: ${auditReport.summary.passed}
+              - ⚠️ Warnings: ${auditReport.summary.warnings}
+              - ❌ Failed: ${auditReport.summary.failed}
+              - 📈 Average score: ${auditReport.summary.averageScore.toFixed(1)}
+              
+              ${auditReport.summary.failed > 0 ? 
+                '### 🚨 Failed Items\n\nSome knowledge items need attention. Please review the audit results.' : 
+                '### ✅ Good Quality\n\nAll knowledge items meet quality standards.'
+              }`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.log('Could not read audit results:', error.message);
+            }
+
+  update-dashboard:
+    name: Update Knowledge Dashboard
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    needs: [capture-knowledge, map-expertise, audit-knowledge]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-${{ github.run_number }}"
+          merge-multiple: true
+      
+      - name: Generate dashboard data
+        run: |
+          # Create dashboard data file
+          cat > dashboard-data.json << 'EOF'
+          {
+            "lastUpdated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "knowledgeStats": {
+              "totalItems": $(jq length all-captures.json 2>/dev/null || echo 0),
+              "avgQuality": $(jq -r 'if length > 0 then (map(.quality.overall) | add / length) else 0 end' all-captures.json 2>/dev/null || echo 0)
+            },
+            "expertiseStats": {
+              "totalContributors": $(jq length expertise-profiles.json 2>/dev/null || echo 0),
+              "avgReputation": $(jq -r 'if length > 0 then (map(.reputation.score) | add / length) else 0 end' expertise-profiles.json 2>/dev/null || echo 0)
+            },
+            "auditStats": $(jq '.summary' knowledge-audit.json 2>/dev/null || echo '{"passed": 0, "warnings": 0, "failed": 0, "averageScore": 0}')
+          }
+          EOF
+      
+      - name: Store dashboard data
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-data-${{ github.run_number }}
+          path: dashboard-data.json
+          retention-days: 90
+
+  notify-team:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    if: failure() && github.event_name == 'schedule'
+    needs: [capture-knowledge, map-expertise, audit-knowledge]
+    
+    steps:
+      - name: Create issue for workflow failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Knowledge Management Workflow Failed',
+              body: `The scheduled knowledge management workflow failed on $(date).
+              
+              **Failed Jobs:**
+              ${context.payload.workflow_run.jobs?.filter(job => job.conclusion === 'failure').map(job => `- ${job.name}`).join('\n') || 'No jobs found'}
+              
+              Please investigate the failure and fix any issues.`,
+              labels: ['bug', 'knowledge-management', 'urgent']
+            })

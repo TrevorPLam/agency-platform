@@ -1,0 +1,48 @@
+{
+  "name": "@agency/knowledge",
+  "version": "0.1.0",
+  "description": "Integrated knowledge management system for agency platform",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./search": {
+      "types": "./dist/search.d.ts",
+      "default": "./dist/search.js"
+    },
+    "./expertise": {
+      "types": "./dist/expertise.d.ts",
+      "default": "./dist/expertise.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "capture-knowledge": "node dist/capture-knowledge.js",
+    "index-repository": "node dist/index-repository.js",
+    "map-expertise": "node dist/map-expertise.js"
+  },
+  "dependencies": {
+    "@octokit/rest": "catalog:",
+    "zod": "catalog:",
+    "jsonschema": "catalog:",
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
