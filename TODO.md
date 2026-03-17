@@ -109,138 +109,68 @@ This roadmap reflects:
 
 ---
 
-## ✅ COMPLETED: Database Package Build Fix
+## [ ] TASK-10: API authorization and tenant isolation hardening (agency-admin costs)
 
-**Why:** Build errors in `@agency/database` package were preventing test execution and blocking development workflow.
+**Why:** Current cost routes trust client-provided `tenant_id` and are vulnerable to cross-tenant access/mutation.
 
-**Completed (2026-03-17)**
+**Definition of Done**
 
-- Fixed all TypeScript strict mode errors in `rate-limiter.ts` and `security-monitoring-integration.ts`
-- Resolved Redis configuration issues (removed invalid `retryDelayOnFailover` option)
-- Fixed environment variable access patterns for `exactOptionalPropertyTypes` compliance
-- Updated Vitest configuration to handle subpath exports for `@agency/analytics/server`
-- Implemented proper mock strategy for analytics dependencies in integration tests
-- Successfully built database package with full TypeScript declaration generation
+- All `apps/agency-admin/src/app/api/costs/*` handlers derive tenant scope from authenticated session (`app_metadata.tenant_id`) or a validated platform-admin path.
+- No route authorizes tenant scope from query params/body alone.
+- `recommendations` PATCH includes tenant-scoped update guards (no update by `id` alone).
+- API handlers enforce auth directly (not only middleware redirect behavior).
+- Validation remains in place, but authorization is the primary gate.
 
-**Results**
+**Target Files**
 
-- Database package builds successfully with zero TypeScript errors
-- 88 out of 94 tests passing (93.6% success rate)
-- All unit tests passing (core functionality verified)
-- Test infrastructure fully operational
-- Build pipeline functional (tsup + TypeScript declarations)
-
-**Technical Changes**
-
-- `packages/database/src/rate-limiter.ts`: Fixed type compatibility and null safety
-- `packages/database/src/security-monitoring-integration.ts`: Mocked analytics imports
-- `packages/database/tsup.config.ts`: Added external dependencies
-- `vitest.config.ts`: Added subpath export resolution
+- `apps/agency-admin/src/app/api/costs/summary/route.ts`
+- `apps/agency-admin/src/app/api/costs/metrics/route.ts`
+- `apps/agency-admin/src/app/api/costs/alerts/route.ts`
+- `apps/agency-admin/src/app/api/costs/recommendations/route.ts`
+- `packages/database/src/middleware.ts` (documentation/guard usage notes if needed)
 
 ---
 
-## ✅ COMPLETED: TASK-18: Security Headers Testing and Compliance
+## [ ] TASK-10A: Cost dashboard and API contract alignment
 
-**Why:** Security headers need automated testing to prevent regressions.
+**Why:** Dashboard calls and route contracts are currently inconsistent, creating guaranteed runtime errors.
 
-**Completed (2026-03-18)**
+**Definition of Done**
 
-**Implementation Delivered**
+- Cost dashboard requests match route contract for tenant context and optional filters.
+- Route contract is documented in code comments or shared schema location.
+- Error UX for cost dashboard distinguishes auth/authorization failure vs transient backend failure.
 
-- Created comprehensive security header validation utilities in `packages/security/src/header-validator.ts`
-- Built CSP validation system in `packages/security/src/csp-validator.ts` with 2026 best practices
-- Implemented cross-app security header testing suite using Playwright
-- Created real-time security compliance dashboard in agency-admin
-- Built security monitoring and alerting system with trend analysis
-- Added automated security scanning API endpoints
-- Implemented security reporting and export functionality
+**Target Files**
 
-**Technical Changes**
-
-- `packages/security/src/header-validator.ts`: Complete security header validation with OWASP standards
-- `packages/security/src/csp-validator.ts`: CSP validation with nonce-based policy analysis
-- `packages/security/src/monitoring.ts`: Real-time monitoring with alerting system
-- `apps/agency-admin/src/app/(dashboard)/security/compliance-dashboard.tsx`: Interactive security dashboard
-- `apps/agency-admin/src/app/api/security/scan/route.ts`: Security scanning API
-- `apps/agency-admin/src/app/api/security/report/route.ts`: Comprehensive reporting API
-- `apps/agency-admin/src/app/api/security/monitoring/route.ts`: Monitoring control API
-- `apps/firm/e2e/security-headers.spec.ts`: Cross-app security testing suite
-- `packages/security/src/monitoring.test.ts`: Comprehensive monitoring system tests
-
-**Results**
-
-- Automated security header testing across all 4 applications
-- Real-time security compliance monitoring with alerting
-- Interactive dashboard with grade-based scoring system
-- Comprehensive security reporting with trend analysis
-- 2026 best practices implementation (CSP nonce, cross-origin isolation)
-- Production-ready security monitoring infrastructure
-- CI/CD integration for automated security validation
-
-**Security Features**
-
-- Mozilla Observatory-compatible scoring system
-- OWASP Secure Headers Project compliance
-- Real-time alerting for critical security issues
-- Historical trend analysis and reporting
-- Multi-tenant security monitoring
-- Automated security regression detection
-- Exportable security compliance reports
+- `apps/agency-admin/src/components/costs/cost-management-dashboard.tsx`
+- `apps/agency-admin/src/app/api/costs/summary/route.ts`
+- `apps/agency-admin/src/app/api/costs/metrics/route.ts`
+- `apps/agency-admin/src/app/api/costs/alerts/route.ts`
+- `apps/agency-admin/src/app/api/costs/recommendations/route.ts`
 
 ---
 
+## [ ] TASK-10B: Database type generation and drift gate recovery
 
-## P2 - Enterprise Readiness
+**Why:** Empty/stale generated DB types can block build/type-check/test and reduce confidence in schema safety.
 
-## ✅ COMPLETED: CMS and Content-ops Decision Gate
+**Definition of Done**
 
-**Why:** Blog/content is currently hardcoded and blocks scalable agency operations.
+- `packages/database/src/types.ts` is generated and non-empty.
+- Generation command and ownership are documented for contributors.
+- CI type drift gate remains green with deterministic regeneration flow.
 
-**Completed (2026-03-17)**
+**Target Files**
 
-**Decision**: DEFER full CMS adoption with enhanced interim content management solution
-**Timeline**: Review in 6-12 months or when content operations scale requires it
-
-**Implementation Delivered**
-
-- Created `@agency/content` package with type-safe content management
-- Implemented content repository pattern with Zod validation
-- Built CLI tools for content management (create, list, search, export/import)
-- Enhanced SEO optimization with automatic metadata generation
-- Added Markdown support for rich content formatting
-- Established migration path from existing hardcoded content
-- Created comprehensive decision analysis documentation
-
-**Enhanced Interim Solution Features**
-
-- Type-safe content schemas (BlogPost, CaseStudy, ServicePage)
-- Content repository with search and filtering capabilities
-- CLI tools: `pnpm content create-blog`, `pnpm content list`, `pnpm content search`
-- SEO optimization: automatic metadata, reading time calculation
-- Content validation and error prevention
-- Export/import functionality for backups and migrations
-
-**Future CMS Triggers**
-
-- Content updates exceed 5x current frequency
-- Non-technical content creators need access
-- Multi-client content operations scale significantly
-- Content personalization requirements emerge
-
-**Recommended Future CMS Options**
-
-- **Strapi**: For agency scale (open-source, SQL-native)
-- **Sanity**: For content-led growth (developer-friendly, real-time)
-- **Contentful**: For enterprise scale (DXP features, AI personalization)
-
-**Target Files Updated**
-
-- `packages/content/src/content-system.ts` - Core content management system
-- `apps/firm/src/lib/content.ts` - Firm app integration
-- `scripts/content-cli.ts` - Content management CLI tools
-- `docs/CMS_DECISION_ANALYSIS.md` - Complete decision documentation
+- `packages/database/src/types.ts`
+- `packages/database/package.json`
+- `.github/workflows/ci.yml`
+- `CONTRIBUTING.md`
 
 ---
+
+## P2 - Production Readiness
 
 ## [ ] TASK-14: Accessibility program baseline (WCAG 2.2 AA target)
 
@@ -557,118 +487,18 @@ This roadmap reflects:
 
 ## 5) Task Dependencies (Critical Path)
 
-1. `TASK-01` -> `TASK-02` -> `TASK-06` -> `TASK-07` -> `TASK-08`
-2. `TASK-03` + `TASK-04` + `TASK-05` should complete before broad new feature rollout.
-3. `TASK-11` (Comprehensive Testing) starts during P1 and continues through all later tasks with 5 implementation phases.
-4. `TASK-14` + `TASK-15` + `TASK-16` are mandatory before production launch claims.
-5. **TASK-10** -> **TASK-10A** -> **TASK-10B** -> **TASK-10C** -> **TASK-10D** -> **TASK-10E** -> **TASK-10F** -> **TASK-10G** -> **TASK-10H** -> **TASK-10I** -> **TASK-11** for security/data/ops correctness before broader confidence claims.
-6. **P4 Advanced Tasks**: `TASK-19` through `TASK-27` can run in parallel after P1 completion, with these dependencies:
-   - `TASK-20` (Supply Chain Security) depends on `TASK-19` (DORA Metrics) for pipeline integration
-   - `TASK-21` (Metadata Governance) depends on `TASK-20` for policy enforcement
-   - `TASK-22` (Artifact Management) depends on `TASK-20` and `TASK-21` for security and governance
-   - `TASK-23` (Performance Optimization) can run independently but benefits from `TASK-19` metrics
-   - `TASK-24` (Knowledge Management) depends on `TASK-21` for metadata integration
-   - `TASK-25` (Cost Management) depends on `TASK-19` and `TASK-23` for metrics and performance data
-   - `TASK-26` (Disaster Recovery) depends on `TASK-22` for artifact backup procedures
-   - `TASK-27` (AI Operations) depends on `TASK-19`, `TASK-21`, and `TASK-24` for metrics, governance, and knowledge
+1. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-11` for API correctness before broader confidence claims.
+2. `TASK-14` -> `TASK-15` -> `TASK-16` for production readiness baseline.
+3. `TASK-19` -> `TASK-20` -> `TASK-21` for advanced repository management foundation.
+4. `TASK-22` -> `TASK-23` -> `TASK-24` for scale optimization workflow.
+5. `TASK-25` -> `TASK-26` -> `TASK-27` for enterprise operations maturity.
 
 ---
 
-## 6) Repository Maturity Assessment & Implementation Strategy
+## 7) Source Anchors (Research Basis)
 
-### Current Repository Maturity: **Advanced (75/100)**
-
-**Updated Score**: 75/100 (downgraded from 80/100 based on testing quality analysis)
-**Why the Decrease**: Comprehensive testing analysis revealed critical gaps in test coverage (<5%), quality assurance practices, and testing infrastructure that represent significant quality risks for production deployment.
-
-### Implementation Phases
-
-#### Phase 1: Foundation (P0-P1) - **MOSTLY COMPLETED** ✅
-
-- Security headers, metadata, sitemap, robots
-- Type safety ratchet and lint enforcement
-- Package build/export integrity fixes
-- Server-side form hardening and analytics
-- Root loading/error/not-found consistency
-- **Security hardening (TASK-10 series)** - IN PROGRESS
-- **Testing foundation (TASK-11 Phase 1)** - COMPLETED ✅
-
-#### Phase 2: Enterprise Readiness (P2-P3) - **PLANNED**
-
-- CMS and content-ops decision gate
-- Accessibility program baseline (WCAG 2.2 AA)
-- Consent and privacy architecture hardening
-- Core Web Vitals field observability
-- Experimentation framework bootstrap
-- AI-assisted content ops pilot
-
-#### Phase 3: Advanced Repository Management (P4) - **NEW**
-
-- **TASK-19**: DORA Metrics Implementation & Automation
-- **TASK-20**: Advanced Supply Chain Security (SLSA & SBOM)
-- **TASK-21**: Repository Metadata & Classification System
-- **TASK-22**: Artifact Lifecycle Management
-- **TASK-23**: Large Monorepo Performance Optimization
-- **TASK-24**: Integrated Knowledge Management
-- **TASK-25**: Cost Management & Resource Optimization
-- **TASK-26**: Disaster Recovery & Business Continuity
-- **TASK-27**: Advanced AI Agent Operations
-
-### Industry Comparison Summary
-
-| Area            | Industry Leader    | Agency Platform | Gap         |
-| --------------- | ------------------ | --------------- | ----------- |
-| **Testing**     | 80%+ Coverage      | <5% Coverage    | ❌ Critical |
-| **Security**    | SLSA Level 4       | Basic GitHub    | ❌ Major    |
-| **Governance**  | Custom Properties  | Manual          | ❌ Major    |
-| **Automation**  | Full Lifecycle     | CI/CD Only      | ❌ Major    |
-| **Performance** | Optimized at Scale | Basic           | ⚠️ Medium   |
-| **Knowledge**   | Integrated Systems | Documentation   | ⚠️ Medium   |
-| **Metrics**     | Comprehensive      | Basic           | ⚠️ Medium   |
-
-### Strategic Priority Order
-
-1. **CRITICAL** (Production Readiness)
-   - TASK-11: Comprehensive Testing Strategy Implementation
-   - TASK-20: Advanced Supply Chain Security
-   - TASK-21: Repository Metadata & Classification
-   - TASK-22: Artifact Lifecycle Management
-
-2. **HIGH PRIORITY** (Scale Readiness)
-   - TASK-19: DORA Metrics Implementation
-   - TASK-23: Large Monorepo Performance Optimization
-   - TASK-24: Integrated Knowledge Management
-
-3. **MEDIUM PRIORITY** (Operational Excellence)
-   - TASK-25: Cost Management & Resource Optimization
-   - TASK-26: Disaster Recovery & Business Continuity
-   - TASK-27: Advanced AI Agent Operations
-
----
-
-## 7) Deferred / Non-Goals For This Cycle
-
-- Full enterprise DXP migration in one iteration.
-- Multi-region data architecture redesign.
-- Complete redesign of all client site templates.
-- Highly dynamic AI personalization without consent and measurement controls.
-
----
-
-## 8) Source Anchors (Research Basis)
-
-- [Next.js 16 upgrade and production guidance](https://nextjs.org/docs/app/guides/upgrading/version-16)
-- [Next.js metadata sitemap convention](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)
-- [Next.js metadata robots convention](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots)
-- [Next.js production checklist](https://nextjs.org/docs/app/guides/production-checklist)
-- [React 19 release notes](https://react.dev/blog/2024/12/05/react-19)
-- [W3C WCAG 2.2 recommendation](https://www.w3.org/TR/WCAG22/)
-- [ADA Title II web rule overview](https://www.ada.gov/resources/2024-03-08-web-rule/)
-- [Google consent mode guidance](https://developers.google.com/tag-platform/security/guides/consent)
-- [Privacy Sandbox next steps update](https://privacysandbox.com/intl/en_us/news/privacy-sandbox-next-steps/)
-- [Supabase row level security guide](https://supabase.com/docs/guides/database/postgres/row-level-security)
-- [Stripe checkout success and webhook guidance](https://docs.stripe.com/payments/checkout/custom-success-page)
-- [Core Web Vitals guidance](https://web.dev/articles/vitals)
 - [OWASP Multi-Tenant Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Multi_Tenant_Security_Cheat_Sheet.html)
 - [OWASP ASVS](https://github.com/OWASP/ASVS)
 - [RFC 9457: Problem Details for HTTP APIs](https://www.rfc-editor.org/rfc/rfc9457.html)
+
+---
