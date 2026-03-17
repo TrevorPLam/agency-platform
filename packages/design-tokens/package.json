@@ -6,8 +6,17 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts",
+    "build": "tsup && node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts",
+    "build:js": "tsup",
+    "build:tokens": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts",
     "tokens:build": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts"
   },
   "dependencies": {

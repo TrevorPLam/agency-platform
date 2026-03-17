@@ -8,7 +8,7 @@ let posthogInstance: PostHog | null = null
  * This TypeScript interface ensures all server events include tenant context.
  */
 export interface ServerEventProperties {
-  [key: string]: any
+  [key: string]: unknown
   tenant: string
 }
 
@@ -17,20 +17,24 @@ export interface ServerEventProperties {
  * Implements lazy initialization to prevent issues during static generation.
  * Uses optimized batching settings for serverless environments.
  */
-function getServerClient(): PostHog {
+function getServerClient(): PostHog | null {
   if (!posthogInstance) {
-    if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-      throw new Error(
-        'NEXT_PUBLIC_POSTHOG_KEY environment variable is required for server-side analytics'
-      )
+    if (!process.env['NEXT_PUBLIC_POSTHOG_KEY']) {
+      console.warn('PostHog API key not configured')
+      return null
     }
 
-    posthogInstance = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      // Optimize for serverless environments (Vercel Lambda)
-      flushAt: 20,
+    const options: Record<string, unknown> = {
+      flushAt: 10,
       flushInterval: 10000,
-    })
+    }
+    
+    const host = process.env['NEXT_PUBLIC_POSTHOG_HOST']
+    if (host) {
+      options['host'] = host
+    }
+    
+    posthogInstance = new PostHog(process.env['NEXT_PUBLIC_POSTHOG_KEY'], options)
   }
 
   return posthogInstance
@@ -51,6 +55,9 @@ export function captureServerEvent(
 ): void {
   try {
     const posthog = getServerClient()
+    if (!posthog) {
+      return
+    }
 
     // Create tenant-specific distinct ID for uniqueness across tenants
     const tenantSpecificId = `${distinctId}@${properties.tenant}`
@@ -80,6 +87,9 @@ export function captureServerEvent(
 export function identifyServerUser(distinctId: string, properties: ServerEventProperties): void {
   try {
     const posthog = getServerClient()
+    if (!posthog) {
+      return
+    }
 
     // Create tenant-specific distinct ID
     const tenantSpecificId = `${distinctId}@${properties.tenant}`
@@ -107,6 +117,9 @@ export function identifyServerUser(distinctId: string, properties: ServerEventPr
 export function aliasServerUser(distinctId: string, alias: string, tenant: string): void {
   try {
     const posthog = getServerClient()
+    if (!posthog) {
+      return
+    }
 
     // Create tenant-specific identifiers
     const tenantSpecificId = `${distinctId}@${tenant}`
@@ -128,6 +141,9 @@ export function aliasServerUser(distinctId: string, alias: string, tenant: strin
 export function flushServerEvents(): Promise<void> {
   try {
     const posthog = getServerClient()
+    if (!posthog) {
+      return Promise.resolve()
+    }
     return posthog.flush()
   } catch (error) {
     console.error('Failed to flush server analytics events:', error)
@@ -139,6 +155,6 @@ export function flushServerEvents(): Promise<void> {
  * Get the raw PostHog server client for advanced usage.
  * Use sparingly and prefer the typed functions above.
  */
-export function getPostHogServerClient(): PostHog {
+export function getPostHogServerClient(): PostHog | null {
   return getServerClient()
 }

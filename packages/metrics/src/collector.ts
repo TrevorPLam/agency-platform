@@ -1,5 +1,4 @@
 import { getAdminClient } from '@agency/database/admin'
-import type { Database } from '@agency/database'
 import type {
   DORAMetrics,
   DORAMetricType,
@@ -8,7 +7,8 @@ import type {
   PerformanceLevel,
   DeploymentEvent,
   IncidentEvent,
-  PullRequestEvent
+  PullRequestEvent,
+  MetricSnapshot
 } from './types'
 import { DeploymentFrequencyTracker } from './deployment-frequency'
 import { LeadTimeCalculator } from './lead-time'
@@ -59,7 +59,7 @@ export class DORAMetricsCollector {
       this.deploymentTracker.calculate(deployments),
       this.leadTimeCalculator.calculate(pullRequests, deployments),
       this.failureRateMonitor.calculate(deployments, incidents),
-      this.mttrTracker.calculate(incidents, deployments)
+      this.mttrTracker.calculate(incidents)
     ])
 
     const metrics: DORAMetrics = {
@@ -139,7 +139,7 @@ export class DORAMetricsCollector {
     for (const [metricType, value] of Object.entries(metrics)) {
       const levels = benchmarks[metricType as DORAMetricType]
       const level = levels.find(l => value >= l.minThreshold && value <= l.maxThreshold)
-      result[metricType as DORAMetricType] = level || levels[levels.length - 1] // fallback to lowest
+      result[metricType as DORAMetricType] = level || levels[levels.length - 1]! // fallback to lowest
     }
 
     return result

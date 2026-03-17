@@ -63,7 +63,12 @@ export class PropertyValidator {
         const validatedProps = result.data
         const businessRuleErrors = this.validateBusinessRules(validatedProps)
         errors.push(...businessRuleErrors.errors)
-        warnings.push(...businessRuleErrors.warnings)
+        warnings.push(...businessRuleErrors.warnings.map(w => ({
+          property: w.property,
+          message: w.message,
+          severity: 'warning' as const,
+          code: 'BUSINESS_RULE_WARNING'
+        })))
       }
 
       // Calculate validation score
@@ -86,7 +91,12 @@ export class PropertyValidator {
       return {
         valid: false,
         errors,
-        warnings,
+        warnings: warnings.map(w => ({
+          property: w.property,
+          message: w.message,
+          severity: 'warning' as const,
+          code: 'VALIDATION_EXCEPTION_WARNING'
+        })),
         score: 0
       }
     }

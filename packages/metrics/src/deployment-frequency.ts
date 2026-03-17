@@ -53,8 +53,10 @@ export class DeploymentFrequencyTracker {
         this.config.environments.includes(deployment.environment)
       )
       .forEach(deployment => {
-        const date = deployment.timestamp.split('T')[0] // Extract date part
-        deploymentsByDate.set(date, (deploymentsByDate.get(date) || 0) + 1)
+        const date = (deployment.timestamp || '').split('T')[0] // Extract date part
+        if (date) {
+          deploymentsByDate.set(date, (deploymentsByDate.get(date) || 0) + 1)
+        }
       })
 
     // Convert to sorted array and calculate cumulative
@@ -156,8 +158,8 @@ export class DeploymentFrequencyTracker {
     if (successfulDeployments.length > 1) {
       const timeDifferences = []
       for (let i = 1; i < successfulDeployments.length; i++) {
-        const prev = new Date(successfulDeployments[i - 1].timestamp).getTime()
-        const curr = new Date(successfulDeployments[i].timestamp).getTime()
+        const prev = new Date(successfulDeployments[i - 1]?.timestamp || '').getTime()
+        const curr = new Date(successfulDeployments[i]?.timestamp || '').getTime()
         timeDifferences.push((curr - prev) / (1000 * 60 * 60)) // Convert to hours
       }
       averageTimeBetweenDeployments = timeDifferences.reduce((sum, diff) => sum + diff, 0) / timeDifferences.length

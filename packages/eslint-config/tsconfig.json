@@ -1,5 +1,5 @@
 {
-  "extends": "@agency/typescript-config/base.json",
+  "extends": "../typescript-config/base.json",
   "compilerOptions": {
     "composite": true,
     "declaration": true,

@@ -170,8 +170,8 @@ export class LeadTimeCalculator {
       median: Math.round(median * 100) / 100,
       p95: Math.round(p95 * 100) / 100,
       p99: Math.round(p99 * 100) / 100,
-      min: Math.round(min * 100) / 100,
-      max: Math.round(max * 100) / 100,
+      min: Math.round((min || 0) * 100) / 100,
+      max: Math.round((max || 0) * 100) / 100,
       sampleSize: deployedPRs.length
     }
   }
@@ -211,13 +211,13 @@ export class LeadTimeCalculator {
 
   private getPercentile(sortedArray: number[], percentile: number): number {
     const index = Math.ceil((percentile / 100) * sortedArray.length) - 1
-    return sortedArray[Math.max(0, Math.min(index, sortedArray.length - 1))]
+    return sortedArray[Math.max(0, Math.min(index, sortedArray.length - 1))] || 0
   }
 
   private getCommitShaFromPR(pr: PullRequestEvent): string {
     // This would typically come from the PR data or GitHub API
     // For now, we'll use a placeholder that would be populated during data collection
-    return pr.metadata?.commitSha as string || ''
+    return (pr.metadata?.['commitSha'] as string) || ''
   }
 
   private getPRService(pr: PullRequestEvent, deployments: DeploymentEvent[]): string {

@@ -27,7 +27,7 @@ module.exports = {
     ],
     // Additional TypeScript-specific rules
     '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'error',
     'prefer-const': 'error',
   },
 };

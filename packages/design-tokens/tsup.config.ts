@@ -5,5 +5,7 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,
-  external: ['@agency/database', '@supabase/supabase-js']
+  external: ['style-dictionary'],
+  sourcemap: true,
+  minify: false,
 })

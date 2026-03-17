@@ -1,8 +1,7 @@
 import { 
   RepositoryProperties, 
   RiskAssessment, 
-  RiskFactor,
-  ComplianceFramework 
+  RiskFactor
 } from './types'
 
 /**
@@ -298,22 +297,24 @@ export class RiskAssessmentEngine {
     }
 
     // Calculate average score
-    const totalScore = repositoryNames.reduce((sum, repo) => sum + assessments[repo].score, 0)
+    const totalScore = repositoryNames.reduce((sum, repo) => sum + (assessments[repo]?.score || 0), 0)
     const averageScore = Math.round((totalScore / totalRepositories) * 100) / 100
 
     // Calculate distribution
     const distribution = { Low: 0, Medium: 0, High: 0, Critical: 0 }
     repositoryNames.forEach(repo => {
-      const category = assessments[repo].category
-      distribution[category]++
+      const category = assessments[repo]?.category
+      if (category) {
+        distribution[category]++
+      }
     })
 
     // Identify high and critical risk repositories
     const highRiskRepositories = repositoryNames.filter(repo => 
-      assessments[repo].category === 'High'
+      assessments[repo]?.category === 'High'
     )
     const criticalRiskRepositories = repositoryNames.filter(repo => 
-      assessments[repo].category === 'Critical'
+      assessments[repo]?.category === 'Critical'
     )
 
     // Generate aggregate recommendations
@@ -347,16 +348,16 @@ export class RiskAssessmentEngine {
       recommendations.push('Implement standardized security policies')
     }
 
-    if (distribution.Critical > 0) {
-      recommendations.push(`Address ${distribution.Critical} critical-risk repositories immediately`)
+    if (distribution['Critical'] > 0) {
+      recommendations.push(`Address ${distribution['Critical']} critical-risk repositories immediately`)
     }
 
-    if (distribution.High > distribution.Low) {
+    if (distribution['High'] > distribution['Low']) {
       recommendations.push('Focus risk mitigation efforts on high-risk repositories')
     }
 
     const totalRepos = Object.values(distribution).reduce((sum, count) => sum + count, 0)
-    const highRiskPercentage = ((distribution.High + distribution.Critical) / totalRepos) * 100
+    const highRiskPercentage = ((distribution['High'] + distribution['Critical']) / totalRepos) * 100
 
     if (highRiskPercentage > 50) {
       recommendations.push('More than 50% of repositories are high-risk - review overall security strategy')

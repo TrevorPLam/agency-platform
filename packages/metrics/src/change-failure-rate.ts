@@ -53,19 +53,23 @@ export class ChangeFailureRateMonitor {
     const dailyData = new Map<string, { deployments: DeploymentEvent[], incidents: IncidentEvent[] }>()
 
     relevantDeployments.forEach(deployment => {
-      const date = deployment.timestamp.split('T')[0]
-      if (!dailyData.has(date)) {
+      const date = (deployment.timestamp || '').split('T')[0]
+      if (date && !dailyData.has(date)) {
         dailyData.set(date, { deployments: [], incidents: [] })
       }
-      dailyData.get(date)!.deployments.push(deployment)
+      if (date) {
+        dailyData.get(date)!.deployments.push(deployment)
+      }
     })
 
     incidents.forEach(incident => {
-      const date = incident.detectedAt.split('T')[0]
-      if (!dailyData.has(date)) {
+      const date = (incident.detectedAt || '').split('T')[0]
+      if (date && !dailyData.has(date)) {
         dailyData.set(date, { deployments: [], incidents: [] })
       }
-      dailyData.get(date)!.incidents.push(incident)
+      if (date) {
+        dailyData.get(date)!.incidents.push(incident)
+      }
     })
 
     // Calculate daily failure rates
@@ -242,27 +246,30 @@ export class ChangeFailureRateMonitor {
       .sort((a, b) => b.failureCount - a.failureCount)
       .slice(0, 5)
 
-    // Failure hotspots (dates with high failure rates)
+      // Failure hotspots (dates with high failure rates)
     const dailyFailures = new Map<string, number>()
     const dailyDeployments = new Map<string, number>()
 
     incidents.forEach(incident => {
-      const date = incident.detectedAt.split('T')[0]
-      dailyFailures.set(date, (dailyFailures.get(date) || 0) + 1)
+      const date = (incident.detectedAt || '').split('T')[0]
+      if (date) {
+        dailyFailures.set(date, (dailyFailures.get(date) || 0) + 1)
+      }
     })
 
-    relevantDeployments.forEach(deployment => {
-      const date = deployment.timestamp.split('T')[0]
-      dailyDeployments.set(date, (dailyDeployments.get(date) || 0) + 1)
+    deployments.forEach(deployment => {
+      const date = (deployment.timestamp || '').split('T')[0]
+      if (date) {
+        dailyDeployments.set(date, (dailyDeployments.get(date) || 0) + 1)
+      }
     })
 
-    const failureHotspots = Array.from(dailyFailures.keys())
-      .map(date => ({
-        date,
-        failureCount: dailyFailures.get(date) || 0,
-        deploymentCount: dailyDeployments.get(date) || 0,
-        failureRate: dailyDeployments.get(date) ? (dailyFailures.get(date)! / dailyDeployments.get(date)!) * 100 : 0
-      }))
+    const failureHotspots = Array.from(dailyFailures.keys()).map(date => ({
+      date,
+      failureCount: dailyFailures.get(date) || 0,
+      deploymentCount: dailyDeployments.get(date) || 0,
+      failureRate: dailyDeployments.get(date) ? (dailyFailures.get(date)! / dailyDeployments.get(date)!) * 100 : 0
+    }))
       .filter(hotspot => hotspot.failureCount > 0)
       .sort((a, b) => b.failureRate - a.failureRate)
       .slice(0, 10)

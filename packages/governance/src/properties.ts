@@ -38,13 +38,13 @@ export class PropertyManager {
 
         switch (propertyName) {
           case 'business_criticality':
-            properties.business_criticality = value as any
+            properties.business_criticality = value as 'Low' | 'Medium' | 'High' | 'Critical'
             break
           case 'owner_team':
             properties.owner_team = value
             break
           case 'service_tier':
-            properties.service_tier = value as any
+            properties.service_tier = value as 'Platform' | 'Application' | 'Library' | 'Infrastructure'
             break
           case 'client_name':
             properties.client_name = value
@@ -56,34 +56,34 @@ export class PropertyManager {
             properties.compliance_frameworks = Array.isArray(value) ? value : []
             break
           case 'data_classification':
-            properties.data_classification = value as any
+            properties.data_classification = value as 'Public' | 'Internal' | 'Confidential' | 'Restricted'
             break
           case 'environment':
-            properties.environment = value as any
+            properties.environment = value as 'Development' | 'Staging' | 'Production' | 'Hybrid'
             break
           case 'security_classification':
-            properties.security_classification = value as any
+            properties.security_classification = value as 'Standard' | 'Elevated' | 'High' | 'Critical'
             break
           case 'tech_stack':
             properties.tech_stack = Array.isArray(value) ? value : []
             break
           case 'architecture_pattern':
-            properties.architecture_pattern = value as any
+            properties.architecture_pattern = value as 'Monolith' | 'Microservices' | 'Serverless' | 'Library' | 'Config'
             break
           case 'dependencies':
-            properties.dependencies = value as any
+            properties.dependencies = value as 'Internal' | 'External' | 'Mixed'
             break
           case 'build_system':
-            properties.build_system = value as any
+            properties.build_system = value as 'Turborepo' | 'Webpack' | 'Vite' | 'Custom'
             break
           case 'lifecycle_stage':
-            properties.lifecycle_stage = value as any
+            properties.lifecycle_stage = value as 'Development' | 'Maintenance' | 'Decommissioning' | 'Archived'
             break
           case 'last_security_review':
             properties.last_security_review = value
             break
           case 'review_frequency':
-            properties.review_frequency = value as any
+            properties.review_frequency = value as 'Monthly' | 'Quarterly' | 'Semi-annual' | 'Annual' | 'As-needed'
             break
           case 'automated_tests':
             properties.automated_tests = value === 'true'
@@ -300,7 +300,7 @@ export class PropertyManager {
         continue
       }
 
-      const result = await this.setRepositoryProperties(repo, update.properties)
+      const result = await this.setRepositoryProperties(repo, update.properties || {})
       results.push(result)
     }
 

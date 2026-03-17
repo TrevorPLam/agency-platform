@@ -14,20 +14,30 @@ export function initAnalytics(tenantSlug: string): void {
     return
   }
 
-  if (!isInitialized && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
-    posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-      loaded: (ph) => {
+  if (!isInitialized && process.env['NEXT_PUBLIC_POSTHOG_KEY']) {
+    const config: Record<string, unknown> = {
+      loaded: (ph: unknown) => {
         // GDPR: do not capture IP address (EU and privacy-conscious clients).
         // capture_ip is supported at runtime; PostHogConfig types may not include it.
         ;(ph as { set_config: (c: Record<string, unknown>) => void }).set_config({
           capture_ip: false,
         })
-        if (process.env.NODE_ENV === 'development') {
-          ph.debug()
+        if (process.env['NODE_ENV'] === 'development') {
+          (ph as { debug: () => void }).debug()
+        }
+        // Set user identification
+        if (typeof window !== 'undefined' && (window as any).analytics) {
+          (window as any).analytics.posthog = ph
         }
       },
-    })
+    }
+    
+    const host = process.env['NEXT_PUBLIC_POSTHOG_HOST']
+    if (host) {
+      config['api_host'] = host
+    }
+    
+    posthog.init(process.env['NEXT_PUBLIC_POSTHOG_KEY'], config)
 
     // Register tenant as a super property for all subsequent events
     posthog.register({

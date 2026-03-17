@@ -88,7 +88,7 @@ export class SBOMGenerator {
   /**
    * Read SBOM from file
    */
-  private readSBOM(filePath: string, format: SBOMFormat): any {
+  private readSBOM(filePath: string, format: SBOMFormat): unknown {
     if (!existsSync(filePath)) {
       throw new Error(`SBOM file not found: ${filePath}`)
     }
@@ -104,7 +104,7 @@ export class SBOMGenerator {
   /**
    * Validate SBOM structure
    */
-  private validateSBOM(sbomData: any, format: SBOMFormat): SBOMDocument {
+  private validateSBOM(sbomData: unknown, format: SBOMFormat): SBOMDocument {
     if (format === 'cyclonedx') {
       return this.validateCycloneDX(sbomData)
     } else if (format === 'spdx') {
@@ -117,74 +117,94 @@ export class SBOMGenerator {
   /**
    * Validate CycloneDX SBOM
    */
-  private validateCycloneDX(data: any): SBOMDocument {
-    if (!data.bomFormat || data.bomFormat !== 'CycloneDX') {
+  private validateCycloneDX(data: unknown): SBOMDocument {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid CycloneDX format: data must be an object')
+    }
+    
+    const cycloneDX = data as Record<string, unknown>
+    
+    if (cycloneDX.bomFormat !== 'CycloneDX') {
       throw new Error('Invalid CycloneDX format: missing or incorrect bomFormat')
     }
 
-    if (!data.specVersion) {
+    if (!cycloneDX.specVersion) {
       throw new Error('Invalid CycloneDX format: missing specVersion')
     }
 
     // Transform to our standard format
     return {
       bomFormat: 'CycloneDX',
-      specVersion: data.specVersion,
+      specVersion: cycloneDX.specVersion as string,
       metadata: {
-        timestamp: data.metadata?.timestamp || new Date().toISOString(),
-        tools: data.metadata?.tools?.map((tool: any) => ({
-          name: tool.name,
-          version: tool.version,
-        })),
-        component: data.metadata?.component ? this.transformComponent(data.metadata.component) : undefined,
+        timestamp: (cycloneDX.metadata as Record<string, unknown>)?.timestamp as string || new Date().toISOString(),
+        tools: (cycloneDX.metadata as Record<string, unknown>)?.tools?.map((tool: unknown) => ({
+          name: (tool as Record<string, unknown>).name as string,
+          version: (tool as Record<string, unknown>).version as string,
+        })) || [],
+        component: (cycloneDX.metadata as Record<string, unknown>)?.component ? 
+          this.transformComponent((cycloneDX.metadata as Record<string, unknown>).component as Record<string, unknown>) : undefined,
       },
-      components: (data.components || []).map((comp: any) => this.transformComponent(comp)),
-      dependencies: data.dependencies,
-      vulnerabilities: data.vulnerabilities?.map((vuln: any) => this.transformVulnerability(vuln)),
+      components: (cycloneDX.components as unknown[] || []).map((comp: unknown) => 
+        this.transformComponent(comp as Record<string, unknown>)
+      ),
+      dependencies: cycloneDX.dependencies as unknown[],
+      vulnerabilities: (cycloneDX.vulnerabilities as unknown[] || []).map((vuln: unknown) => 
+        this.transformVulnerability(vuln as Record<string, unknown>)
+      ),
     }
   }
 
   /**
    * Validate SPDX SBOM
    */
-  private validateSPDX(data: any): SBOMDocument {
-    if (!data.spdxVersion) {
+  private validateSPDX(data: unknown): SBOMDocument {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid SPDX format: data must be an object')
+    }
+    
+    const spdx = data as Record<string, unknown>
+    
+    if (!spdx.spdxVersion) {
       throw new Error('Invalid SPDX format: missing spdxVersion')
     }
 
     // Transform SPDX to our standard format
     return {
       bomFormat: 'SPDX',
-      specVersion: data.spdxVersion,
+      specVersion: spdx.spdxVersion as string,
       metadata: {
-        timestamp: data.creationInfo?.created || new Date().toISOString(),
-        tools: data.creationInfo?.creators?.map((creator: string) => {
+        timestamp: (spdx.creationInfo as Record<string, unknown>)?.created as string || new Date().toISOString(),
+        tools: (spdx.creationInfo as Record<string, unknown>)?.creators?.map((creator: string) => {
           const match = creator.match(/Tool: (.+?)\s*(?:v?([\d.]+))?/)
           return match ? { name: match[1], version: match[2] || 'unknown' } : { name: creator, version: 'unknown' }
-        }),
+        }) || [],
       },
-      components: (data.packages || []).map((pkg: any) => this.transformSPDXPackage(pkg)),
+      components: ((spdx.packages as unknown[]) || []).map((pkg: unknown) => 
+        this.transformSPDXPackage(pkg as Record<string, unknown>)
+      ),
     }
   }
 
   /**
    * Transform component to standard format
    */
-  private transformComponent(comp: any): Component {
+  private transformComponent(comp: Record<string, unknown>): Component {
     return {
-      name: comp.name || comp['@id'] || 'unknown',
-      version: comp.version || 'unknown',
-      type: comp.type || 'library',
-      purl: comp.purl,
-      cpe: comp.cpe,
-      supplier: comp.supplier?.name || comp.supplier,
-      author: comp.author,
-      copyright: comp.copyright,
-      licenses: comp.licenses ? [comp.licenses].flat().map((lic: any) => 
-        typeof lic === 'string' ? lic : lic.license?.id || lic.license?.name || 'unknown'
+      name: (comp.name || comp['@id'] || 'unknown') as string,
+      version: (comp.version || 'unknown') as string,
+      type: (comp.type || 'library') as string,
+      purl: comp.purl as string,
+      cpe: comp.cpe as string,
+      supplier: typeof comp.supplier === 'string' ? comp.supplier : (comp.supplier as Record<string, unknown>)?.name as string,
+      author: comp.author as string,
+      copyright: comp.copyright as string,
+      licenses: comp.licenses ? [comp.licenses].flat().map((lic: unknown) => 
+        typeof lic === 'string' ? lic : ((lic as Record<string, unknown>)?.license?.id || (lic as Record<string, unknown>)?.license?.name || 'unknown') as string
       ) : undefined,
-      hash: comp.hashes?.reduce((acc: Record<string, string>, hash: any) => {
-        acc[hash.alg] = hash.content
+      hash: (comp.hashes as unknown[])?.reduce((acc: Record<string, string>, hash: unknown) => {
+        const hashObj = hash as Record<string, unknown>
+        acc[hashObj.alg as string] = hashObj.content as string
         return acc
       }, {}),
     }
@@ -193,18 +213,21 @@ export class SBOMGenerator {
   /**
    * Transform SPDX package to component
    */
-  private transformSPDXPackage(pkg: any): Component {
+  private transformSPDXPackage(pkg: Record<string, unknown>): Component {
     return {
-      name: pkg.name || 'unknown',
-      version: pkg.versionInfo || 'unknown',
+      name: (pkg.name || 'unknown') as string,
+      version: (pkg.versionInfo || 'unknown') as string,
       type: 'library',
-      purl: pkg.externalRefs?.find((ref: any) => ref.referenceType === 'purl')?.referenceLocator,
-      supplier: pkg.supplier,
-      author: pkg.originator,
-      copyright: pkg.copyrightText,
-      licenses: pkg.licenseDeclared ? [pkg.licenseDeclared] : undefined,
-      hash: pkg.checksums?.reduce((acc: Record<string, string>, checksum: any) => {
-        acc[checksum.algorithm] = checksum.checksumValue
+      purl: ((pkg.externalRefs as unknown[]) || []).find((ref: unknown) => 
+        (ref as Record<string, unknown>).referenceType === 'purl'
+      )?.referenceLocator as string,
+      supplier: pkg.supplier as string,
+      author: pkg.originator as string,
+      copyright: pkg.copyrightText as string,
+      licenses: pkg.licenseDeclared ? [pkg.licenseDeclared as string] : undefined,
+      hash: ((pkg.checksums as unknown[]) || []).reduce((acc: Record<string, string>, checksum: unknown) => {
+        const checksumObj = checksum as Record<string, unknown>
+        acc[checksumObj.algorithm as string] = checksumObj.checksumValue as string
         return acc
       }, {}),
     }
@@ -213,16 +236,18 @@ export class SBOMGenerator {
   /**
    * Transform vulnerability to standard format
    */
-  private transformVulnerability(vuln: any): any {
+  private transformVulnerability(vuln: Record<string, unknown>): unknown {
     return {
-      id: vuln.id || vuln['bom-ref'] || 'unknown',
+      id: (vuln.id || vuln['bom-ref'] || 'unknown') as string,
       source: 'CVE', // Default, could be enhanced
-      severity: this.mapSeverity(vuln.severity || vuln.rating?.severity),
-      description: vuln.description,
-      published: vuln.created,
-      updated: vuln.updated,
-      references: vuln.advisories || vuln.references,
-      affected: vuln.affects?.map((affect: any) => affect.ref),
+      severity: this.mapSeverity((vuln.severity || (vuln as Record<string, unknown>)?.rating?.severity) as string),
+      description: vuln.description as string,
+      published: vuln.created as string,
+      updated: vuln.updated as string,
+      references: vuln.advisories as unknown[] || vuln.references as unknown[],
+      affected: ((vuln.affects as unknown[]) || []).map((affect: unknown) => 
+        (affect as Record<string, unknown>).ref as string
+      ),
     }
   }
 
@@ -283,10 +308,14 @@ export class SBOMGenerator {
    * Scan for vulnerabilities in SBOM
    */
   async scanVulnerabilities(sbom: SBOMDocument): Promise<SecurityScanResult> {
-    const vulnerabilities: any[] = sbom.vulnerabilities || []
+    const vulnerabilities: unknown[] = sbom.vulnerabilities || []
     
-    const criticalVulns = vulnerabilities.filter(v => v.severity === 'CRITICAL')
-    const highVulns = vulnerabilities.filter(v => v.severity === 'HIGH')
+    const criticalVulns = vulnerabilities.filter((v: unknown) => 
+      typeof v === 'object' && v !== null && (v as Record<string, unknown>).severity === 'CRITICAL'
+    )
+    const highVulns = vulnerabilities.filter((v: unknown) => 
+      typeof v === 'object' && v !== null && (v as Record<string, unknown>).severity === 'HIGH'
+    )
 
     const status = criticalVulns.length > 0 ? 'failed' : 
                   highVulns.length > 0 ? 'warning' : 'passed'
@@ -307,7 +336,7 @@ export class SBOMGenerator {
   /**
    * Generate security recommendations
    */
-  private generateRecommendations(vulnerabilities: any[]): string[] {
+  private generateRecommendations(vulnerabilities: unknown[]): string[] {
     const recommendations: string[] = []
 
     if (vulnerabilities.length === 0) {
@@ -315,8 +344,12 @@ export class SBOMGenerator {
       return recommendations
     }
 
-    const criticalCount = vulnerabilities.filter(v => v.severity === 'CRITICAL').length
-    const highCount = vulnerabilities.filter(v => v.severity === 'HIGH').length
+    const criticalCount = vulnerabilities.filter((v: unknown) => 
+      typeof v === 'object' && v !== null && (v as Record<string, unknown>).severity === 'CRITICAL'
+    ).length
+    const highCount = vulnerabilities.filter((v: unknown) => 
+      typeof v === 'object' && v !== null && (v as Record<string, unknown>).severity === 'HIGH'
+    ).length
 
     if (criticalCount > 0) {
       recommendations.push(`URGENT: Update ${criticalCount} critical dependencies immediately`)

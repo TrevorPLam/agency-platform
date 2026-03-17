@@ -1,4 +1,7 @@
-import type { IncidentEvent, DeploymentEvent, MetricsConfig } from './types'
+import type {
+  MetricsConfig,
+  IncidentEvent
+} from './types'
 
 /**
  * Mean Time to Recovery (MTTR) Tracker
@@ -16,7 +19,7 @@ export class MTTRTracker {
   /**
    * Calculate Mean Time to Recovery (in hours)
    */
-  async calculate(incidents: IncidentEvent[], deployments: DeploymentEvent[]): Promise<number> {
+  async calculate(incidents: IncidentEvent[]): Promise<number> {
     // Filter incidents based on configuration
     const relevantIncidents = incidents.filter(incident => 
       this.config.services.length === 0 || this.config.services.includes(incident.service)
@@ -49,13 +52,15 @@ export class MTTRTracker {
     incidents
       .filter(incident => incident.resolvedAt)
       .forEach(incident => {
-        const date = incident.resolvedAt!.split('T')[0]
+        const date = (incident.resolvedAt || '').split('T')[0]
         const mttr = this.calculateIncidentMTTR(incident)
         
-        if (!dailyMTTR.has(date)) {
+        if (date && !dailyMTTR.has(date)) {
           dailyMTTR.set(date, [])
         }
-        dailyMTTR.get(date)!.push(mttr)
+        if (date) {
+          dailyMTTR.get(date)!.push(mttr)
+        }
       })
 
     // Calculate daily average MTTR
@@ -168,8 +173,8 @@ export class MTTRTracker {
       median: Math.round(median * 100) / 100,
       p95: Math.round(p95 * 100) / 100,
       p99: Math.round(p99 * 100) / 100,
-      min: Math.round(min * 100) / 100,
-      max: Math.round(max * 100) / 100,
+      min: Math.round((min || 0) * 100) / 100,
+      max: Math.round((max || 0) * 100) / 100,
       sampleSize: resolvedIncidents.length,
       unresolvedCount: incidents.length - resolvedIncidents.length
     }
@@ -311,6 +316,6 @@ export class MTTRTracker {
 
   private getPercentile(sortedArray: number[], percentile: number): number {
     const index = Math.ceil((percentile / 100) * sortedArray.length) - 1
-    return sortedArray[Math.max(0, Math.min(index, sortedArray.length - 1))]
+    return sortedArray[Math.max(0, Math.min(index, sortedArray.length - 1))] || 0
   }
 }

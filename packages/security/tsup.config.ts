@@ -8,7 +8,7 @@ export default defineConfig({
     provenance: 'src/provenance/index.ts',
   },
   format: ['cjs', 'esm'],
-  dts: false, // Disable declaration generation temporarily
+  dts: true, // Enable declaration generation
   clean: true,
   external: ['@agency/database'],
   sourcemap: true,
