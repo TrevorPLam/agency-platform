@@ -365,22 +365,57 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-08: Server-side analytics wiring for conversion events
+## [x] TASK-08: Server-side analytics wiring for conversion events
 
 **Why:** Client analytics is present; server event coverage is weak.
 
 **Definition of Done**
 - Server events wired for:
-  - contact form success,
-  - booking intent/success,
-  - key agency-admin operational actions (where useful).
-- Event schema includes tenant context and avoids sensitive data leakage.
+  - contact form success, ✅
+  - booking intent/success, ✅ (already implemented)
+  - key agency-admin operational actions (where useful). ✅
+- Event schema includes tenant context and avoids sensitive data leakage. ✅
 
-**Target Files**
-- `apps/firm/src/app/contact/actions.ts`
-- `apps/firm/src/app/book/actions.ts`
-- `apps/agency-admin/src/app/api/*`
-- `packages/analytics/src/server.ts`
+**Implementation Notes:**
+- ✅ **Contact Form Analytics**: Added `contact_submitted` event with:
+  - Tenant context (`firm`)
+  - Submission source tracking
+  - Form metadata (has_name, message_length)
+  - No PII or sensitive data
+- ✅ **Agency-Admin Cost APIs**: Added comprehensive operational analytics:
+  - `costs:summary_viewed` - Cost summary views with trend data
+  - `costs:metrics_viewed` - Cost metrics views with period filters
+  - `costs:metric_created` - New metric creation events
+  - `costs:alerts_viewed` - Cost alerts views with filter context
+  - `costs:alert_created` - New alert creation events
+  - `costs:recommendations_viewed` - Recommendations views with filters
+  - `costs:recommendation_created` - New recommendation creation
+  - `costs:recommendation_updated` - Recommendation status updates
+- ✅ **Tenant Context Resolution**: Added helper function to resolve tenant slugs from tenant_id for proper analytics context
+- ✅ **Privacy Compliance**: All events exclude sensitive data (no cost amounts, PII, or internal metrics)
+- ✅ **Error Handling**: Analytics failures don't break core functionality (logged but don't fail operations)
+- ✅ **Event Naming**: Follow consistent `action:object` pattern for clarity
+- ✅ **Backend Analytics**: Used PostHog server-side tracking for reliability (per best practices)
+
+**Target Files** - COMPLETED
+- `apps/firm/src/app/contact/actions.ts` ✅
+- `apps/firm/src/app/book/actions.ts` ✅ (already implemented)
+- `apps/agency-admin/src/app/api/costs/summary/route.ts` ✅
+- `apps/agency-admin/src/app/api/costs/metrics/route.ts` ✅
+- `apps/agency-admin/src/app/api/costs/alerts/route.ts` ✅
+- `apps/agency-admin/src/app/api/costs/recommendations/route.ts` ✅
+- `packages/analytics/src/server.ts` ✅ (already comprehensive)
+
+**Analytics Events Added:**
+- `contact_submitted` with tenant context and form metadata
+- `costs:summary_viewed` with trend information
+- `costs:metrics_viewed` with period and count data
+- `costs:metric_created` for new cost metrics
+- `costs:alerts_viewed` with filter context
+- `costs:alert_created` for new budget alerts
+- `costs:recommendations_viewed` with filter context
+- `costs:recommendation_created` for new recommendations
+- `costs:recommendation_updated` for status changes
 
 ---
 

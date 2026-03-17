@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
+import { captureServerEvent } from '@agency/analytics/server'
+
+// Helper function to resolve tenant slug from tenant_id
+async function getTenantSlug(tenantId: string): Promise<string | null> {
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin
+      .from('tenants')
+      .select('slug')
+      .eq('id', tenantId)
+      .single()
+    return data?.slug || null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,6 +75,25 @@ export async function GET(request: NextRequest) {
       createdAt: rec.created_at,
       reviewBy: rec.review_by,
     }))
+
+    // Capture analytics event for cost recommendations view
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:recommendations_viewed',
+          {
+            tenant: tenantSlug,
+            recommendations_count: recommendations.length,
+            status_filter: status || 'all',
+            priority_filter: priority || 'all',
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost recommendations analytics:', analyticsError)
+      }
+    }
 
     return NextResponse.json(recommendations)
   } catch (error) {
@@ -169,6 +204,26 @@ export async function POST(request: NextRequest) {
       reviewBy: data.review_by,
     }
 
+    // Capture analytics event for cost recommendation creation
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:recommendation_created',
+          {
+            tenant: tenantSlug,
+            category,
+            difficulty,
+            priority,
+            status,
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost recommendation creation analytics:', analyticsError)
+      }
+    }
+
     return NextResponse.json(recommendation, { status: 201 })
   } catch (error) {
     console.error('Error in optimization recommendations POST API:', error)
@@ -230,6 +285,26 @@ export async function PATCH(request: NextRequest) {
       status: data.status,
       createdAt: data.created_at,
       reviewBy: data.review_by,
+    }
+
+    // Capture analytics event for cost recommendation update
+    if (data.tenant_id) {
+      const tenantSlug = await getTenantSlug(data.tenant_id)
+      if (tenantSlug) {
+        try {
+          captureServerEvent(
+            'system',
+            'costs:recommendation_updated',
+            {
+              tenant: tenantSlug,
+              new_status: status,
+              category: data.category,
+            }
+          )
+        } catch (analyticsError) {
+          console.error('Failed to capture cost recommendation update analytics:', analyticsError)
+        }
+      }
     }
 
     return NextResponse.json(recommendation)

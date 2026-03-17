@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
+import { captureServerEvent } from '@agency/analytics/server'
+
+// Helper function to resolve tenant slug from tenant_id
+async function getTenantSlug(tenantId: string): Promise<string | null> {
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin
+      .from('tenants')
+      .select('slug')
+      .eq('id', tenantId)
+      .single()
+    return data?.slug || null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,6 +71,24 @@ export async function GET(request: NextRequest) {
       createdAt: alert.created_at,
       updatedAt: alert.updated_at,
     }))
+
+    // Capture analytics event for cost alerts view
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:alerts_viewed',
+          {
+            tenant: tenantSlug,
+            alerts_count: alerts.length,
+            active_filter: active === 'true' ? 'active' : active === 'false' ? 'inactive' : 'all',
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost alerts analytics:', analyticsError)
+      }
+    }
 
     return NextResponse.json(alerts)
   } catch (error) {
@@ -146,6 +180,26 @@ export async function POST(request: NextRequest) {
       lastTriggered: data.last_triggered,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
+    }
+
+    // Capture analytics event for cost alert creation
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:alert_created',
+          {
+            tenant: tenantSlug,
+            category,
+            severity,
+            threshold_type: thresholdType,
+            active,
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost alert creation analytics:', analyticsError)
+      }
     }
 
     return NextResponse.json(alert, { status: 201 })

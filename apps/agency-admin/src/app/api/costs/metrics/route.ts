@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
+import { captureServerEvent } from '@agency/analytics/server'
+
+// Helper function to resolve tenant slug from tenant_id
+async function getTenantSlug(tenantId: string): Promise<string | null> {
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin
+      .from('tenants')
+      .select('slug')
+      .eq('id', tenantId)
+      .single()
+    return data?.slug || null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,6 +66,25 @@ export async function GET(request: NextRequest) {
       period: metric.period,
       metadata: metric.metadata || {},
     }))
+
+    // Capture analytics event for cost metrics view
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:metrics_viewed',
+          {
+            tenant: tenantSlug,
+            period,
+            days,
+            metrics_count: metrics.length,
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost metrics analytics:', analyticsError)
+      }
+    }
 
     return NextResponse.json(metrics)
   } catch (error) {
@@ -119,6 +154,24 @@ export async function POST(request: NextRequest) {
       timestamp: data.timestamp,
       period: data.period,
       metadata: data.metadata || {},
+    }
+
+    // Capture analytics event for cost metric creation
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system',
+          'costs:metric_created',
+          {
+            tenant: tenantSlug,
+            period,
+            currency,
+          }
+        )
+      } catch (analyticsError) {
+        console.error('Failed to capture cost metric creation analytics:', analyticsError)
+      }
     }
 
     return NextResponse.json(metric, { status: 201 })

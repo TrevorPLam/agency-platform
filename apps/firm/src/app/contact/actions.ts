@@ -2,6 +2,7 @@
 
 import { getAdminClient } from '@agency/database/admin'
 import { sendContactNotification } from '@agency/email'
+import { captureServerEvent, flushServerEvents } from '@agency/analytics/server'
 import { z } from 'zod'
 
 // Zod schema for contact form validation
@@ -70,6 +71,26 @@ export async function submitContactForm(
   if (!emailOk && emailErr) {
     // Submission saved; email failed (log but don't fail the form)
     console.error('Contact notification email failed:', emailErr)
+  }
+
+  // Capture server-side analytics event
+  try {
+    captureServerEvent(
+      email, // Use email as distinctId for user identification
+      'contact_submitted',
+      {
+        tenant: 'firm',
+        submission_source: 'firm_contact_form',
+        has_name: !!name,
+        message_length: message.length,
+      }
+    )
+
+    // Flush events to ensure they're sent before response
+    await flushServerEvents()
+  } catch (analyticsError) {
+    // Log analytics error but don't fail the form submission
+    console.error('Failed to capture contact analytics:', analyticsError)
   }
 
   return { success: true, message: 'Thank you! We will be in touch soon.' }

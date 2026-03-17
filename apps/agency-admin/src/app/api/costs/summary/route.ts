@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
+import { captureServerEvent } from '@agency/analytics/server'
+
+// Helper function to resolve tenant slug from tenant_id
+async function getTenantSlug(tenantId: string): Promise<string | null> {
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin
+      .from('tenants')
+      .select('slug')
+      .eq('id', tenantId)
+      .single()
+    return data?.slug || null
+  } catch {
+    return null
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,6 +60,26 @@ export async function GET(request: NextRequest) {
     }
 
     const summary = data[0]
+
+    // Capture analytics event for cost summary view
+    const tenantSlug = await getTenantSlug(tenantId)
+    if (tenantSlug) {
+      try {
+        captureServerEvent(
+          'system', // Use system as distinctId for operational events
+          'costs:summary_viewed',
+          {
+            tenant: tenantSlug,
+            period_days: 7,
+            has_data: !!summary,
+            trend_direction: summary?.trend_direction || 'stable',
+          }
+        )
+      } catch (analyticsError) {
+        // Log analytics error but don't fail the API
+        console.error('Failed to capture cost summary analytics:', analyticsError)
+      }
+    }
 
     return NextResponse.json({
       totalCost: parseFloat(summary.total_cost) || 0,
