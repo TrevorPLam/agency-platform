@@ -7,6 +7,7 @@
 
 import { SecurityEvent, SecurityEventType, SecuritySeverity, SecurityMetrics } from './security-events'
 import { SecurityAlert, SecurityAlertType } from './security-alerting'
+import { calculateSecurityScore, SecurityScoreReport } from '@agency/security'
 
 /**
  * Security monitoring configuration
@@ -99,6 +100,7 @@ export class SecurityMonitoringEngine {
   private threatIntel: ThreatIntelligence
   private metricsCache: Map<string, SecurityMetrics> = new Map()
   private processing = false
+  private headerComplianceStore: Map<string, SecurityScoreReport[]> = new Map()
 
   constructor(config?: Partial<SecurityMonitoringConfig>) {
     this.config = {
@@ -652,6 +654,225 @@ export class SecurityMonitoringEngine {
   public updateConfig(config: Partial<SecurityMonitoringConfig>): void {
     this.config = { ...this.config, ...config }
   }
+
+  /**
+   * Monitor header compliance for an application
+   */
+  public async monitorHeaderCompliance(url: string, tenantId?: string): Promise<SecurityScoreReport> {
+    try {
+      // Fetch headers from the application
+      const response = await fetch(url, { method: 'HEAD' })
+      const headers: Record<string, string> = {}
+      response.headers.forEach((value, key) => {
+        headers[key.toLowerCase()] = value
+      })
+
+      // Calculate security score
+      const securityReport = calculateSecurityScore(url, headers)
+
+      // Store the report
+      if (!this.headerComplianceStore.has(url)) {
+        this.headerComplianceStore.set(url, [])
+      }
+
+      const urlReports = this.headerComplianceStore.get(url)!
+      urlReports.push(securityReport)
+
+      // Apply retention policy (keep last 30 days)
+      const cutoffDate = new Date()
+      cutoffDate.setDate(cutoffDate.getDate() - 30)
+
+      const filteredReports = urlReports.filter(report =>
+        new Date(report.timestamp) >= cutoffDate
+      )
+
+      this.headerComplianceStore.set(url, filteredReports)
+
+      // Create security event for compliance monitoring
+      const scorePercentage = (securityReport.overallScore / securityReport.maxScore) * 100
+
+      if (scorePercentage < 70) {
+        await this.addEvents([{
+          id: `header-compliance-${url}-${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          eventType: SecurityEventType.SECURITY_POLICY_VIOLATION,
+          severity: scorePercentage < 50 ? 'critical' : 'high',
+          source: {
+            ip: 'monitoring-system',
+            userAgent: 'Security-Monitoring-Engine/1.0',
+            hostname: new URL(url).hostname,
+          },
+          actor: {
+            userId: 'system',
+            tenantId: tenantId || 'system',
+            role: 'system',
+          },
+          target: {
+            resource: url,
+            resourceType: 'application',
+            operation: 'header-compliance-check',
+          },
+          context: {
+            description: `Security header compliance check failed: ${securityReport.overallScore}/${securityReport.maxScore} (${securityReport.grade})`,
+            metadata: {
+              securityScore: securityReport.overallScore,
+              maxScore: securityReport.maxScore,
+              grade: securityReport.grade,
+              criticalIssues: securityReport.criticalIssues.length,
+              url: url,
+            },
+          },
+        }])
+      }
+
+      console.log(`Header compliance monitoring completed for ${url}: ${securityReport.overallScore}/${securityReport.maxScore} (${securityReport.grade})`)
+
+      return securityReport
+    } catch (error) {
+      console.error(`Failed to monitor header compliance for ${url}:`, error)
+
+      // Create error event
+      await this.addEvents([{
+        id: `header-compliance-error-${url}-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        eventType: SecurityEventType.SYSTEM_ERROR,
+        severity: 'medium',
+        source: {
+          ip: 'monitoring-system',
+          userAgent: 'Security-Monitoring-Engine/1.0',
+          hostname: new URL(url).hostname,
+        },
+        actor: {
+          userId: 'system',
+          tenantId: tenantId || 'system',
+          role: 'system',
+        },
+        target: {
+          resource: url,
+          resourceType: 'application',
+          operation: 'header-compliance-check',
+        },
+        context: {
+          description: `Header compliance monitoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          metadata: {
+            url: url,
+          },
+        },
+      }])
+
+      throw error
+    }
+  }
+
+  /**
+   * Get header compliance history
+   */
+  public getHeaderComplianceHistory(url: string, days: number = 30): SecurityScoreReport[] {
+    const reports = this.headerComplianceStore.get(url) || []
+    const cutoffDate = new Date()
+    cutoffDate.setDate(cutoffDate.getDate() - days)
+
+    return reports
+      .filter(report => new Date(report.timestamp) >= cutoffDate)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+  }
+
+  /**
+   * Get all header compliance reports
+   */
+  public getAllHeaderComplianceReports(): Map<string, SecurityScoreReport[]> {
+    return new Map(this.headerComplianceStore)
+  }
+
+  /**
+   * Calculate header compliance trends
+   */
+  public calculateHeaderComplianceTrends(url: string): {
+    averageScore: number
+    trendDirection: 'improving' | 'declining' | 'stable'
+    gradeDistribution: Record<string, number>
+    complianceRate: number
+  } {
+    const reports = this.getHeaderComplianceHistory(url)
+
+    if (reports.length === 0) {
+      return {
+        averageScore: 0,
+        trendDirection: 'stable',
+        gradeDistribution: {},
+        complianceRate: 0
+      }
+    }
+
+    // Calculate average score
+    const totalScore = reports.reduce((sum, report) => sum + report.overallScore, 0)
+    const totalMaxScore = reports.reduce((sum, report) => sum + report.maxScore, 0)
+    const averageScore = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0
+
+    // Determine trend direction
+    let trendDirection: 'improving' | 'declining' | 'stable' = 'stable'
+    if (reports.length >= 10) {
+      const recent = reports.slice(0, 5)
+      const previous = reports.slice(5, 10)
+
+      const recentAvg = recent.reduce((sum, r) => sum + (r.overallScore / r.maxScore) * 100, 0) / recent.length
+      const previousAvg = previous.reduce((sum, r) => sum + (r.overallScore / r.maxScore) * 100, 0) / previous.length
+
+      if (recentAvg > previousAvg + 2) {
+        trendDirection = 'improving'
+      } else if (recentAvg < previousAvg - 2) {
+        trendDirection = 'declining'
+      }
+    }
+
+    // Calculate grade distribution
+    const gradeDistribution = reports.reduce((dist, report) => {
+      dist[report.grade] = (dist[report.grade] || 0) + 1
+      return dist
+    }, {} as Record<string, number>)
+
+    // Calculate compliance rate (scores >= 70%)
+    const compliantReports = reports.filter(report =>
+      (report.overallScore / report.maxScore) * 100 >= 70
+    )
+    const complianceRate = (compliantReports.length / reports.length) * 100
+
+    return {
+      averageScore: Math.round(averageScore),
+      trendDirection,
+      gradeDistribution,
+      complianceRate
+    }
+  }
+
+  /**
+   * Monitor header compliance for all configured applications
+   */
+  public async monitorAllApplications(applications: Array<{ url: string; name: string; tenantId?: string }>): Promise<Map<string, SecurityScoreReport>> {
+    const results = new Map<string, SecurityScoreReport>()
+
+    // Monitor applications in parallel with concurrency limit
+    const concurrencyLimit = 3
+    for (let i = 0; i < applications.length; i += concurrencyLimit) {
+      const batch = applications.slice(i, i + concurrencyLimit)
+
+      const batchPromises = batch.map(async (app) => {
+        try {
+          const report = await this.monitorHeaderCompliance(app.url, app.tenantId)
+          results.set(app.url, report)
+          return { url: app.url, success: true, report }
+        } catch (error) {
+          console.error(`Failed to monitor ${app.name}:`, error)
+          return { url: app.url, success: false, error }
+        }
+      })
+
+      await Promise.all(batchPromises)
+    }
+
+    return results
+  }
 }
 
 // Global monitoring engine instance
@@ -676,4 +897,37 @@ export function detectThreatPatterns(tenantId?: string): ThreatPattern[] {
  */
 export function getSecurityAlerts(tenantId?: string, status?: SecurityAlert['status']): SecurityAlert[] {
   return securityMonitoringEngine.getAlerts(tenantId, status)
+}
+
+/**
+ * Monitor header compliance for an application
+ */
+export async function monitorHeaderCompliance(url: string, tenantId?: string): Promise<SecurityScoreReport> {
+  return securityMonitoringEngine.monitorHeaderCompliance(url, tenantId)
+}
+
+/**
+ * Get header compliance history
+ */
+export function getHeaderComplianceHistory(url: string, days?: number): SecurityScoreReport[] {
+  return securityMonitoringEngine.getHeaderComplianceHistory(url, days)
+}
+
+/**
+ * Calculate header compliance trends
+ */
+export function calculateHeaderComplianceTrends(url: string): {
+  averageScore: number
+  trendDirection: 'improving' | 'declining' | 'stable'
+  gradeDistribution: Record<string, number>
+  complianceRate: number
+} {
+  return securityMonitoringEngine.calculateHeaderComplianceTrends(url)
+}
+
+/**
+ * Monitor header compliance for all applications
+ */
+export async function monitorAllApplications(applications: Array<{ url: string; name: string; tenantId?: string }>): Promise<Map<string, SecurityScoreReport>> {
+  return securityMonitoringEngine.monitorAllApplications(applications)
 }

@@ -1,0 +1,411 @@
+name: Security Compliance Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of security test to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - headers
+          - csp
+          - compliance
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.12.1'
+
+jobs:
+  security-headers:
+    name: Security Headers Testing
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'headers' || github.event.inputs.test_type == ''
+    
+    strategy:
+      matrix:
+        app: [firm, agency-admin]
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build applications
+        run: pnpm turbo run build --filter=@agency/${{ matrix.app }}
+        
+      - name: Start application
+        run: |
+          pnpm turbo run dev --filter=@agency/${{ matrix.app }} &
+          sleep 30
+          
+      - name: Wait for application to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:300${{ matrix.app == 'firm' && '0' || '1' }}; do sleep 2; done'
+          
+      - name: Run security headers tests
+        run: |
+          pnpm turbo run test:e2e --filter=@agency/${{ matrix.app }} -- --grep "Security Headers"
+          
+      - name: Run CSP compliance tests
+        run: |
+          pnpm turbo run test:e2e --filter=@agency/${{ matrix.app }} -- --grep "CSP Compliance"
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results-${{ matrix.app }}
+          path: |
+            apps/${{ matrix.app }}/playwright-report/
+            apps/${{ matrix.app }}/test-results/
+          retention-days: 7
+          
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-reports-${{ matrix.app }}
+          path: |
+            security-reports/
+          retention-days: 30
+
+  prospective-clients-security:
+    name: Prospective Clients Security Testing
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'headers' || github.event.inputs.test_type == ''
+    
+    strategy:
+      matrix:
+        client: [riley-day-care, the-barber-cave]
+        
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build client application
+        run: pnpm turbo run build --filter=@agency/${{ matrix.client }}
+        
+      - name: Start client application
+        run: |
+          pnpm turbo run dev --filter=@agency/${{ matrix.client }} &
+          sleep 30
+          
+      - name: Wait for application to be ready
+        run: |
+          PORT=300${{ matrix.client == 'riley-day-care' && '2' || '3' }}
+          timeout 60 bash -c "until curl -f http://localhost:$PORT; do sleep 2; done"
+          
+      - name: Run security headers tests
+        run: |
+          pnpm turbo run test:e2e --filter=@agency/${{ matrix.client }} -- --grep "Security Headers"
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results-${{ matrix.client }}
+          path: |
+            apps/prospective-clients/${{ matrix.client }}/playwright-report/
+            apps/prospective-clients/${{ matrix.client }}/test-results/
+          retention-days: 7
+
+  security-score-analysis:
+    name: Security Score Analysis
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'compliance' || github.event.inputs.test_type == ''
+    needs: [security-headers, prospective-clients-security]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build agency-admin
+        run: pnpm turbo run build --filter=@agency/agency-admin
+        
+      - name: Start agency-admin
+        run: |
+          pnpm turbo run dev --filter=@agency/agency-admin &
+          sleep 30
+          
+      - name: Wait for agency-admin to be ready
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3001; do sleep 2; done'
+          
+      - name: Analyze security headers for all applications
+        run: |
+          # Create security analysis script
+          cat > analyze-security.js << 'EOF'
+          const apps = [
+            { name: 'Firm', url: 'http://localhost:3000' },
+            { name: 'Agency Admin', url: 'http://localhost:3001' },
+            { name: 'Riley Day Care', url: 'http://localhost:3002' },
+            { name: 'The Barber Cave', url: 'http://localhost:3003' }
+          ];
+          
+          const { calculateSecurityScore, generateSecurityScoreReport } = require('./packages/security/dist/index.js');
+          const fs = require('fs');
+          const path = require('path');
+          
+          async function analyzeAllApps() {
+            const results = [];
+            
+            for (const app of apps) {
+              try {
+                console.log(`Analyzing ${app.name}...`);
+                const response = await fetch(app.url, { method: 'HEAD' });
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                  headers[key.toLowerCase()] = value;
+                });
+                
+                const report = calculateSecurityScore(app.url, headers);
+                results.push({ app: app.name, ...report });
+                
+                // Save individual report
+                const reportText = generateSecurityScoreReport(report);
+                fs.writeFileSync(`security-reports/${app.name.toLowerCase().replace(/\s+/g, '-')}-report.md`, reportText);
+                
+                console.log(`${app.name}: ${report.overallScore}/${report.maxScore} (${report.grade})`);
+              } catch (error) {
+                console.error(`Failed to analyze ${app.name}:`, error.message);
+                results.push({ app: app.name, error: error.message });
+              }
+            }
+            
+            // Save summary
+            const summary = {
+              timestamp: new Date().toISOString(),
+              totalApps: apps.length,
+              results: results,
+              summary: {
+                averageScore: results.filter(r => !r.error).reduce((sum, r) => sum + (r.overallScore / r.maxScore) * 100, 0) / results.filter(r => !r.error).length,
+                gradeDistribution: results.filter(r => !r.error).reduce((dist, r) => {
+                  dist[r.grade] = (dist[r.grade] || 0) + 1;
+                  return dist;
+                }, {})
+              }
+            };
+            
+            fs.writeFileSync('security-reports/security-summary.json', JSON.stringify(summary, null, 2));
+            
+            return summary;
+          }
+          
+          analyzeAllApps().then(summary => {
+            console.log('Security analysis completed!');
+            console.log(`Average score: ${summary.summary.averageScore.toFixed(1)}%`);
+            console.log('Grade distribution:', summary.summary.gradeDistribution);
+          }).catch(console.error);
+          EOF
+          
+          # Create reports directory
+          mkdir -p security-reports
+          
+          # Run analysis
+          node analyze-security.js
+          
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-analysis-reports
+          path: security-reports/
+          retention-days: 30
+          
+      - name: Comment PR with security results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const summary = JSON.parse(fs.readFileSync('security-reports/security-summary.json', 'utf8'));
+              
+              const comment = `## 🔒 Security Compliance Report
+              
+              **Average Security Score:** ${summary.summary.averageScore.toFixed(1)}%
+              
+              **Grade Distribution:**
+              ${Object.entries(summary.summary.gradeDistribution).map(([grade, count]) => `- ${grade}: ${count}`).join('\n')}
+              
+              **Application Results:**
+              ${summary.results.map(result => {
+                if (result.error) {
+                  return `- ❌ ${result.app}: Analysis failed - ${result.error}`;
+                }
+                return `- ${result.grade === 'A+' || result.grade === 'A' ? '✅' : result.grade === 'B' ? '⚠️' : '❌'} ${result.app}: ${result.overallScore}/${result.maxScore} (${result.grade})`;
+              }).join('\n')}
+              
+              [View detailed reports](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              `;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (error) {
+              console.log('Could not read security summary for PR comment:', error.message);
+            }
+
+  security-compliance-check:
+    name: Security Compliance Check
+    runs-on: ubuntu-latest
+    if: github.event.inputs.test_type == 'all' || github.event.inputs.test_type == 'compliance' || github.event.inputs.test_type == ''
+    needs: [security-score-analysis]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Download security reports
+        uses: actions/download-artifact@v4
+        with:
+          name: security-analysis-reports
+          path: security-reports/
+          
+      - name: Check compliance requirements
+        run: |
+          # Check if security reports exist and meet requirements
+          if [ ! -f "security-reports/security-summary.json" ]; then
+            echo "❌ Security summary not found"
+            exit 1
+          fi
+          
+          # Extract average score from summary
+          AVERAGE_SCORE=$(node -e "
+            const summary = JSON.parse(require('fs').readFileSync('security-reports/security-summary.json', 'utf8'));
+            console.log(summary.summary.averageScore);
+          ")
+          
+          echo "📊 Average Security Score: ${AVERAGE_SCORE}%"
+          
+          # Check minimum score requirement (80%)
+          if (( $(echo "$AVERAGE_SCORE < 80" | bc -l) )); then
+            echo "❌ Security score below minimum threshold (80%)"
+            echo "Current score: ${AVERAGE_SCORE}%"
+            exit 1
+          fi
+          
+          # Check for any failing applications
+          FAILING_APPS=$(node -e "
+            const summary = JSON.parse(require('fs').readFileSync('security-reports/security-summary.json', 'utf8'));
+            const failing = summary.results.filter(r => r.error || r.grade === 'F' || r.grade === 'D');
+            console.log(failing.length);
+          ")
+          
+          if [ "$FAILING_APPS" -gt 0 ]; then
+            echo "❌ $FAILING_APPS application(s) failing security checks"
+            exit 1
+          fi
+          
+          echo "✅ All security compliance checks passed!"
+          
+      - name: Update security badge (if on main)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "Security compliance checks passed - badge would be updated here"
+          # In a real implementation, this would update a README badge or similar
+
+  notify-security-team:
+    name: Notify Security Team
+    runs-on: ubuntu-latest
+    if: failure() && github.event_name == 'schedule'
+    needs: [security-compliance-check]
+    
+    steps:
+      - name: Create issue for security failures
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Compliance Check Failed',
+              body: `The scheduled security compliance check has failed.
+              
+              **Workflow:** ${{ github.workflow }}
+              **Run ID:** ${{ github.run_id }}
+              **Triggered:** ${{ github.event_name }}
+              
+              Please investigate the security compliance failures and take appropriate action.
+              
+              [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+              labels: ['security', 'compliance', 'urgent']
+            })

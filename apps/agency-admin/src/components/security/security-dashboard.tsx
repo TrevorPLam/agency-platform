@@ -1,6 +1,6 @@
 /**
  * Security Dashboard Component
- * 
+ *
  * Comprehensive security monitoring dashboard with real-time metrics,
  * alerts, and threat intelligence visualization.
  */
@@ -13,11 +13,11 @@ import { Badge } from '@agency/ui/badge'
 import { Button } from '@agency/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@agency/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@agency/ui/tabs'
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
   TrendingUp,
   TrendingDown,
   Activity,
@@ -30,6 +30,7 @@ import {
   Filter,
   Bell,
 } from 'lucide-react'
+import { SecurityComplianceDashboard } from './compliance-dashboard'
 
 // Types for the security dashboard
 interface SecurityMetrics {
@@ -376,6 +377,7 @@ export function SecurityDashboard({ tenantId, className }: SecurityDashboardProp
           <TabsTrigger value="alerts">Active Alerts</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
           <TabsTrigger value="concerns">Security Concerns</TabsTrigger>
+          <TabsTrigger value="compliance">Header Compliance</TabsTrigger>
         </TabsList>
 
         {/* Alerts Tab */}
@@ -522,6 +524,11 @@ export function SecurityDashboard({ tenantId, className }: SecurityDashboardProp
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Header Compliance Tab */}
+        <TabsContent value="compliance" className="space-y-4">
+          <SecurityComplianceDashboard />
         </TabsContent>
       </Tabs>
     </div>
