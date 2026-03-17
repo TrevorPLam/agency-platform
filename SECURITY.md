@@ -135,6 +135,33 @@ pnpm run verify-signatures
 
 ---
 
+## Vector 7: Open Redirect in Authentication Flows
+
+**What it is:** Unvalidated redirect parameters (`next`, `redirect`) in authentication flows allow attackers to redirect users to malicious sites after authentication, enabling phishing and credential theft.
+
+**Detection:**
+
+```bash
+# Check for unprotected redirect parameters
+grep -r "redirect.*next\|next.*redirect" --include="*.ts" --include="*.tsx" apps/*/src/app/(auth)/
+
+# Verify all auth flows use validateRedirectUrl
+grep -r "validateRedirectUrl" --include="*.ts" --include="*.tsx" packages/security/ apps/
+```
+
+**Fix:** All authentication flows must use the `validateRedirectUrl` utility from `@agency/security` which provides:
+- Input validation with type checking
+- Full URL decoding with iteration limits (prevents bypass attempts)  
+- Protocol-relative URL blocking (`//` attacks)
+- Absolute URL rejection for auth flows
+- Relative URL validation with suspicious pattern detection
+- Directory traversal prevention (`../`, encoded variants)
+- Safe default fallbacks
+
+**Implementation:** See `packages/security/src/redirect-validator.ts` for the comprehensive `RedirectValidator` class. All auth flows in `apps/*/src/app/(auth)/` are protected.
+
+---
+
 ## HTTP Security Headers
 
 All client and admin apps set the following headers (see each app's `next.config.ts`):

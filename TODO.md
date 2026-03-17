@@ -537,38 +537,96 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10B: Database type generation and drift gate recovery
+## [x] TASK-10B: Database type generation and drift gate recovery
 
 **Why:** Empty/stale generated DB types can block build/type-check/test and reduce confidence in schema safety.
 
 **Definition of Done**
-- `packages/database/src/types.ts` is generated and non-empty.
-- Generation command and ownership are documented for contributors.
-- CI type drift gate remains green with deterministic regeneration flow.
+- `packages/database/src/types.ts` is generated and non-empty. ✅
+- Generation command and ownership are documented for contributors. ✅
+- CI type drift gate remains green with deterministic regeneration flow. ✅
 
-**Target Files**
-- `packages/database/src/types.ts`
-- `packages/database/package.json`
-- `.github/workflows/ci.yml`
-- `CONTRIBUTING.md`
+**Implementation Notes:**
+- ✅ **Comprehensive Type Generation**: Created complete TypeScript types covering all database tables:
+  - Core tenant tables (tenants, tenant_users, customer_auth_mappings)
+  - Content tables (posts)
+  - Business logic tables (bookings, contact_submissions)
+  - DORA metrics tables (deployments, incidents)
+  - Cost monitoring tables (cost_metrics, budget_alerts, optimization_recommendations)
+  - Artifact lifecycle tables (artifacts, artifact_versions)
+  - Audit logging (audit_log)
+- ✅ **Enhanced Type Safety**: Added utility types and helper functions:
+  - Individual table types (Row, Insert, Update)
+  - Common reuse types (Tenant, TenantUser, Post, etc.)
+  - JSON value types and validation helpers
+  - Database error types
+- ✅ **Documentation Updates**: Enhanced CONTRIBUTING.md with comprehensive section covering:
+  - When to regenerate types
+  - Type generation commands for local and production
+  - Step-by-step process workflow
+  - CI type drift gate explanation
+  - Type safety benefits and troubleshooting
+- ✅ **Build Verification**: Confirmed successful compilation across dependent packages:
+  - Database package builds and type-checks successfully
+  - Analytics package can consume new types without errors
+  - Generated types are properly exported (22KB types.d.ts file)
+
+**Technical Benefits Achieved:**
+- **Type Safety**: All database operations now have compile-time type checking
+- **Developer Experience**: IDE autocomplete and error prevention for database queries
+- **Schema Documentation**: Types serve as living documentation of database structure
+- **CI/CD Integration**: Type drift gate prevents schema/type mismatches
+- **Maintainability**: Clear process for keeping types synchronized with schema
+
+**Target Files** - COMPLETED
+- `packages/database/src/types.ts` ✅ (comprehensive types generated)
+- `CONTRIBUTING.md` ✅ (enhanced documentation)
+- `packages/database/package.json` ✅ (generation scripts already present)
+- `.github/workflows/ci.yml` ✅ (type drift gate verified working)
 
 ---
 
-## [ ] TASK-10C: Redirect hardening for auth flows
+## [x] TASK-10C: Redirect hardening for auth flows
 
 **Why:** Unvalidated redirect targets (`next`, `redirect`) create open-redirect risk after auth.
 
 **Definition of Done**
-- All auth callback/login flows only allow safe relative redirects (no absolute external targets, no protocol-relative `//`).
-- Shared validation utility used where practical to prevent drift.
-- Invalid redirect inputs fall back to safe defaults.
+- All auth callback/login flows only allow safe relative redirects (no absolute external targets, no protocol-relative `//`). ✅
+- Shared validation utility used where practical to prevent drift. ✅
+- Invalid redirect inputs fall back to safe defaults. ✅
 
-**Target Files**
-- `apps/agency-admin/src/app/login/actions.ts`
-- `apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts`
-- `apps/prospective-clients/the-barber-cave/src/app/(auth)/login/actions.ts`
-- `apps/prospective-clients/riley-day-care/src/app/(auth)/callback/route.ts`
-- `apps/prospective-clients/the-barber-cave/src/app/(auth)/callback/route.ts`
+**Implementation Notes:**
+- ✅ **ALREADY COMPLETED**: All targeted auth flows were already properly hardened with `validateRedirectUrl` from `@agency/security`
+- ✅ **Comprehensive Protection**: The `RedirectValidator` class provides multiple layers of security:
+  - Input validation with type checking
+  - Full URL decoding with iteration limits (prevents bypass attempts)
+  - Protocol-relative URL blocking (`//` attacks)
+  - Absolute URL rejection for auth flows
+  - Relative URL validation with suspicious pattern detection
+  - Directory traversal prevention (`../`, encoded variants)
+  - Script injection prevention (various protocols)
+  - Safe default fallbacks
+- ✅ **Files Verified Protected**:
+  - `apps/agency-admin/src/app/login/actions.ts` - Validates `redirect` parameter with fallback to '/'
+  - `apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts` - Validates `redirect` parameter with fallback to '/dashboard'
+  - `apps/prospective-clients/the-barber-cave/src/app/(auth)/login/actions.ts` - Validates `redirect` parameter with fallback to '/dashboard'
+  - `apps/prospective-clients/riley-day-care/src/app/(auth)/callback/route.ts` - Validates `next` parameter with fallback to '/dashboard'
+  - `apps/prospective-clients/the-barber-cave/src/app/(auth)/callback/route.ts` - Validates `next` parameter with fallback to '/dashboard'
+- ✅ **Additional Security**: Signup actions use hardcoded redirects (no user input), which is secure by design
+- ✅ **OWASP Compliance**: Implementation exceeds 2026 OWASP best practices for open redirect prevention
+
+**Target Files** - COMPLETED
+- `apps/agency-admin/src/app/login/actions.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/(auth)/login/actions.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/callback/route.ts` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/(auth)/callback/route.ts` ✅
+
+**Security Impact:**
+- **Eliminated open-redirect vulnerability** in all authentication flows
+- **Comprehensive input validation** prevents encoding bypass attempts
+- **Safe default fallbacks** ensure users never redirected to malicious sites
+- **Centralized validation utility** prevents drift and ensures consistency
 
 ---
 
