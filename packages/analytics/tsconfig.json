@@ -2,7 +2,7 @@
   "extends": "../typescript-config/base.json",
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
@@ -18,7 +18,10 @@
     "rootDir": "./src",
     "declaration": true,
     "declarationMap": true,
-    "types": ["node"]
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "checkJs": false
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]

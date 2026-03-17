@@ -16,13 +16,17 @@
   },
   "dependencies": {
     "posthog-js": "catalog:",
-    "posthog-node": "catalog:"
+    "posthog-node": "catalog:",
+    "react": "catalog:",
+    "next": "catalog:"
   },
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
     "typescript": "catalog:",
     "tsup": "catalog:",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "eslint": "catalog:",
     "vitest": "catalog:"
   },

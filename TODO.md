@@ -1099,59 +1099,114 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-13: API Rate Limiting Implementation
+## [x] TASK-13: API Rate Limiting Implementation
 
 **Why:** No API rate limiting detected, creating vulnerability to abuse and DoS attacks.
 
 **Definition of Done**
 
-- Implement rate limiting middleware for all API endpoints
-- Configure tiered rate limits (100 requests/hour for general, 1000/hour for authenticated)
-- Add rate limit headers to responses
-- Implement Redis-based rate limit storage for production
-- Add rate limit bypass for service operations
+- ✅ Implement rate limiting middleware for all API endpoints
+- ✅ Configure tiered rate limits (100 requests/hour for general, 1000/hour for authenticated)
+- ✅ Add rate limit headers to responses
+- ✅ Implement Redis-based rate limit storage for production
+- ✅ Add rate limit bypass for service operations
 
 **Implementation Notes**
 
-- Add rate limiting to existing middleware.ts files
-- Use IP-based limiting with exponential backoff
-- Include tenant context in rate limit keys for multi-tenant fairness
-- Add monitoring for rate limit violations
+- ✅ Created comprehensive rate limiting utility in `packages/database/src/rate-limiter.ts`
+- ✅ Added rate limiting to all three middleware.ts files with tenant isolation
+- ✅ Implemented sliding window algorithm using Redis with Lua scripts for atomicity
+- ✅ Added multi-tenant key isolation: `rate-limit:{prefix}:tenant:{tenant-id}:ip:{ip}:{auth|anon}`
+- ✅ Configured three rate limit tiers: general (100/hr), authenticated (1000/hr), strict (10/min)
+- ✅ Added proper error responses with 429 status and problem+json format
+- ✅ Included comprehensive test coverage (17 tests passing)
+- ✅ Added documentation in `docs/development/rate-limiting.md`
+- ✅ Fail-open strategy when Redis unavailable
+- ✅ Service operation bypass capability
 
 **Target Files**
 
-- `apps/agency-admin/src/middleware.ts`
-- `apps/prospective-clients/riley-day-care/src/middleware.ts`
-- `apps/prospective-clients/the-barber-cave/src/middleware.ts`
-- `packages/database/src/rate-limiter.ts` (new utility)
+- ✅ `apps/agency-admin/src/middleware.ts` - Updated with rate limiting
+- ✅ `apps/prospective-clients/riley-day-care/src/middleware.ts` - Updated with rate limiting  
+- ✅ `apps/prospective-clients/the-barber-cave/src/middleware.ts` - Updated with rate limiting
+- ✅ `packages/database/src/rate-limiter.ts` - New comprehensive rate limiting utility
+- ✅ `packages/database/src/rate-limiter.test.ts` - Comprehensive test suite
+- ✅ `docs/development/rate-limiting.md` - Implementation documentation
+
+**Technical Details**
+
+- Uses sliding window counter algorithm for accuracy without boundary bursts
+- Redis-based storage with in-memory fallback for development
+- Multi-tenant isolation prevents cross-tenant resource consumption
+- Standard rate limit headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
+- IP extraction supports various headers (x-forwarded-for, x-real-ip, cf-connecting-ip)
+- Comprehensive error handling with structured logging
+
+**Dependencies Added**
+
+- `ioredis: ^5.4.2` - Redis client for production rate limiting
 
 ---
 
-## [ ] TASK-14: Content Security Policy Hardening
+## [x] TASK-14: Content Security Policy Hardening
 
 **Why:** Current CSP uses 'unsafe-inline' which allows XSS attacks through script/style injection.
 
 **Definition of Done**
 
-- Remove 'unsafe-inline' from script-src directive
-- Implement nonce-based CSP for dynamic scripts
-- Add object-src 'none' and media-src restrictions
-- Configure CSP for PostHog analytics with proper allowlist
-- Add CSP violation reporting endpoint
+- ✅ Remove 'unsafe-inline' from script-src directive
+- ✅ Implement nonce-based CSP for dynamic scripts
+- ✅ Add object-src 'none' and media-src restrictions
+- ✅ Configure CSP for PostHog analytics with proper allowlist
+- ✅ Add CSP violation reporting endpoint
 
 **Implementation Notes**
 
-- Use CSP nonces for any required inline scripts
-- Hash-based CSP for static inline content
-- Maintain backward compatibility with existing analytics
-- Test CSP in development before production rollout
+- ✅ Created nonce-based CSP middleware for all 4 applications
+- ✅ Removed 'unsafe-inline' from script-src, using nonce-based CSP instead
+- ✅ Added object-src 'none' and media-src 'self' restrictions
+- ✅ Configured PostHog analytics with nonce support and wildcard domains
+- ✅ Implemented CSP violation reporting endpoints in all applications
+- ✅ Updated analytics package with CSP nonce utilities and provider components
+- ✅ Added comprehensive CSP implementation documentation
+- ✅ Environment-specific CSP (development allows unsafe-eval and unsafe-inline for styles)
+- ✅ Maintained backward compatibility with existing analytics
 
 **Target Files**
 
-- `apps/agency-admin/next.config.ts`
-- `apps/firm/next.config.ts`
-- `apps/prospective-clients/riley-day-care/next.config.ts`
-- `apps/prospective-clients/the-barber-cave/next.config.ts`
+- ✅ `apps/agency-admin/src/middleware.ts` - Added CSP middleware with nonce generation
+- ✅ `apps/firm/src/middleware.ts` - Added CSP middleware with nonce generation
+- ✅ `apps/prospective-clients/riley-day-care/src/middleware.ts` - Updated existing middleware with CSP
+- ✅ `apps/prospective-clients/the-barber-cave/src/middleware.ts` - Updated existing middleware with CSP
+- ✅ `apps/*/src/app/api/csp-report/route.ts` - CSP violation reporting endpoints (4 files)
+- ✅ `packages/analytics/src/client.ts` - Updated with nonce support for PostHog
+- ✅ `packages/analytics/src/nonce.ts` - New CSP nonce utilities
+- ✅ `packages/analytics/src/provider.tsx` - New analytics provider component
+- ✅ `packages/analytics/src/csp-provider.tsx` - New CSP nonce provider component
+- ✅ `docs/security/CSP_IMPLEMENTATION.md` - Comprehensive implementation documentation
+
+**Technical Details**
+
+- Uses cryptographically secure nonces generated via `crypto.randomUUID()` + base64 encoding
+- Middleware-based CSP generation for dynamic nonce handling
+- PostHog integration with nonce injection for external scripts
+- Development vs production CSP policies (strict-dynamic in production)
+- Comprehensive security headers maintained (HSTS, X-Frame-Options, etc.)
+- CSP violation reporting with structured logging for security monitoring
+
+**Security Benefits Achieved**
+
+- ✅ XSS attack prevention through nonce-based script execution
+- ✅ Code injection mitigation with strict CSP directives
+- ✅ Data exfiltration prevention via controlled resource loading
+- ✅ Attack detection through CSP violation reporting
+- ✅ Clickjacking protection maintained
+- ✅ Enhanced security posture for production deployment
+
+**Dependencies Updated**
+
+- ✅ Added React and Next.js dependencies to @agency/analytics package
+- ✅ Updated TypeScript configuration for JSX support in analytics package
 
 ---
 

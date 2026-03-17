@@ -9,7 +9,7 @@ let isInitialized = false
  * This function must be called before any other analytics functions.
  * Sets up tenant-aware tracking as a super property.
  */
-export function initAnalytics(tenantSlug: string): void {
+export function initAnalytics(tenantSlug: string, nonce?: string): void {
   if (typeof window === 'undefined') {
     return
   }
@@ -31,12 +31,24 @@ export function initAnalytics(tenantSlug: string): void {
         }
       },
     }
-    
+
     const host = process.env['NEXT_PUBLIC_POSTHOG_HOST']
     if (host) {
       config['api_host'] = host
     }
-    
+
+    // Add nonce support for CSP compliance
+    if (nonce) {
+      config['prepare_external_dependency_script'] = (script: HTMLScriptElement) => {
+        script.nonce = nonce
+        return script
+      }
+      config['prepare_external_dependency_stylesheet'] = (stylesheet: HTMLLinkElement) => {
+        stylesheet.nonce = nonce
+        return stylesheet
+      }
+    }
+
     posthog.init(process.env['NEXT_PUBLIC_POSTHOG_KEY'], config)
 
     // Register tenant as a super property for all subsequent events
