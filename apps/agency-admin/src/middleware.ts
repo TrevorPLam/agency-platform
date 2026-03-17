@@ -4,11 +4,31 @@ import {
   createSupabaseServerClient,
   resolveTenantFromRequest,
 } from '@agency/database'
+import { ensureRequestId, logStructuredWarning } from '@/lib/request-context'
 
 export async function middleware(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers)
+  const requestId = ensureRequestId(request)
+  const incomingTraceparent = request.headers.get('traceparent')
+  const incomingSentryTrace = request.headers.get('sentry-trace')
+  requestHeaders.set('x-request-id', requestId)
+  if (incomingTraceparent) {
+    requestHeaders.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    requestHeaders.set('sentry-trace', incomingSentryTrace)
+  }
+
   const response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers: requestHeaders },
   })
+  response.headers.set('x-request-id', requestId)
+  if (incomingTraceparent) {
+    response.headers.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    response.headers.set('sentry-trace', incomingSentryTrace)
+  }
 
   const cookieStore = {
     getAll: () => request.cookies.getAll().map((c) => ({ name: c.name, value: c.value })),
@@ -29,8 +49,37 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-tenant-id', tenant.tenantId)
     response.headers.set('x-tenant-slug', tenant.tenantSlug)
     response.headers.set('x-tenant-source', tenant.source)
-  } catch {
-    // No tenant for this hostname (e.g. generic admin URL); continue without tenant headers
+  } catch (error) {
+    logStructuredWarning('Tenant resolution failed in middleware', {
+      service: 'agency-admin',
+      requestId,
+      pathname: request.nextUrl.pathname,
+      errorName: error instanceof Error ? error.name : 'UnknownError',
+    })
+
+    if (
+      request.nextUrl.pathname.startsWith('/api/costs') ||
+      request.nextUrl.pathname.startsWith('/api/metrics')
+    ) {
+      return NextResponse.json(
+        {
+          type: 'https://agency.dev/problems/tenant-resolution-failed',
+          title: 'Tenant resolution failed',
+          status: 503,
+          detail: 'Unable to resolve tenant context for this request.',
+          instance: request.nextUrl.pathname,
+          code: 'TENANT_RESOLUTION_FAILED',
+          correlationId: requestId,
+        },
+        {
+          status: 503,
+          headers: {
+            'x-request-id': requestId,
+            'content-type': 'application/problem+json',
+          },
+        }
+      )
+    }
   }
 
   const pathname = request.nextUrl.pathname

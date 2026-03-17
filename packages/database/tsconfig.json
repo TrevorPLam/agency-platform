@@ -1,4 +1,5 @@
 {
+  "extends": "@agency/typescript-config/base.json",
   "compilerOptions": {
     "strict": true,
     "esModuleInterop": true,

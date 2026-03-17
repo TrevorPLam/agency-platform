@@ -2,11 +2,11 @@
   "name": "@agency/booking",
   "version": "0.1.0",
   "private": true,
-  "main": "./src/index.tsx",
-  "types": "./src/index.tsx",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "node -e \"process.exit(0)\"",
-    "dev": "echo 'No dev server for library'",
+    "build": "tsc",
+    "dev": "tsc --watch",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
   },

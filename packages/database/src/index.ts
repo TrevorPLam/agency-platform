@@ -62,9 +62,11 @@
 // Type definitions (Database from generated types; IDs from semantic aliases)
 export type { Database } from './types'
 export type { TenantId, UserId } from './ids'
+export type { ErrorCode, AppErrorOptions } from './errors'
 
 // Client factories
 export { createSupabaseServerClient, createSupabaseBrowserClient, type CookieStore } from './client'
+export { REQUEST_ID_HEADER, ensureRequestId, getRequestIdFromHeaders } from './request-context'
 
 // Middleware utilities
 export {
@@ -73,6 +75,27 @@ export {
   getTenantFromHeaders,
   type TenantResolution,
 } from './middleware'
+
+export {
+  AppError,
+  AuthenticationError,
+  AuthorizationError,
+  ValidationError,
+  TenantResolutionError,
+  ResourceNotFoundError,
+  DatabaseOperationError,
+  ExternalServiceError,
+  InternalServerError,
+  isAppError,
+} from './errors'
+
+export {
+  DEFAULT_RETRY_POLICY,
+  executeWithRetry,
+  withTimeout,
+  isSupabaseTransientError,
+  type RetryPolicy,
+} from './resilience'
 
 // Authentication utilities
 export {

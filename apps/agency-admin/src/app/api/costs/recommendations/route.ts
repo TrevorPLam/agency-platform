@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAdminClient } from '@agency/database/admin'
 import { captureServerEvent } from '@agency/analytics/server'
 import { validateTenantAccess } from '@/lib/auth'
+import {
+  DatabaseOperationError,
+  ResourceNotFoundError,
+  ValidationError,
+  AuthorizationError,
+} from '@/lib/error-types'
+import { withApiErrorHandling } from '@/lib/api-error-handling'
+import { createRequestLogger } from '@/lib/logger'
 
 // Helper function to resolve tenant slug from tenant_id
 async function getTenantSlug(tenantId: string): Promise<string | null> {
@@ -75,397 +83,260 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
  * @error {404} Not Found - Recommendation not found (PATCH only)
  * @error {500} Internal Server Error - Database or service failure
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Authenticate and validate tenant access
-    const auth = await validateTenantAccess(request)
-    
-    // Get query parameters
-    const searchParams = request.nextUrl.searchParams
-    const requestedTenantId = searchParams.get('tenant_id')
-    const status = searchParams.get('status')
-    const priority = searchParams.get('priority')
-    
-    // For platform admins, allow specifying tenant_id in query params
-    // For regular users, always use their assigned tenant
-    const tenantId = auth.isPlatformAdmin && requestedTenantId 
-      ? requestedTenantId 
-      : auth.tenantId
+export const GET = withApiErrorHandling(async (request: NextRequest) => {
+  const correlationId = request.headers.get('x-request-id') ?? crypto.randomUUID()
+  const logger = createRequestLogger({
+    service: 'agency-admin',
+    component: 'recommendations-route',
+    requestId: correlationId,
+  })
 
-    if (!tenantId) {
-      return NextResponse.json(
-        { error: 'Tenant ID is required' },
-        { status: 400 }
-      )
-    }
+  const auth = await validateTenantAccess(request)
+  const searchParams = request.nextUrl.searchParams
+  const requestedTenantId = searchParams.get('tenant_id')
+  const status = searchParams.get('status')
+  const priority = searchParams.get('priority')
+  const tenantId = auth.isPlatformAdmin && requestedTenantId ? requestedTenantId : auth.tenantId
 
-    // Build query
-    const admin = getAdminClient()
-    let query = admin
-      .from('optimization_recommendations')
-      .select('*')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: false })
-
-    // Filter by status if specified
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    // Filter by priority if specified
-    if (priority) {
-      query = query.eq('priority', priority)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching optimization recommendations:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch optimization recommendations' },
-        { status: 500 }
-      )
-    }
-
-    // Transform data to match expected format
-    const recommendations = (data || []).map(rec => ({
-      id: rec.id,
-      tenantId: rec.tenant_id,
-      category: rec.category,
-      title: rec.title,
-      description: rec.description,
-      estimatedSavings: parseFloat(rec.estimated_savings) || 0,
-      difficulty: rec.difficulty,
-      priority: rec.priority,
-      status: rec.status,
-      createdAt: rec.created_at,
-      reviewBy: rec.review_by,
-    }))
-
-    // Capture analytics event for cost recommendations view
-    const tenantSlug = await getTenantSlug(tenantId)
-    if (tenantSlug) {
-      try {
-        captureServerEvent(
-          'system',
-          'costs:recommendations_viewed',
-          {
-            tenant: tenantSlug,
-            recommendations_count: recommendations.length,
-            status_filter: status || 'all',
-            priority_filter: priority || 'all',
-          }
-        )
-      } catch (analyticsError) {
-        console.error('Failed to capture cost recommendations analytics:', analyticsError)
-      }
-    }
-
-    return NextResponse.json(recommendations)
-  } catch (error) {
-    console.error('Error in optimization recommendations API:', error)
-    
-    // Return appropriate error codes based on error type
-    if (error instanceof Error) {
-      if (error.message.includes('Unauthorized')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        )
-      }
-      if (error.message.includes('Forbidden')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
-      }
-    }
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+  if (!tenantId) {
+    throw new ValidationError('Tenant ID is required.')
   }
-}
 
-export async function POST(request: NextRequest) {
-  try {
-    // Authenticate and validate tenant access
-    const auth = await validateTenantAccess(request)
-    
-    const admin = getAdminClient()
-    const body = await request.json()
-    
-    const {
-      tenantId: requestedTenantId,
+  const admin = getAdminClient()
+  let query = admin
+    .from('optimization_recommendations')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+
+  if (status) {
+    query = query.eq('status', status)
+  }
+  if (priority) {
+    query = query.eq('priority', priority)
+  }
+
+  const { data, error } = await query
+  if (error) {
+    throw new DatabaseOperationError('Failed to fetch optimization recommendations.')
+  }
+
+  const recommendations = (data || []).map((rec) => ({
+    id: rec.id,
+    tenantId: rec.tenant_id,
+    category: rec.category,
+    title: rec.title,
+    description: rec.description,
+    estimatedSavings: parseFloat(rec.estimated_savings) || 0,
+    difficulty: rec.difficulty,
+    priority: rec.priority,
+    status: rec.status,
+    createdAt: rec.created_at,
+    reviewBy: rec.review_by,
+  }))
+
+  const tenantSlug = await getTenantSlug(tenantId)
+  if (tenantSlug) {
+    try {
+      captureServerEvent('system', 'costs:recommendations_viewed', {
+        tenant: tenantSlug,
+        recommendations_count: recommendations.length,
+        status_filter: status || 'all',
+        priority_filter: priority || 'all',
+      })
+    } catch (analyticsError) {
+      logger.warn('Failed to capture recommendations analytics event', {
+        errorName: analyticsError instanceof Error ? analyticsError.name : 'UnknownError',
+      })
+    }
+  }
+
+  return NextResponse.json(recommendations)
+}, 'costs.recommendations.GET')
+
+export const POST = withApiErrorHandling(async (request: NextRequest) => {
+  const correlationId = request.headers.get('x-request-id') ?? crypto.randomUUID()
+  const logger = createRequestLogger({
+    service: 'agency-admin',
+    component: 'recommendations-route',
+    requestId: correlationId,
+  })
+
+  const auth = await validateTenantAccess(request)
+  const admin = getAdminClient()
+  const body = (await request.json()) as Record<string, unknown>
+
+  const requestedTenantId = body['tenantId']
+  const category = body['category']
+  const title = body['title']
+  const description = body['description']
+  const estimatedSavings = Number(body['estimatedSavings'] ?? 0)
+  const difficulty = typeof body['difficulty'] === 'string' ? body['difficulty'] : 'medium'
+  const priority = typeof body['priority'] === 'string' ? body['priority'] : 'medium'
+  const status = typeof body['status'] === 'string' ? body['status'] : 'pending'
+  const reviewBy = typeof body['reviewBy'] === 'string' ? body['reviewBy'] : null
+
+  const tenantId = auth.isPlatformAdmin && typeof requestedTenantId === 'string'
+    ? requestedTenantId
+    : auth.tenantId
+
+  if (!tenantId || typeof category !== 'string' || typeof title !== 'string' || typeof description !== 'string') {
+    throw new ValidationError('Missing required fields: tenantId, category, title, description.')
+  }
+
+  const validCategories = ['storage', 'compute', 'bandwidth', 'general']
+  if (!validCategories.includes(category)) {
+    throw new ValidationError(`Invalid category. Must be one of: ${validCategories.join(', ')}`)
+  }
+
+  const validDifficulties = ['easy', 'medium', 'hard']
+  if (!validDifficulties.includes(difficulty)) {
+    throw new ValidationError(`Invalid difficulty. Must be one of: ${validDifficulties.join(', ')}`)
+  }
+
+  const validPriorities = ['low', 'medium', 'high']
+  if (!validPriorities.includes(priority)) {
+    throw new ValidationError(`Invalid priority. Must be one of: ${validPriorities.join(', ')}`)
+  }
+
+  const validStatuses = ['pending', 'in_progress', 'completed', 'dismissed']
+  if (!validStatuses.includes(status)) {
+    throw new ValidationError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`)
+  }
+
+  const { data, error } = await admin
+    .from('optimization_recommendations')
+    .insert({
+      tenant_id: tenantId,
       category,
       title,
       description,
-      estimatedSavings = 0,
-      difficulty = 'medium',
-      priority = 'medium',
-      status = 'pending',
-      reviewBy,
-    } = body
+      estimated_savings: estimatedSavings,
+      difficulty,
+      priority,
+      status,
+      review_by: reviewBy,
+    })
+    .select()
+    .single()
 
-    // For platform admins, allow specifying tenant_id in body
-    // For regular users, always use their assigned tenant
-    const tenantId = auth.isPlatformAdmin && requestedTenantId 
-      ? requestedTenantId 
-      : auth.tenantId
+  if (error) {
+    throw new DatabaseOperationError('Failed to create optimization recommendation.')
+  }
 
-    if (!tenantId || !category || !title || !description) {
-      return NextResponse.json(
-        { error: 'Missing required fields: tenantId, category, title, description' },
-        { status: 400 }
-      )
-    }
+  const recommendation = {
+    id: data.id,
+    tenantId: data.tenant_id,
+    category: data.category,
+    title: data.title,
+    description: data.description,
+    estimatedSavings: parseFloat(data.estimated_savings) || 0,
+    difficulty: data.difficulty,
+    priority: data.priority,
+    status: data.status,
+    createdAt: data.created_at,
+    reviewBy: data.review_by,
+  }
 
-    // Validate category
-    const validCategories = ['storage', 'compute', 'bandwidth', 'general']
-    if (!validCategories.includes(category)) {
-      return NextResponse.json(
-        { error: `Invalid category. Must be one of: ${validCategories.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate difficulty
-    const validDifficulties = ['easy', 'medium', 'hard']
-    if (!validDifficulties.includes(difficulty)) {
-      return NextResponse.json(
-        { error: `Invalid difficulty. Must be one of: ${validDifficulties.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate priority
-    const validPriorities = ['low', 'medium', 'high']
-    if (!validPriorities.includes(priority)) {
-      return NextResponse.json(
-        { error: `Invalid priority. Must be one of: ${validPriorities.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Validate status
-    const validStatuses = ['pending', 'in_progress', 'completed', 'dismissed']
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // Insert new recommendation
-    const { data, error } = await admin
-      .from('optimization_recommendations')
-      .insert({
-        tenant_id: tenantId,
+  const tenantSlug = await getTenantSlug(tenantId)
+  if (tenantSlug) {
+    try {
+      captureServerEvent('system', 'costs:recommendation_created', {
+        tenant: tenantSlug,
         category,
-        title,
-        description,
-        estimated_savings: estimatedSavings,
         difficulty,
         priority,
         status,
-        review_by: reviewBy,
       })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error creating optimization recommendation:', error)
-      return NextResponse.json(
-        { error: 'Failed to create optimization recommendation' },
-        { status: 500 }
-      )
+    } catch (analyticsError) {
+      logger.warn('Failed to capture recommendation creation analytics event', {
+        errorName: analyticsError instanceof Error ? analyticsError.name : 'UnknownError',
+      })
     }
+  }
 
-    const recommendation = {
-      id: data.id,
-      tenantId: data.tenant_id,
-      category: data.category,
-      title: data.title,
-      description: data.description,
-      estimatedSavings: parseFloat(data.estimated_savings) || 0,
-      difficulty: data.difficulty,
-      priority: data.priority,
-      status: data.status,
-      createdAt: data.created_at,
-      reviewBy: data.review_by,
-    }
+  return NextResponse.json(recommendation, { status: 201 })
+}, 'costs.recommendations.POST')
 
-    // Capture analytics event for cost recommendation creation
-    const tenantSlug = await getTenantSlug(tenantId)
+export const PATCH = withApiErrorHandling(async (request: NextRequest) => {
+  const correlationId = request.headers.get('x-request-id') ?? crypto.randomUUID()
+  const logger = createRequestLogger({
+    service: 'agency-admin',
+    component: 'recommendations-route',
+    requestId: correlationId,
+  })
+
+  const auth = await validateTenantAccess(request)
+  const admin = getAdminClient()
+  const body = (await request.json()) as Record<string, unknown>
+  const id = body['id']
+  const status = body['status']
+
+  if (typeof id !== 'string' || typeof status !== 'string') {
+    throw new ValidationError('Missing required fields: id, status.')
+  }
+
+  const validStatuses = ['pending', 'in_progress', 'completed', 'dismissed']
+  if (!validStatuses.includes(status)) {
+    throw new ValidationError(`Invalid status. Must be one of: ${validStatuses.join(', ')}`)
+  }
+
+  const { data: existingRec, error: fetchError } = await admin
+    .from('optimization_recommendations')
+    .select('tenant_id, id')
+    .eq('id', id)
+    .single()
+
+  if (fetchError || !existingRec) {
+    throw new ResourceNotFoundError('Recommendation not found.')
+  }
+
+  if (!auth.isPlatformAdmin && existingRec.tenant_id !== auth.tenantId) {
+    throw new AuthorizationError('Cannot access recommendation from another tenant.')
+  }
+
+  const { data, error } = await admin
+    .from('optimization_recommendations')
+    .update({ status })
+    .eq('id', id)
+    .eq('tenant_id', auth.isPlatformAdmin ? existingRec.tenant_id : auth.tenantId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new DatabaseOperationError('Failed to update optimization recommendation.')
+  }
+
+  const recommendation = {
+    id: data.id,
+    tenantId: data.tenant_id,
+    category: data.category,
+    title: data.title,
+    description: data.description,
+    estimatedSavings: parseFloat(data.estimated_savings) || 0,
+    difficulty: data.difficulty,
+    priority: data.priority,
+    status: data.status,
+    createdAt: data.created_at,
+    reviewBy: data.review_by,
+  }
+
+  if (data.tenant_id) {
+    const tenantSlug = await getTenantSlug(data.tenant_id)
     if (tenantSlug) {
       try {
-        captureServerEvent(
-          'system',
-          'costs:recommendation_created',
-          {
-            tenant: tenantSlug,
-            category,
-            difficulty,
-            priority,
-            status,
-          }
-        )
+        captureServerEvent('system', 'costs:recommendation_updated', {
+          tenant: tenantSlug,
+          new_status: status,
+          category: data.category,
+        })
       } catch (analyticsError) {
-        console.error('Failed to capture cost recommendation creation analytics:', analyticsError)
+        logger.warn('Failed to capture recommendation update analytics event', {
+          errorName: analyticsError instanceof Error ? analyticsError.name : 'UnknownError',
+        })
       }
     }
-
-    return NextResponse.json(recommendation, { status: 201 })
-  } catch (error) {
-    console.error('Error in optimization recommendations POST API:', error)
-    
-    // Return appropriate error codes based on error type
-    if (error instanceof Error) {
-      if (error.message.includes('Unauthorized')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        )
-      }
-      if (error.message.includes('Forbidden')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
-      }
-    }
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
 
-export async function PATCH(request: NextRequest) {
-  try {
-    // Authenticate and validate tenant access
-    const auth = await validateTenantAccess(request)
-    
-    const admin = getAdminClient()
-    const body = await request.json()
-    
-    const { id, status } = body
-
-    if (!id || !status) {
-      return NextResponse.json(
-        { error: 'Missing required fields: id, status' },
-        { status: 400 }
-      )
-    }
-
-    // Validate status
-    const validStatuses = ['pending', 'in_progress', 'completed', 'dismissed']
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` },
-        { status: 400 }
-      )
-    }
-
-    // CRITICAL SECURITY FIX: First verify the recommendation belongs to the user's tenant
-    // This prevents IDOR attacks where users could modify recommendations from other tenants
-    const { data: existingRec, error: fetchError } = await admin
-      .from('optimization_recommendations')
-      .select('tenant_id, id')
-      .eq('id', id)
-      .single()
-
-    if (fetchError || !existingRec) {
-      return NextResponse.json(
-        { error: 'Recommendation not found' },
-        { status: 404 }
-      )
-    }
-
-    // Verify tenant access: Platform admins can access any, regular users only their own
-    if (!auth.isPlatformAdmin && existingRec.tenant_id !== auth.tenantId) {
-      return NextResponse.json(
-        { error: 'Forbidden: Cannot access recommendation from other tenant' },
-        { status: 403 }
-      )
-    }
-
-    // Update recommendation status with tenant-scoped guard
-    const { data, error } = await admin
-      .from('optimization_recommendations')
-      .update({ status })
-      .eq('id', id)
-      .eq('tenant_id', auth.isPlatformAdmin ? existingRec.tenant_id : auth.tenantId) // Extra tenant guard
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Error updating optimization recommendation:', error)
-      return NextResponse.json(
-        { error: 'Failed to update optimization recommendation' },
-        { status: 500 }
-      )
-    }
-
-    const recommendation = {
-      id: data.id,
-      tenantId: data.tenant_id,
-      category: data.category,
-      title: data.title,
-      description: data.description,
-      estimatedSavings: parseFloat(data.estimated_savings) || 0,
-      difficulty: data.difficulty,
-      priority: data.priority,
-      status: data.status,
-      createdAt: data.created_at,
-      reviewBy: data.review_by,
-    }
-
-    // Capture analytics event for cost recommendation update
-    if (data.tenant_id) {
-      const tenantSlug = await getTenantSlug(data.tenant_id)
-      if (tenantSlug) {
-        try {
-          captureServerEvent(
-            'system',
-            'costs:recommendation_updated',
-            {
-              tenant: tenantSlug,
-              new_status: status,
-              category: data.category,
-            }
-          )
-        } catch (analyticsError) {
-          console.error('Failed to capture cost recommendation update analytics:', analyticsError)
-        }
-      }
-    }
-
-    return NextResponse.json(recommendation)
-  } catch (error) {
-    console.error('Error in optimization recommendations PATCH API:', error)
-    
-    // Return appropriate error codes based on error type
-    if (error instanceof Error) {
-      if (error.message.includes('Unauthorized')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        )
-      }
-      if (error.message.includes('Forbidden')) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
-      }
-    }
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
-  }
-}
+  return NextResponse.json(recommendation)
+}, 'costs.recommendations.PATCH')

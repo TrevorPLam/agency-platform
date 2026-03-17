@@ -502,22 +502,181 @@ const posthog = usePostHog()
 posthog.debug() // Enable console logging
 ```
 
-### **Common Issues**
+### **🆘 Troubleshooting Guide**
 
-1. **Events Not Appearing**
-   - Check API key configuration
-   - Verify network connectivity
-   - Ensure proper initialization
+#### **Common Issues & Solutions**
 
-2. **Tenant Data Mixing**
-   - Verify tenant_id is properly set
-   - Check group configuration
-   - Review data isolation settings
+**1. Events Not Appearing in PostHog**
 
-3. **Performance Issues**
-   - Debounce rapid events
-   - Use batch processing
-   - Monitor bundle size
+**Symptoms**: Events tracked in code but not showing in dashboard
+
+**Solutions**:
+- ✅ Verify API key: `console.log(process.env.NEXT_PUBLIC_POSTHOG_KEY)`
+- ✅ Check network tab for failed requests
+- ✅ Ensure PostHog provider wraps your app
+- ✅ Verify tenant_id is properly set
+
+```tsx
+// Debug event tracking
+const posthog = usePostHog()
+
+const debugCapture = (event: string, properties?: any) => {
+  console.log('Tracking event:', event, properties)
+  posthog.capture(event, properties)
+}
+```
+
+**2. Tenant Data Mixing**
+
+**Symptoms**: Seeing data from other tenants in reports
+
+**Solutions**:
+- ✅ Verify tenant context middleware is working
+- ✅ Check group configuration: `posthog.group('tenant', tenantId)`
+- ✅ Review data isolation settings in PostHog
+- ✅ Ensure proper tenant_id in all events
+
+```ts
+// Debug tenant isolation
+export function debugTenantContext(tenantId: string) {
+  console.log('Current tenant:', tenantId)
+  console.log('Group properties:', { tenant_type: 'client' })
+}
+```
+
+**3. Performance Issues**
+
+**Symptoms**: Slow page loads, high bundle size
+
+**Solutions**:
+- ✅ Debounce rapid events with `lodash.debounce`
+- ✅ Use batch processing for multiple events
+- ✅ Monitor bundle size with `webpack-bundle-analyzer`
+- ✅ Disable autocapture for unused features
+
+```tsx
+// Optimized event tracking
+import { debounce } from 'lodash-es'
+
+const debouncedCapture = debounce((event: string, properties?: any) => {
+  posthog.capture(event, properties)
+}, 300)
+```
+
+**4. Feature Flags Not Working**
+
+**Symptoms**: Feature flags always returning false
+
+**Solutions**:
+- ✅ Check user identification: `posthog.identify(userId)`
+- ✅ Verify feature flag exists in PostHog
+- ✅ Ensure proper rollout percentage
+- ✅ Check for override conditions
+
+```tsx
+// Debug feature flags
+const debugFeatureFlag = (flag: string, userId: string) => {
+  const isEnabled = posthog.isFeatureEnabled(flag, userId)
+  console.log(`Feature flag ${flag} for ${userId}:`, isEnabled)
+  console.log('All feature flags:', posthog.getFeatureFlagPayload())
+}
+```
+
+**5. Server-Side Tracking Failures**
+
+**Symptoms**: Server events not being recorded
+
+**Solutions**:
+- ✅ Verify server API key: `POSTHOG_PROJECT_API_KEY`
+- ✅ Check PostHog instance URL
+- ✅ Ensure proper async/await usage
+- ✅ Verify request payload format
+
+```ts
+// Debug server-side tracking
+export async function debugServerCapture(event: string, properties: any) {
+  try {
+    console.log('Server tracking:', { event, properties })
+    await posthogServer.capture({ event, properties })
+    console.log('Server tracking successful')
+  } catch (error) {
+    console.error('Server tracking failed:', error)
+  }
+}
+```
+
+#### **🔧 Advanced Debugging Tools**
+
+**PostHog Debug Toolbar**
+```tsx
+// Add debug toolbar in development
+if (process.env.NODE_ENV === 'development') {
+  posthog.debug()
+  // Shows PostHog debug toolbar
+}
+```
+
+**Event Validation**
+```ts
+// Validate event structure
+export function validateEvent(event: string, properties: any) {
+  const errors: string[] = []
+  
+  if (!event || typeof event !== 'string') {
+    errors.push('Event name must be a non-empty string')
+  }
+  
+  if (!event.match(/^[a-z0-9_]+$/)) {
+    errors.push('Event name must contain only lowercase letters, numbers, and underscores')
+  }
+  
+  if (properties && typeof properties !== 'object') {
+    errors.push('Properties must be an object')
+  }
+  
+  return errors
+}
+```
+
+**Network Monitoring**
+```tsx
+// Monitor PostHog requests
+const originalFetch = window.fetch
+window.fetch = (...args) => {
+  const [url, options] = args
+  if (url.includes('posthog') || url.includes('analytics')) {
+    console.log('PostHog request:', url, options)
+  }
+  return originalFetch(...args)
+}
+```
+
+#### **📞 Getting Help**
+
+**Self-Service Debugging**:
+1. Check browser console for errors
+2. Verify environment variables are set
+3. Test with a simple capture event
+4. Check PostHog network requests
+5. Review PostHog project settings
+
+**Community Support**:
+- **PostHog Documentation**: [https://posthog.com/docs](https://posthog.com/docs)
+- **GitHub Issues**: [Agency Platform Issues](https://github.com/agency/platform/issues)
+- **Discord Community**: [Join our Discord](https://discord.gg/agency)
+- **Email Support**: analytics@agency.com
+
+**Common Debug Commands**:
+```bash
+# Check environment variables
+pnpm run env:check
+
+# Validate analytics setup
+pnpm run analytics:validate
+
+# Test PostHog connection
+pnpm run analytics:test
+```
 
 ## 🤝 Contributing
 

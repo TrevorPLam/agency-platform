@@ -5,9 +5,9 @@ import type { BookingConfig } from '../types/config'
 import { Button, Input, Label, cn } from '@agency/ui'
 
 export type BookingSubmitAction = (
-  _prev: { success: boolean; message?: string },
+  _prev: { success: boolean; message?: string; errors?: Record<string, string> },
   formData: FormData
-) => Promise<{ success: boolean; message?: string }>
+) => Promise<{ success: boolean; message?: string; errors?: Record<string, string> }>
 
 export interface BookingWidgetProps {
   config: BookingConfig
@@ -15,7 +15,7 @@ export interface BookingWidgetProps {
   className?: string
 }
 
-const initialState = { success: false, message: '' }
+const initialState = { success: false, message: '', errors: {} as Record<string, string> }
 
 export function BookingWidget({ config, submitAction, className }: BookingWidgetProps) {
   const [state, formAction] = useActionState(
@@ -32,7 +32,18 @@ export function BookingWidget({ config, submitAction, className }: BookingWidget
           </legend>
           <div className="space-y-2">
             <Label htmlFor="booking-name">Name</Label>
-            <Input id="booking-name" name="name" placeholder="Your name" className="w-full" />
+            <Input
+              id="booking-name"
+              name="name"
+              placeholder="Your name"
+              className="w-full"
+              aria-invalid={Boolean(state.errors?.name)}
+            />
+            {state.errors?.name && (
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                {state.errors.name}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="booking-email">Email</Label>
@@ -43,7 +54,13 @@ export function BookingWidget({ config, submitAction, className }: BookingWidget
               required
               placeholder="you@example.com"
               className="w-full"
+              aria-invalid={Boolean(state.errors?.email)}
             />
+            {state.errors?.email && (
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                {state.errors.email}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="booking-message">Message (optional)</Label>
@@ -56,7 +73,13 @@ export function BookingWidget({ config, submitAction, className }: BookingWidget
                 'border-input bg-background ring-offset-background flex w-full rounded-md border px-3 py-2 text-sm',
                 'placeholder:text-muted-foreground focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2'
               )}
+              aria-invalid={Boolean(state.errors?.message)}
             />
+            {state.errors?.message && (
+              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+                {state.errors.message}
+              </p>
+            )}
           </div>
         </fieldset>
         {state.message && (

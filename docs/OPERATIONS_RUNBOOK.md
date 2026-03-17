@@ -72,3 +72,52 @@ Single reference for backup, cost, communication, DORA metrics, geographic distr
 ## Incident response
 
 For severity levels, response team structure, and lifecycle (detection → containment → recovery → post-mortem), see [docs/security/INCIDENT_RESPONSE.md](../security/INCIDENT_RESPONSE.md). Coordinate with [Communication protocols](#communication-protocols) above.
+
+---
+
+## Error budget and SLO operations
+
+**Target SLOs (30-day rolling):**
+- **API availability:** 99.9% successful responses (excluding intentional 4xx client errors).
+- **API latency p95:** 99.0% of requests under 800ms.
+
+**Burn-rate policy:**
+- **Fast burn (>=14.4x):** page on-call immediately, pause non-critical deploys.
+- **Medium burn (>=6x):** escalate to incident commander and increase triage frequency.
+- **Slow burn (>=2x):** create reliability issue and schedule remediation in current sprint.
+
+**Verification routine:**
+1. Check alert source and confirm request volume/traffic anomalies.
+2. Correlate by `x-request-id`, `traceparent`, and error class code.
+3. Execute the mapped runbook below.
+4. Record mitigation + follow-up action in the incident timeline.
+
+## Authentication failures
+
+- **Signal:** `AUTHENTICATION_REQUIRED` spikes in API responses.
+- **Checks:** session cookie validity, Supabase auth status, callback/login route health.
+- **Immediate action:** verify auth provider availability and rollback recent auth changes if needed.
+
+## Authorization and tenant isolation
+
+- **Signal:** `AUTHORIZATION_DENIED` spikes or cross-tenant access anomalies.
+- **Checks:** tenant assignment in `app_metadata`, tenant middleware headers, policy changes.
+- **Immediate action:** lock impacted endpoints if isolation is uncertain and notify security owner.
+
+## Tenant resolution failures
+
+- **Signal:** `TENANT_RESOLUTION_FAILED` or repeated middleware tenant lookup failures.
+- **Checks:** host/domain mapping in `tenants`, DNS/domain config drift, middleware request headers.
+- **Immediate action:** restore known-good tenant routing config and invalidate stale edge caches.
+
+## Database degradation or outage
+
+- **Signal:** `DATABASE_OPERATION_FAILED`, elevated latency, or timeout/retry saturation.
+- **Checks:** Supabase status, pool exhaustion, migration drift, query error rate.
+- **Immediate action:** reduce load, disable expensive features, and execute database incident protocol.
+
+## Third-party provider outages
+
+- **Signal:** `EXTERNAL_SERVICE_FAILED` errors from analytics/email/other integrations.
+- **Checks:** provider status pages, API rate limits, timeout/retry behavior.
+- **Immediate action:** activate degraded mode, queue/retry non-critical jobs, and notify stakeholders.

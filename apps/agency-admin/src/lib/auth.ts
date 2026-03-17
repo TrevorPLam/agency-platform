@@ -1,6 +1,10 @@
 import { cookies } from 'next/headers'
 import { createSupabaseServerClient } from '@agency/database'
 import { NextRequest } from 'next/server'
+import {
+  AuthenticationError,
+  AuthorizationError,
+} from '@/lib/error-types'
 
 /**
  * Authentication result interface
@@ -47,7 +51,7 @@ export async function verifySession(): Promise<AuthResult> {
   const { data: { user }, error } = await supabase.auth.getUser()
 
   if (error || !user) {
-    throw new Error('Unauthorized: Invalid or missing authentication')
+    throw new AuthenticationError('Invalid or missing authentication.')
   }
 
   // Extract tenant_id from app_metadata (never user_metadata for security)
@@ -87,12 +91,12 @@ export async function validateTenantAccess(
 
   // Non-admin users must have a tenant_id in their app_metadata
   if (!auth.tenantId) {
-    throw new Error('Forbidden: User is not assigned to any tenant')
+    throw new AuthorizationError('User is not assigned to any tenant.')
   }
 
   // If a specific tenant is being requested, validate access
   if (requestedTenantId && auth.tenantId !== requestedTenantId) {
-    throw new Error('Forbidden: Cannot access data from other tenants')
+    throw new AuthorizationError('Cannot access data from other tenants.')
   }
 
   return auth
@@ -121,7 +125,7 @@ export async function getValidatedTenantId(request: NextRequest): Promise<string
 
   // For regular users, always use their assigned tenant
   if (!auth.tenantId) {
-    throw new Error('Forbidden: User is not assigned to any tenant')
+    throw new AuthorizationError('User is not assigned to any tenant.')
   }
 
   return auth.tenantId

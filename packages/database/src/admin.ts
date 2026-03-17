@@ -58,7 +58,7 @@ import { Database } from './types'
  * ```
  */
 export function getAdminClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const serviceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY']
 
   if (!serviceRoleKey) {
     throw new Error(
@@ -67,14 +67,14 @@ export function getAdminClient() {
     )
   }
 
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
     throw new Error(
       'CRITICAL SECURITY ERROR: getAdminClient() was called in browser environment. ' +
         'Service role access is restricted to server-side code only.'
     )
   }
 
-  return createSupabaseClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+  return createSupabaseClient<Database>(process.env['NEXT_PUBLIC_SUPABASE_URL']!, serviceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -101,7 +101,7 @@ export function getAdminClient() {
  * ```
  */
 export function assertAdminContext(context: string): void {
-  if (typeof window !== 'undefined') {
+  if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
     throw new Error(
       `Admin context violation: ${context}. ` +
         'Service role operations cannot be performed in browser environment.'

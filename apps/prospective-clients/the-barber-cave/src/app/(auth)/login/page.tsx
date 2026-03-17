@@ -19,7 +19,9 @@ function SubmitButton() {
 function LoginForm() {
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') ?? '/dashboard'
+  const callbackError = searchParams.get('error')
   const [state, formAction] = useActionState(loginAction, null)
+  const visibleError = callbackError || state?.error
 
   return (
     <div className={cn('flex min-h-screen items-center justify-center p-4')}>
@@ -29,9 +31,9 @@ function LoginForm() {
       >
         <input type="hidden" name="redirect" value={redirect} />
         <h1 className="text-xl font-semibold">Sign in</h1>
-        {state?.error && (
+        {visibleError && (
           <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-            {state.error}
+            {visibleError}
           </p>
         )}
         <div className="space-y-2">

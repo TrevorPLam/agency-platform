@@ -166,12 +166,14 @@ export async function createUserForTenant(options: CreateUserOptions): Promise<C
     }
 
     // Store real_email → auth_email mapping for login-by-real-email flow (T-15).
-    const { error: mappingError } = await admin.from('customer_auth_mappings').insert({
-      tenant_id: tenantId,
-      user_id: authData.user.id,
-      real_email: email,
-      auth_email: tenantSpecificEmail,
-    })
+    const { error: mappingError } = await admin
+      .from('customer_auth_mappings')
+      .insert({
+        tenant_id: tenantId,
+        user_id: authData.user.id,
+        real_email: email,
+        auth_email: tenantSpecificEmail,
+      } as any)
     if (mappingError) {
       await admin.auth.admin.deleteUser(authData.user.id)
       throw new Error(`Failed to create customer_auth_mapping: ${mappingError.message}`)
@@ -237,7 +239,7 @@ export function extractOriginalEmail(tenantSpecificEmail: string): string {
   const [localPart, domain] = tenantSpecificEmail.split('@')
 
   // Remove +tenant-xxx suffix if present
-  const originalLocalPart = localPart.replace(/\+tenant-[^@]+/, '')
+  const originalLocalPart = localPart?.replace(/\+tenant-[^@]+/, '') || ''
 
   return `${originalLocalPart}@${domain}`
 }
@@ -260,7 +262,8 @@ function generateSecurePassword(): string {
   crypto.getRandomValues(array)
 
   for (let i = 0; i < length; i++) {
-    password += charset[array[i] % charset.length]
+    const index = array[i]! % charset.length
+    password += charset[index]
   }
 
   return password
@@ -313,7 +316,7 @@ export async function getUserTenants(userId: UserId): Promise<
     return ((data || []) as Row[]).map((item) => ({
       tenantId: item.tenant_id,
       role: item.role,
-      tenantName: item.tenants?.name ?? undefined,
+      ...(item.tenants?.name && { tenantName: item.tenants.name }),
     }))
   } catch (error) {
     console.error('Error in getUserTenants:', error)

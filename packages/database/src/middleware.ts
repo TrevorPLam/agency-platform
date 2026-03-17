@@ -1,5 +1,15 @@
 import { getAdminClient } from './admin'
 import type { NextRequest } from 'next/server'
+import {
+  DatabaseOperationError,
+  TenantResolutionError,
+  ValidationError,
+} from './errors'
+import {
+  executeWithRetry,
+  isSupabaseTransientError,
+  withTimeout,
+} from './resilience'
 
 /**
  * Tenant resolution result interface.
@@ -77,14 +87,14 @@ export interface TenantResolution {
  */
 export async function resolveTenantFromRequest(request: NextRequest): Promise<TenantResolution> {
   const hostname = request.headers.get('host') || ''
-  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isDevelopment = process.env['NODE_ENV'] === 'development'
 
   // Development mode: resolve tenant by slug so tenantId is always UUID (consistent with production)
-  if (isDevelopment && process.env.NEXT_PUBLIC_TENANT_SLUG) {
-    const slug = process.env.NEXT_PUBLIC_TENANT_SLUG
+  if (isDevelopment && process.env['NEXT_PUBLIC_TENANT_SLUG']) {
+    const slug = process.env['NEXT_PUBLIC_TENANT_SLUG']
     const tenant = await resolveTenantBySlug(slug)
     if (!tenant) {
-      throw new Error(
+      throw new TenantResolutionError(
         `Unable to resolve tenant for slug: ${slug}. ` +
           `Ensure the tenant exists in the tenants table and NEXT_PUBLIC_TENANT_SLUG is correct.`
       )
@@ -100,7 +110,7 @@ export async function resolveTenantFromRequest(request: NextRequest): Promise<Te
   const tenant = await resolveTenantFromHostname(hostname)
 
   if (!tenant) {
-    throw new Error(
+    throw new TenantResolutionError(
       `Unable to resolve tenant for hostname: ${hostname}. ` +
         `Ensure the hostname is configured in the tenants table.`
     )
@@ -123,14 +133,28 @@ async function resolveTenantBySlug(slug: string): Promise<{
 } | null> {
   try {
     const admin = getAdminClient()
-    const { data } = await admin
-      .from('tenants')
-      .select('id, slug, domain')
-      .eq('slug', slug)
-      .single()
+    const { data } = await executeWithRetry(
+      () =>
+        withTimeout(
+          async () =>
+            admin
+              .from('tenants')
+              .select('id, slug, domain')
+              .eq('slug', slug)
+              .single()
+              .then((result) => {
+                if (result.error) {
+                  throw new DatabaseOperationError(result.error.message)
+                }
+                return result
+              }),
+          5000,
+          'Tenant lookup by slug timed out.'
+        ),
+      isSupabaseTransientError
+    )
     return data
-  } catch (error) {
-    console.error('Error resolving tenant by slug:', error)
+  } catch {
     return null
   }
 }
@@ -159,11 +183,26 @@ async function resolveTenantFromHostname(hostname: string): Promise<{
     const admin = getAdminClient()
 
     // Look for exact hostname match first
-    const { data: exactMatch } = await admin
-      .from('tenants')
-      .select('id, slug, domain')
-      .eq('domain', hostname)
-      .single()
+    const { data: exactMatch } = await executeWithRetry(
+      () =>
+        withTimeout(
+          async () =>
+            admin
+              .from('tenants')
+              .select('id, slug, domain')
+              .eq('domain', hostname)
+              .single()
+              .then((result) => {
+                if (result.error) {
+                  throw new DatabaseOperationError(result.error.message)
+                }
+                return result
+              }),
+          5000,
+          'Tenant lookup by hostname timed out.'
+        ),
+      isSupabaseTransientError
+    )
 
     if (exactMatch) {
       return exactMatch
@@ -184,8 +223,7 @@ async function resolveTenantFromHostname(hostname: string): Promise<{
     }
 
     return null
-  } catch (error) {
-    console.error('Error resolving tenant from hostname:', error)
+  } catch {
     return null
   }
 }
@@ -210,11 +248,11 @@ async function resolveTenantFromHostname(hostname: string): Promise<{
  */
 export function validateTenantContext(tenant: TenantResolution): void {
   if (!tenant.tenantId) {
-    throw new Error('Tenant ID is required for database operations')
+    throw new ValidationError('Tenant ID is required for database operations')
   }
 
   if (!tenant.tenantSlug) {
-    throw new Error('Tenant slug is required for routing')
+    throw new ValidationError('Tenant slug is required for routing')
   }
 
   // Additional validation can be added here

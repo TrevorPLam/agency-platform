@@ -34,6 +34,15 @@ export { StorageMonitor } from './storage-monitor'
 export { CicdCostMonitor } from './cicd-costs'
 export { CostAlertEngine } from './cost-alerts'
 export { CostOptimizationEngine } from './optimization-engine'
+export { createRequestLogger, logInfo, logWarn, logError, type LogContext, type LogLevel } from './logger'
+export {
+  DEFAULT_SLOS,
+  DEFAULT_ERROR_BUDGET_POLICIES,
+  ERROR_CLASS_RUNBOOKS,
+  type ServiceLevelObjective,
+  type ErrorBudgetPolicy,
+  type ErrorClassRunbook,
+} from './error-budget'
 
 // Import types for use in the class
 import type {

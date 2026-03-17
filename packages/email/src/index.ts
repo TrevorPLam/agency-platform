@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env['RESEND_API_KEY'])
 
 export interface SendEmailOptions {
   to: string | string[]
@@ -23,7 +23,7 @@ export interface SendContactNotificationOptions {
  * Requires RESEND_API_KEY. Optional FROM_EMAIL env (defaults to onboarding@resend.dev for development).
  */
 export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean; error?: string }> {
-  const from = options.from ?? process.env.FROM_EMAIL ?? 'Agency <onboarding@resend.dev>'
+  const from = options.from ?? process.env['FROM_EMAIL'] ?? 'Agency <onboarding@resend.dev>'
   const to = Array.isArray(options.to) ? options.to : [options.to]
   const { error } = await resend.emails.send({
     from,
@@ -42,7 +42,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
 export async function sendContactNotification(
   options: SendContactNotificationOptions
 ): Promise<{ success: boolean; error?: string }> {
-  const to = options.to ?? process.env.CONTACT_TO_EMAIL ?? ''
+  const to = options.to ?? process.env['CONTACT_TO_EMAIL'] ?? ''
   if (!to) return { success: false, error: 'CONTACT_TO_EMAIL not set' }
   const subject = `New contact from ${options.source}: ${options.name}`
   const html = `

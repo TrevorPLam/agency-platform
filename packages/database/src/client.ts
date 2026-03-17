@@ -34,8 +34,8 @@ export interface CookieStore {
  */
 export function createSupabaseServerClient(cookieStore: CookieStore) {
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+    process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!,
     {
       cookies: {
         getAll() {
@@ -56,13 +56,13 @@ export function createSupabaseServerClient(cookieStore: CookieStore) {
  * @returns Typed Supabase client instance
  */
 export function createSupabaseBrowserClient() {
-  if (typeof window === 'undefined') {
+  if (typeof globalThis === 'undefined' || !('window' in globalThis)) {
     throw new Error('createSupabaseBrowserClient can only be called in browser environment')
   }
 
   return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env['NEXT_PUBLIC_SUPABASE_URL']!,
+    process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY']!,
   )
 }
 

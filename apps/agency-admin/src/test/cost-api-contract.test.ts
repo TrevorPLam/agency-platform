@@ -9,6 +9,8 @@ import type {
   BudgetAlert,
   OptimizationRecommendation,
   HTTP_STATUS,
+} from '../types/cost-api'
+import {
   AuthenticationError,
   AuthorizationError,
   NetworkError,
@@ -194,13 +196,13 @@ export function runContractTests(): boolean {
     const recommendationsValid = validateOptimizationRecommendation(validRecommendations)
 
     // Test error creation
-    const authError = createTestAuthenticationError()
-    const authError = createTestAuthorizationError()
+    const authnError = createTestAuthenticationError()
+    const authzError = createTestAuthorizationError()
     const networkError = createTestNetworkError()
 
     const errorsValid = 
-      authError instanceof AuthenticationError &&
-      authError instanceof AuthorizationError &&
+      authnError instanceof AuthenticationError &&
+      authzError instanceof AuthorizationError &&
       networkError instanceof NetworkError
 
     // Test HTTP status constants

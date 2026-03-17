@@ -5,10 +5,37 @@ import {
   resolveTenantFromRequest,
 } from '@agency/database'
 
+function ensureRequestId(request: NextRequest): string {
+  const existing = request.headers.get('x-request-id')
+  if (existing && existing.length > 0) {
+    return existing
+  }
+  return crypto.randomUUID()
+}
+
 export async function middleware(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers)
+  const requestId = ensureRequestId(request)
+  const incomingTraceparent = request.headers.get('traceparent')
+  const incomingSentryTrace = request.headers.get('sentry-trace')
+  requestHeaders.set('x-request-id', requestId)
+  if (incomingTraceparent) {
+    requestHeaders.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    requestHeaders.set('sentry-trace', incomingSentryTrace)
+  }
+
   const response = NextResponse.next({
-    request: { headers: request.headers },
+    request: { headers: requestHeaders },
   })
+  response.headers.set('x-request-id', requestId)
+  if (incomingTraceparent) {
+    response.headers.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    response.headers.set('sentry-trace', incomingSentryTrace)
+  }
 
   const cookieStore = {
     getAll: () => request.cookies.getAll().map((c) => ({ name: c.name, value: c.value })),
@@ -29,8 +56,18 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-tenant-id', tenant.tenantId)
     response.headers.set('x-tenant-slug', tenant.tenantSlug)
     response.headers.set('x-tenant-source', tenant.source)
-  } catch {
-    // No tenant resolved (e.g. hostname not in tenants table); continue without tenant headers
+  } catch (error) {
+    console.warn(
+      JSON.stringify({
+        timestamp: new Date().toISOString(),
+        level: 'warn',
+        message: 'Tenant resolution failed in middleware',
+        service: 'riley-day-care',
+        requestId,
+        pathname: request.nextUrl.pathname,
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+      })
+    )
   }
 
   const pathname = request.nextUrl.pathname
