@@ -88,6 +88,13 @@ This roadmap reflects:
 - `apps/agency-admin/src/app/api/costs/recommendations/route.ts` PATCH updates by `id` without tenant scoping, creating IDOR-style risk.
 - `apps/agency-admin/src/components/costs/cost-management-dashboard.tsx` calls cost APIs without required `tenant_id`, causing contract-level runtime failures.
 - `packages/database/src/types.ts` is currently empty in this branch state, which can block affected build/type/test workflows.
+- `apps/prospective-clients/*/src/app/(auth)/callback/route.ts` and login actions currently accept unvalidated redirect targets (`next`/`redirect`), creating open-redirect risk.
+- `supabase/migrations/006_dora_metrics.sql` policies currently allow broad authenticated reads without tenant-scoped checks.
+- `supabase/migrations/011_cost_monitoring.sql` uses `SECURITY DEFINER` in `get_tenant_cost_summary` without explicit caller-tenant enforcement.
+- `supabase/migrations/010_bookings.sql`, `011_cost_monitoring.sql`, and `012_artifact_lifecycle_management.sql` use `CREATE INDEX CONCURRENTLY`, which is unsafe in transactional migration flows.
+- `supabase/migrations/012_artifact_lifecycle_management.sql` uses `tenant_id TEXT` instead of UUID-aligned tenant typing, creating policy/type mismatch risk.
+- `.github/workflows/recovery-test.yml` and `.github/workflows/governance.yml` reference scripts/files that do not exist, creating guaranteed CI failure paths.
+- docs include high-volume broken links and stale path references (e.g. `docs/architecture/*`), reducing operational trust in runbooks.
 
 ---
 
@@ -236,7 +243,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-05: Package build/export integrity fixes
+## [x] TASK-05: Package build/export integrity fixes
 
 **Why:** Export/build mismatches create latent runtime and DX failures.
 
@@ -246,14 +253,26 @@ This roadmap reflects:
 - `packages/security` type export story fixed (`d.ts` generated or exports corrected).
 - broken scripts in governance path resolved.
 
-**Target Files**
-- `packages/design-tokens/package.json`
-- `packages/metrics/package.json`
-- `packages/metrics/tsup.config.ts`
-- `packages/security/package.json`
-- `packages/security/tsup.config.ts`
-- `packages/governance/package.json`
-- `packages/governance/src/*`
+**Implementation Notes:**
+- ✅ **COMPLETED**: Fixed `packages/design-tokens/package.json` exports to match actual build output:
+  - Changed `"import": "./dist/index.mjs"` to `"import": "./dist/index.js"` 
+  - Build generates `index.js` (ESM) and `index.cjs` (CJS), not `index.mjs`
+- 🔄 **PARTIAL**: Other packages blocked by TypeScript strict mode errors and missing database types
+- 🚫 **BLOCKED**: `packages/security`, `packages/governance`, `packages/metrics` all fail due to:
+  1. TypeScript strict mode compilation errors (from TASK-04 enhancements)
+  2. Missing database types in `@agency/database` (TASK-10B dependency)
+- 📝 **FINDINGS**: Root cause is incomplete `packages/database/src/types.ts` file blocking dependent packages
+
+**Target Files** - PARTIALLY COMPLETED
+- `packages/design-tokens/package.json` ✅
+- `packages/metrics/package.json` ⚠️ (blocked by database types)
+- `packages/metrics/tsup.config.ts` ⚠️ (blocked by database types)
+- `packages/security/package.json` ⚠️ (blocked by TypeScript errors)
+- `packages/security/tsup.config.ts` ⚠️ (blocked by TypeScript errors)
+- `packages/governance/package.json` ⚠️ (blocked by TypeScript errors)
+- `packages/governance/src/*` ⚠️ (blocked by TypeScript errors)
+
+**Dependencies:** Requires TASK-10B completion for full resolution
 
 ---
 
@@ -388,6 +407,128 @@ This roadmap reflects:
 - `packages/database/package.json`
 - `.github/workflows/ci.yml`
 - `CONTRIBUTING.md`
+
+---
+
+## [ ] TASK-10C: Redirect hardening for auth flows
+
+**Why:** Unvalidated redirect targets (`next`, `redirect`) create open-redirect risk after auth.
+
+**Definition of Done**
+- All auth callback/login flows only allow safe relative redirects (no absolute external targets, no protocol-relative `//`).
+- Shared validation utility used where practical to prevent drift.
+- Invalid redirect inputs fall back to safe defaults.
+
+**Target Files**
+- `apps/agency-admin/src/app/login/actions.ts`
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/login/actions.ts`
+- `apps/prospective-clients/the-barber-cave/src/app/(auth)/login/actions.ts`
+- `apps/prospective-clients/riley-day-care/src/app/(auth)/callback/route.ts`
+- `apps/prospective-clients/the-barber-cave/src/app/(auth)/callback/route.ts`
+
+---
+
+## [ ] TASK-10D: DORA data tenant isolation and policy correction
+
+**Why:** Current DORA table policies are not tenant-scoped and can leak cross-tenant data.
+
+**Definition of Done**
+- DORA tables are tenant-scoped (or explicitly admin-only with documented rationale).
+- RLS policies enforce tenant context from `app_metadata`.
+- pgTAP tests include DORA isolation checks.
+
+**Target Files**
+- `supabase/migrations/006_dora_metrics.sql`
+- `supabase/migrations/007_refactor_rls_use_tenant_id_helper.sql` (if updates required)
+- `supabase/tests/database/01-tenant-isolation.sql`
+- `supabase/tests/database/03-positive-access.sql`
+
+---
+
+## [ ] TASK-10E: Cost summary function authorization fix (`SECURITY DEFINER`)
+
+**Why:** Definer-executed functions must enforce caller authorization internally, not trust input params.
+
+**Definition of Done**
+- `get_tenant_cost_summary` enforces caller tenant equivalence (or is restricted to service-role usage only).
+- Function behavior is documented with explicit authorization contract.
+- Route usage aligns with updated contract and tests cover negative cross-tenant cases.
+
+**Target Files**
+- `supabase/migrations/011_cost_monitoring.sql`
+- `apps/agency-admin/src/app/api/costs/summary/route.ts`
+- `apps/agency-admin/src/app/api/costs/metrics/route.ts`
+- `supabase/tests/database/*` (function auth test coverage)
+
+---
+
+## [ ] TASK-10F: Migration safety and ordering integrity pass
+
+**Why:** Current migration set includes patterns that can fail in transactional execution and ordering ambiguity.
+
+**Definition of Done**
+- `CREATE INDEX CONCURRENTLY` usage removed or moved to safe non-transactional strategy.
+- Duplicate/ambiguous migration ordering is resolved with deterministic sequence.
+- migration runbook includes explicit guidance for online index strategy.
+
+**Target Files**
+- `supabase/migrations/010_bookings.sql`
+- `supabase/migrations/011_cost_monitoring.sql`
+- `supabase/migrations/012_artifact_lifecycle_management.sql`
+- `docs/SUPABASE_LOCAL.md`
+- `docs/DEVELOPER_OPERATIONS.md`
+
+---
+
+## [ ] TASK-10G: Artifact tenant schema normalization (UUID alignment)
+
+**Why:** Artifact lifecycle tables currently diverge from core tenant typing and weaken policy correctness.
+
+**Definition of Done**
+- Artifact-related tenant columns align with canonical tenant UUID model.
+- Foreign keys and RLS comparisons are type-consistent.
+- Seed/default data is valid for tenant model or moved to explicit bootstrap flow.
+
+**Target Files**
+- `supabase/migrations/012_artifact_lifecycle_management.sql`
+- `packages/artifacts/src/*`
+- `supabase/tests/database/00-rls-coverage.sql`
+
+---
+
+## [ ] TASK-10H: CI workflow executable integrity recovery
+
+**Why:** Multiple workflows reference missing scripts/files and can fail independent of product correctness.
+
+**Definition of Done**
+- Recovery and governance workflows only reference existing executable scripts.
+- Missing scripts are implemented or workflow steps are removed/guarded.
+- Workflow smoke run validates script path correctness.
+
+**Target Files**
+- `.github/workflows/recovery-test.yml`
+- `.github/workflows/governance.yml`
+- `.github/workflows/audit.yml`
+- `scripts/test/*` (create as needed)
+- `scripts/governance/*`
+
+---
+
+## [ ] TASK-10I: Documentation path and runbook trust restoration
+
+**Why:** Broken links and stale path conventions in docs create operational errors during incidents and onboarding.
+
+**Definition of Done**
+- Broken path references (`docs/architecture/*`, `docs/guides/*`, etc.) are corrected or files moved to match.
+- security/onboarding docs reference current canonical files.
+- docs link-check is automated in CI or pre-merge validation.
+
+**Target Files**
+- `README.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `docs/*.md`
+- `.github/workflows/ci.yml` (or dedicated docs validation workflow)
 
 ---
 
@@ -534,7 +675,7 @@ This roadmap reflects:
 2. `TASK-03` + `TASK-04` + `TASK-05` should complete before broad new feature rollout.
 3. `TASK-11` starts during P1 and continues through all later tasks.
 4. `TASK-14` + `TASK-15` + `TASK-16` are mandatory before production launch claims.
-5. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-11` for API correctness before broader confidence claims.
+5. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-10C` -> `TASK-10D` -> `TASK-10E` -> `TASK-10F` -> `TASK-10G` -> `TASK-10H` -> `TASK-10I` -> `TASK-11` for security/data/ops correctness before broader confidence claims.
 
 ---
 
