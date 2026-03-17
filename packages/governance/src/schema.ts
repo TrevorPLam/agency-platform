@@ -366,3 +366,133 @@ export const workflowDefinitionSchema = {
     }
   }
 }
+
+export const agentClassificationSchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agency-platform.github.io/schemas/agent-classification.json",
+  "title": "Agent Classification Schema",
+  "description": "Schema for agent classification properties used in agency platform governance",
+  "type": "object",
+  "properties": {
+    // Agent Classification
+    "agent_type": {
+      "type": "string",
+      "enum": ["Autonomous", "Semi-Autonomous", "Scripted", "Orchestrator"],
+      "description": "Type of agent based on autonomy and decision-making capabilities",
+      "default": "Semi-Autonomous"
+    },
+    "autonomy_level": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"],
+      "description": "Level of agent autonomy in decision-making",
+      "default": "Medium"
+    },
+    "decision_scope": {
+      "type": "string",
+      "enum": ["Internal", "Customer-Facing", "System-Admin", "Cross-System"],
+      "description": "Scope of agent decision-making authority",
+      "default": "Internal"
+    },
+    
+    // Authority & Boundaries
+    "human_oversight_required": {
+      "type": "boolean",
+      "description": "Whether human oversight is required for agent decisions",
+      "default": true
+    },
+    "max_decision_impact": {
+      "type": "string",
+      "enum": ["Low", "Medium", "High", "Critical"],
+      "description": "Maximum impact level of agent decisions",
+      "default": "Medium"
+    },
+    
+    // Technical Properties
+    "model_framework": {
+      "type": "string",
+      "description": "AI model framework used by the agent",
+      "examples": ["OpenAI GPT-4", "Claude", "Custom LLM", "Rule-Based Engine"]
+    },
+    "reasoning_approach": {
+      "type": "string",
+      "enum": ["Symbolic", "Neural", "Hybrid", "Rule-Based"],
+      "description": "Primary reasoning approach used by the agent",
+      "default": "Hybrid"
+    },
+    "orchestration_pattern": {
+      "type": "string",
+      "enum": ["Hierarchical", "Peer-to-Peer", "Event-Driven"],
+      "description": "Orchestration pattern for multi-agent coordination",
+      "default": "Hierarchical"
+    },
+    
+    // Operational Properties
+    "lifecycle_stage": {
+      "type": "string",
+      "enum": ["Development", "Testing", "Validation", "Pilot", "Production", "Maintenance", "Decommissioning"],
+      "description": "Current stage in agent lifecycle",
+      "default": "Development"
+    },
+    "deployment_environment": {
+      "type": "string",
+      "enum": ["Development", "Staging", "Production", "Hybrid"],
+      "description": "Deployment environment for the agent",
+      "default": "Development"
+    },
+    "monitoring_level": {
+      "type": "string",
+      "enum": ["Basic", "Enhanced", "Comprehensive"],
+      "description": "Level of monitoring and observability for the agent",
+      "default": "Enhanced"
+    },
+    "audit_frequency": {
+      "type": "string",
+      "enum": ["Real-time", "Hourly", "Daily", "Weekly"],
+      "description": "Frequency of agent audit trail generation",
+      "default": "Daily"
+    },
+    
+    // Compliance & Security
+    "compliance_frameworks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["SOC2", "ISO27001", "HIPAA", "PCI-DSS", "GDPR", "CCPA", "NIST"]
+      },
+      "uniqueItems": true,
+      "description": "Applicable compliance frameworks for the agent",
+      "default": []
+    },
+    "data_access_level": {
+      "type": "string",
+      "enum": ["Public", "Internal", "Confidential", "Restricted"],
+      "description": "Maximum data access level for the agent",
+      "default": "Internal"
+    },
+    "security_classification": {
+      "type": "string",
+      "enum": ["Standard", "Elevated", "High", "Critical"],
+      "description": "Security classification level for the agent",
+      "default": "Standard"
+    },
+    "audit_trail_required": {
+      "type": "boolean",
+      "description": "Whether comprehensive audit trail is required for the agent",
+      "default": true
+    }
+  },
+  "required": [
+    "agent_type",
+    "autonomy_level",
+    "decision_scope",
+    "human_oversight_required",
+    "max_decision_impact",
+    "lifecycle_stage",
+    "deployment_environment",
+    "monitoring_level",
+    "audit_frequency",
+    "data_access_level",
+    "security_classification",
+    "audit_trail_required"
+  ]
+}

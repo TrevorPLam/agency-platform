@@ -419,24 +419,40 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-09: Root loading/error/not-found consistency
+## [x] TASK-09: Root loading/error/not-found consistency
 
 **Why:** UX resilience differs between apps.
 
 **Definition of Done**
-- `firm`, `riley-day-care`, and `the-barber-cave` have root `loading.tsx`, `error.tsx`, and `not-found.tsx` patterns as appropriate.
-- internal/admin app behavior remains intentional.
+- `firm`, `riley-day-care`, and `the-barber-cave` have root `loading.tsx`, `error.tsx`, and `not-found.tsx` patterns as appropriate. ✅
+- internal/admin app behavior remains intentional. ✅
 
-**Target Files**
-- `apps/firm/src/app/loading.tsx`
-- `apps/firm/src/app/error.tsx`
-- `apps/firm/src/app/not-found.tsx`
-- `apps/prospective-clients/riley-day-care/src/app/loading.tsx`
-- `apps/prospective-clients/riley-day-care/src/app/error.tsx`
-- `apps/prospective-clients/riley-day-care/src/app/not-found.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/loading.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/error.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/not-found.tsx`
+**Implementation Notes:**
+- ✅ **Consistent Loading States**: Created accessible loading components with spinning indicators and contextual text for each app
+- ✅ **Enhanced Error Boundaries**: Improved error.tsx with proper recovery options, development-only error details, and accessible messaging
+- ✅ **SEO-Optimized 404 Pages**: Added not-found.tsx with proper metadata, contextual navigation, and helpful links for each app
+- ✅ **Accessibility Compliance**: All components use semantic HTML, ARIA attributes, and WCAG 2.2 AA patterns
+- ✅ **Design System Integration**: Used @agency/ui components and design tokens for consistency
+- ✅ **Client-Specific Branding**: Each app has contextual messaging (firm: agency, riley-day-care: childcare, the-barber-cave: barber services)
+- ✅ **Progressive Enhancement**: Server Components by default, client boundaries only where needed for error handling
+
+**Technical Benefits Achieved:**
+- **UX Resilience**: Consistent loading, error, and 404 experiences across all public-facing apps
+- **Accessibility**: Proper focus management, semantic HTML, and screen reader support
+- **SEO**: Proper metadata and structured content for not-found pages
+- **Developer Experience**: Standardized patterns that can be replicated for future clients
+- **Error Recovery**: Multiple recovery paths (try again, go home, contact) for better user experience
+
+**Target Files** - COMPLETED
+- `apps/firm/src/app/loading.tsx` ✅
+- `apps/firm/src/app/error.tsx` ✅  
+- `apps/firm/src/app/not-found.tsx` ✅
+- `apps/prospective-clients/riley-day-care/src/app/loading.tsx` ✅
+- `apps/prospective-clients/riley-day-care/src/app/error.tsx` ✅
+- `apps/prospective-clients/riley-day-care/src/app/not-found.tsx` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/loading.tsx` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/error.tsx` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/not-found.tsx` ✅
 
 ---
 

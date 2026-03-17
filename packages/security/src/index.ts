@@ -9,5 +9,7 @@ export * from './sbom'
 export * from './integrity'
 export * from './provenance'
 export * from './types'
-
+export * from './monitoring'
+export * from './crypto'
+export * from './agent-auditing'
 export { SecurityManager } from './security-manager'

@@ -1,7 +1,10 @@
 import { 
   RepositoryProperties, 
   RiskAssessment, 
-  RiskFactor
+  RiskFactor,
+  AgentProperties,
+  AgentRiskAssessment,
+  AgentRiskFactor
 } from './types'
 
 /**
@@ -402,5 +405,527 @@ export class RiskAssessmentEngine {
       errors,
       warnings
     }
+  }
+
+  // ============================================================================
+  // AGENT-SPECIFIC RISK ASSESSMENT METHODS
+  // ============================================================================
+
+  /**
+   * Calculate agent-specific risk assessment
+   */
+  calculateAgentRiskScore(
+    agentProperties: AgentProperties,
+    baseProperties?: RepositoryProperties
+  ): AgentRiskAssessment {
+    // Start with base repository risk assessment if provided
+    let baseAssessment: RiskAssessment | null = null
+    if (baseProperties) {
+      baseAssessment = this.calculateRiskScore(baseProperties)
+    }
+
+    // Calculate agent-specific risk factors
+    const agentFactors = this.calculateAgentRiskFactors(agentProperties)
+    
+    // Calculate agent-specific risk scores
+    const autonomyRiskScore = this.calculateAutonomyRisk(agentProperties)
+    const humanOversightRisk = this.calculateHumanOversightRisk(agentProperties)
+    const decisionImpactRisk = this.calculateDecisionImpactRisk(agentProperties)
+    const biasFairnessRisk = this.calculateBiasFairnessRisk(agentProperties)
+
+    // Combine all risk factors
+    const allFactors: AgentRiskFactor[] = [
+      ...agentFactors,
+      ...this.createAgentSpecificRiskFactors(
+        autonomyRiskScore,
+        humanOversightRisk,
+        decisionImpactRisk,
+        biasFairnessRisk
+      )
+    ]
+
+    // Calculate total agent risk score
+    const agentSpecificScore = this.calculateAgentSpecificRiskScore(allFactors)
+    
+    // Combine with base assessment if available
+    let totalScore = agentSpecificScore
+    if (baseAssessment) {
+      // Weight agent-specific risk higher than base repository risk
+      totalScore = (agentSpecificScore * 0.7) + (baseAssessment.score * 0.3)
+    }
+
+    const category = this.getRiskCategory(totalScore)
+    const overallAgentRisk = this.getAgentRiskCategory(totalScore, agentProperties)
+
+    // Generate agent-specific recommendations
+    const recommendations = this.generateAgentRecommendations(
+      agentProperties,
+      category,
+      allFactors,
+      baseAssessment
+    )
+
+    return {
+      score: Math.round(totalScore * 100) / 100,
+      category,
+      factors: allFactors,
+      recommendations,
+      last_assessed: new Date().toISOString(),
+      agent_specific_factors: allFactors.filter(f => 'factor_category' in f),
+      autonomy_risk_score: autonomyRiskScore,
+      human_oversight_risk: humanOversightRisk,
+      decision_impact_risk: decisionImpactRisk,
+      bias_fairness_risk: biasFairnessRisk,
+      overall_agent_risk
+    }
+  }
+
+  /**
+   * Calculate agent-specific risk factors
+   */
+  private calculateAgentRiskFactors(agentProperties: AgentProperties): AgentRiskFactor[] {
+    const factors: AgentRiskFactor[] = []
+
+    // Autonomy Level Risk
+    const autonomyWeight = this.getAutonomyWeight(agentProperties.autonomy_level)
+    factors.push({
+      factor: 'Agent Autonomy Level',
+      weight: 0.25,
+      value: autonomyWeight,
+      contribution: autonomyWeight * 0.25,
+      factor_category: 'Autonomy',
+      mitigation_strategies: this.getAutonomyMitigationStrategies(agentProperties.autonomy_level),
+      monitoring_required: agentProperties.autonomy_level !== 'Low',
+      review_frequency: this.getReviewFrequency(agentProperties.autonomy_level)
+    })
+
+    // Decision Scope Risk
+    const decisionScopeWeight = this.getDecisionScopeWeight(agentProperties.decision_scope)
+    factors.push({
+      factor: 'Agent Decision Scope',
+      weight: 0.20,
+      value: decisionScopeWeight,
+      contribution: decisionScopeWeight * 0.20,
+      factor_category: 'Decision_Impact',
+      mitigation_strategies: this.getDecisionScopeMitigationStrategies(agentProperties.decision_scope),
+      monitoring_required: agentProperties.decision_scope !== 'Internal',
+      review_frequency: 'Daily'
+    })
+
+    // Data Access Risk
+    const dataAccessWeight = this.getDataAccessWeight(agentProperties.data_access_level)
+    factors.push({
+      factor: 'Agent Data Access Level',
+      weight: 0.15,
+      value: dataAccessWeight,
+      contribution: dataAccessWeight * 0.15,
+      factor_category: 'Data_Access',
+      mitigation_strategies: this.getDataAccessMitigationStrategies(agentProperties.data_access_level),
+      monitoring_required: agentProperties.data_access_level !== 'Public',
+      review_frequency: 'Hourly'
+    })
+
+    // Human Oversight Risk
+    const oversightWeight = agentProperties.human_oversight_required ? 1.0 : 2.0
+    factors.push({
+      factor: 'Human Oversight Requirements',
+      weight: 0.20,
+      value: oversightWeight,
+      contribution: oversightWeight * 0.20,
+      factor_category: 'Human_Oversight',
+      mitigation_strategies: this.getOversightMitigationStrategies(agentProperties.human_oversight_required),
+      monitoring_required: !agentProperties.human_oversight_required,
+      review_frequency: agentProperties.human_oversight_required ? 'Weekly' : 'Continuous'
+    })
+
+    // Technical Complexity Risk
+    const technicalWeight = this.getTechnicalComplexityWeight(agentProperties)
+    factors.push({
+      factor: 'Agent Technical Complexity',
+      weight: 0.10,
+      value: technicalWeight,
+      contribution: technicalWeight * 0.10,
+      factor_category: 'Technical',
+      mitigation_strategies: this.getTechnicalMitigationStrategies(agentProperties),
+      monitoring_required: agentProperties.orchestration_pattern !== 'Hierarchical',
+      review_frequency: 'Monthly'
+    })
+
+    // Compliance Framework Risk
+    const complianceWeight = this.getComplianceFrameworkWeight(agentProperties.compliance_frameworks.length)
+    factors.push({
+      factor: 'Agent Compliance Requirements',
+      weight: 0.10,
+      value: complianceWeight,
+      contribution: complianceWeight * 0.10,
+      factor_category: 'Compliance',
+      mitigation_strategies: this.getComplianceMitigationStrategies(agentProperties.compliance_frameworks),
+      monitoring_required: agentProperties.compliance_frameworks.length > 0,
+      review_frequency: 'Weekly'
+    })
+
+    return factors
+  }
+
+  /**
+   * Calculate autonomy-specific risk score
+   */
+  private calculateAutonomyRisk(agentProperties: AgentProperties): number {
+    const autonomyWeights = { 'Low': 1.0, 'Medium': 2.0, 'High': 3.0, 'Critical': 4.0 }
+    let risk = autonomyWeights[agentProperties.autonomy_level]
+
+    // Increase risk for customer-facing agents
+    if (agentProperties.decision_scope === 'Customer-Facing') {
+      risk *= 1.5
+    }
+
+    // Increase risk for agents without human oversight
+    if (!agentProperties.human_oversight_required) {
+      risk *= 2.0
+    }
+
+    // Decrease risk for agents with comprehensive monitoring
+    if (agentProperties.monitoring_level === 'Comprehensive') {
+      risk *= 0.8
+    }
+
+    return Math.min(risk, 4.0) // Cap at maximum risk
+  }
+
+  /**
+   * Calculate human oversight risk
+   */
+  private calculateHumanOversightRisk(agentProperties: AgentProperties): number {
+    let risk = 1.0 // Base risk
+
+    if (!agentProperties.human_oversight_required) {
+      risk = 3.0 // High risk without oversight
+    }
+
+    // Increase risk based on decision impact
+    const impactWeights = { 'Low': 0.8, 'Medium': 1.0, 'High': 1.5, 'Critical': 2.0 }
+    risk *= impactWeights[agentProperties.max_decision_impact]
+
+    // Decrease risk with comprehensive audit trails
+    if (agentProperties.audit_trail_required && agentProperties.audit_frequency === 'Real-time') {
+      risk *= 0.7
+    }
+
+    return Math.min(risk, 4.0)
+  }
+
+  /**
+   * Calculate decision impact risk
+   */
+  private calculateDecisionImpactRisk(agentProperties: AgentProperties): number {
+    const impactWeights = { 'Low': 1.0, 'Medium': 2.0, 'High': 3.0, 'Critical': 4.0 }
+    let risk = impactWeights[agentProperties.max_decision_impact]
+
+    // Increase risk for cross-system decisions
+    if (agentProperties.decision_scope === 'Cross-System') {
+      risk *= 1.5
+    }
+
+    // Increase risk for autonomous agents
+    if (agentProperties.autonomy_level === 'Critical') {
+      risk *= 1.3
+    }
+
+    return Math.min(risk, 4.0)
+  }
+
+  /**
+   * Calculate bias and fairness risk
+   */
+  private calculateBiasFairnessRisk(agentProperties: AgentProperties): number {
+    let risk = 1.5 // Base risk for all AI agents
+
+    // Increase risk for customer-facing agents
+    if (agentProperties.decision_scope === 'Customer-Facing') {
+      risk *= 1.5
+    }
+
+    // Increase risk for autonomous agents
+    if (agentProperties.autonomy_level === 'High' || agentProperties.autonomy_level === 'Critical') {
+      risk *= 1.3
+    }
+
+    // Decrease risk for agents with comprehensive monitoring
+    if (agentProperties.monitoring_level === 'Comprehensive') {
+      risk *= 0.8
+    }
+
+    // Increase risk for neural networks (more prone to bias)
+    if (agentProperties.reasoning_approach === 'Neural') {
+      risk *= 1.2
+    }
+
+    return Math.min(risk, 4.0)
+  }
+
+  /**
+   * Create agent-specific risk factors
+   */
+  private createAgentSpecificRiskFactors(
+    autonomyRisk: number,
+    humanOversightRisk: number,
+    decisionImpactRisk: number,
+    biasFairnessRisk: number
+  ): AgentRiskFactor[] {
+    return [
+      {
+        factor: 'Autonomy Risk Score',
+        weight: 0.3,
+        value: autonomyRisk,
+        contribution: autonomyRisk * 0.3,
+        factor_category: 'Autonomy',
+        mitigation_strategies: ['Implement bounded autonomy', 'Add human-in-the-loop checkpoints', 'Enhanced monitoring'],
+        monitoring_required: true,
+        review_frequency: 'Continuous'
+      },
+      {
+        factor: 'Human Oversight Risk',
+        weight: 0.25,
+        value: humanOversightRisk,
+        contribution: humanOversightRisk * 0.25,
+        factor_category: 'Human_Oversight',
+        mitigation_strategies: ['Implement oversight protocols', 'Add escalation paths', 'Enhanced audit trails'],
+        monitoring_required: humanOversightRisk > 2.0,
+        review_frequency: 'Daily'
+      },
+      {
+        factor: 'Decision Impact Risk',
+        weight: 0.25,
+        value: decisionImpactRisk,
+        contribution: decisionImpactRisk * 0.25,
+        factor_category: 'Decision_Impact',
+        mitigation_strategies: ['Implement decision boundaries', 'Add approval workflows', 'Risk-based controls'],
+        monitoring_required: true,
+        review_frequency: 'Hourly'
+      },
+      {
+        factor: 'Bias and Fairness Risk',
+        weight: 0.2,
+        value: biasFairnessRisk,
+        contribution: biasFairnessRisk * 0.2,
+        factor_category: 'Technical',
+        mitigation_strategies: ['Regular bias audits', 'Fairness metrics monitoring', 'Diverse training data'],
+        monitoring_required: biasFairnessRisk > 2.0,
+        review_frequency: 'Weekly'
+      }
+    ]
+  }
+
+  /**
+   * Calculate agent-specific total risk score
+   */
+  private calculateAgentSpecificRiskScore(factors: AgentRiskFactor[]): number {
+    return factors.reduce((sum, factor) => sum + factor.contribution, 0)
+  }
+
+  /**
+   * Get agent-specific risk category
+   */
+  private getAgentRiskCategory(score: number, agentProperties: AgentProperties): 'Low' | 'Medium' | 'High' | 'Critical' {
+    // Stricter thresholds for agents due to higher potential impact
+    if (score >= 3.0) return 'Critical'
+    if (score >= 2.5) return 'High'
+    if (score >= 1.8) return 'Medium'
+    return 'Low'
+  }
+
+  /**
+   * Generate agent-specific recommendations
+   */
+  private generateAgentRecommendations(
+    agentProperties: AgentProperties,
+    category: string,
+    factors: AgentRiskFactor[],
+    baseAssessment: RiskAssessment | null
+  ): string[] {
+    const recommendations: string[] = []
+
+    // Base recommendations by category
+    switch (category) {
+      case 'Critical':
+        recommendations.push('Implement real-time agent monitoring and alerting')
+        recommendations.push('Require human approval for all agent decisions')
+        recommendations.push('Establish agent incident response team')
+        recommendations.push('Implement comprehensive audit trails')
+        break
+      case 'High':
+        recommendations.push('Implement enhanced agent monitoring')
+        recommendations.push('Require human oversight for high-impact decisions')
+        recommendations.push('Conduct regular agent behavior audits')
+        break
+      case 'Medium':
+        recommendations.push('Implement basic agent monitoring')
+        recommendations.push('Establish agent performance metrics')
+        recommendations.push('Conduct periodic agent reviews')
+        break
+      case 'Low':
+        recommendations.push('Maintain basic agent oversight')
+        recommendations.push('Monitor agent performance metrics')
+        break
+    }
+
+    // Autonomy-specific recommendations
+    if (agentProperties.autonomy_level === 'Critical') {
+      recommendations.push('Implement multi-layer human oversight')
+      recommendations.push('Establish agent decision review board')
+    }
+
+    // Decision scope recommendations
+    if (agentProperties.decision_scope === 'Customer-Facing') {
+      recommendations.push('Implement customer interaction monitoring')
+      recommendations.push('Establish agent communication guidelines')
+    }
+
+    if (agentProperties.decision_scope === 'Cross-System') {
+      recommendations.push('Implement system integration monitoring')
+      recommendations.push('Establish cross-system coordination protocols')
+    }
+
+    // Human oversight recommendations
+    if (!agentProperties.human_oversight_required) {
+      recommendations.push('Implement automated oversight mechanisms')
+      recommendations.push('Establish agent behavior anomaly detection')
+    }
+
+    // Include base repository recommendations if available
+    if (baseAssessment) {
+      recommendations.push(...baseAssessment.recommendations)
+    }
+
+    return [...new Set(recommendations)] // Remove duplicates
+  }
+
+  // Helper methods for agent risk calculations
+
+  private getAutonomyWeight(level: string): number {
+    const weights = { 'Low': 1.0, 'Medium': 2.0, 'High': 3.0, 'Critical': 4.0 }
+    return weights[level as keyof typeof weights] || 2.0
+  }
+
+  private getDecisionScopeWeight(scope: string): number {
+    const weights = { 'Internal': 1.0, 'Customer-Facing': 2.5, 'System-Admin': 3.0, 'Cross-System': 4.0 }
+    return weights[scope as keyof typeof weights] || 1.0
+  }
+
+  private getDataAccessWeight(level: string): number {
+    const weights = { 'Public': 1.0, 'Internal': 2.0, 'Confidential': 3.0, 'Restricted': 4.0 }
+    return weights[level as keyof typeof weights] || 1.0
+  }
+
+  private getTechnicalComplexityWeight(agentProperties: AgentProperties): number {
+    let weight = 1.0
+
+    // Increase weight based on reasoning approach
+    if (agentProperties.reasoning_approach === 'Hybrid') weight += 0.5
+    if (agentProperties.reasoning_approach === 'Neural') weight += 0.8
+
+    // Increase weight based on orchestration pattern
+    if (agentProperties.orchestration_pattern === 'Peer-to-Peer') weight += 0.5
+    if (agentProperties.orchestration_pattern === 'Event-Driven') weight += 0.7
+
+    // Increase weight based on memory systems
+    if (agentProperties.memory_systems.length > 2) weight += 0.3
+
+    return Math.min(weight, 4.0)
+  }
+
+  private getReviewFrequency(autonomyLevel: string): 'Continuous' | 'Hourly' | 'Daily' | 'Weekly' {
+    switch (autonomyLevel) {
+      case 'Critical': return 'Continuous'
+      case 'High': return 'Hourly'
+      case 'Medium': return 'Daily'
+      case 'Low': return 'Weekly'
+      default: return 'Daily'
+    }
+  }
+
+  private getAutonomyMitigationStrategies(level: string): string[] {
+    switch (level) {
+      case 'Critical':
+        return ['Multi-layer human oversight', 'Decision approval workflows', 'Real-time monitoring', 'Automated intervention']
+      case 'High':
+        return ['Human oversight checkpoints', 'Enhanced monitoring', 'Decision logging', 'Periodic reviews']
+      case 'Medium':
+        return ['Basic monitoring', 'Decision boundaries', 'Performance metrics']
+      case 'Low':
+        return ['Basic oversight', 'Error handling', 'Performance tracking']
+      default:
+        return ['Basic monitoring']
+    }
+  }
+
+  private getDecisionScopeMitigationStrategies(scope: string): string[] {
+    switch (scope) {
+      case 'Cross-System':
+        return ['System integration monitoring', 'Cross-system coordination protocols', 'Comprehensive logging']
+      case 'System-Admin':
+        return ['Admin action logging', 'Privilege escalation controls', 'System integrity checks']
+      case 'Customer-Facing':
+        return ['Customer interaction monitoring', 'Communication guidelines', 'Quality assurance']
+      case 'Internal':
+        return ['Internal process monitoring', 'Performance metrics', 'Error tracking']
+      default:
+        return ['Basic monitoring']
+    }
+  }
+
+  private getDataAccessMitigationStrategies(level: string): string[] {
+    switch (level) {
+      case 'Restricted':
+        return ['Data encryption', 'Access logging', 'Multi-factor authentication', 'Data loss prevention']
+      case 'Confidential':
+        return ['Data encryption', 'Access controls', 'Audit logging', 'Privacy controls']
+      case 'Internal':
+        return ['Access controls', 'Basic logging', 'Data classification']
+      case 'Public':
+        return ['Basic access controls', 'Performance monitoring']
+      default:
+        return ['Basic controls']
+    }
+  }
+
+  private getOversightMitigationStrategies(oversightRequired: boolean): string[] {
+    if (oversightRequired) {
+      return ['Human review protocols', 'Escalation procedures', 'Oversight training', 'Review documentation']
+    } else {
+      return ['Automated oversight', 'Anomaly detection', 'Performance monitoring', 'Automated intervention']
+    }
+  }
+
+  private getTechnicalMitigationStrategies(agentProperties: AgentProperties): string[] {
+    const strategies = ['Regular system updates', 'Performance monitoring', 'Error handling']
+
+    if (agentProperties.orchestration_pattern === 'Peer-to-Peer') {
+      strategies.push('Peer coordination monitoring', 'Consensus mechanism validation')
+    }
+
+    if (agentProperties.reasoning_approach === 'Neural') {
+      strategies.push('Model validation', 'Training data monitoring', 'Bias detection')
+    }
+
+    return strategies
+  }
+
+  private getComplianceMitigationStrategies(frameworks: string[]): string[] {
+    const strategies = ['Compliance monitoring', 'Audit trail maintenance']
+
+    if (frameworks.includes('HIPAA')) {
+      strategies.push('HIPAA compliance monitoring', 'PHI protection', 'BAA management')
+    }
+
+    if (frameworks.includes('GDPR')) {
+      strategies.push('GDPR compliance monitoring', 'Data subject rights management', 'Privacy controls')
+    }
+
+    if (frameworks.includes('SOC2')) {
+      strategies.push('SOC2 compliance monitoring', 'Security controls validation', 'Audit readiness')
+    }
+
+    return strategies
   }
 }
