@@ -19,6 +19,7 @@
   "scripts": {
     "build": "tsup && tsc -p tsconfig.declaration.json",
     "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
     "test": "pnpm exec vitest run",
     "test:ci": "pnpm exec vitest run --reporter=dot",
@@ -34,8 +35,10 @@
     "next": ">=14.0.0"
   },
   "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
     "@agency/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "eslint": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
