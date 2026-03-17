@@ -13,7 +13,8 @@ For first-run setup steps, see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 4. [IDE Performance](#ide-performance)
 5. [Workflow Automation](#workflow-automation)
 6. [Package Management](#package-management)
-7. [Developer Experience Monitoring](#developer-experience-monitoring)
+7. [Performance Monitoring](#performance-monitoring)
+8. [Developer Experience Monitoring](#developer-experience-monitoring)
 
 ---
 
@@ -248,6 +249,108 @@ For large tables where index creation might block writes:
 | Lock timeout during index creation | Reduce timeout values or schedule during low traffic |
 | Invalid index after failed CONCURRENTLY | `DROP INDEX CONCURRENTLY` + rebuild or `REINDEX CONCURRENTLY` |
 | Migration ordering conflicts | Use sequential naming, check dependencies |
+
+---
+
+## Performance Monitoring
+
+### Core Web Vitals Tracking
+
+The agency platform includes comprehensive performance monitoring with Core Web Vitals tracking:
+
+```bash
+# View performance dashboard (agency-admin)
+pnpm dev --filter=@agency/agency-admin
+# Navigate to /performance
+
+# Check performance budgets during build
+pnpm build --filter=@agency/firm
+# Performance reports saved to .next/performance-reports/
+
+# Run performance tests
+pnpm test:performance
+
+# Check performance alerts
+pnpm performance:alerts
+```
+
+### Performance Budgets
+
+Performance budgets are enforced at build time to prevent regressions:
+
+- **LCP**: ≤ 2.5s (Loading performance)
+- **INP**: ≤ 200ms (Responsiveness) 
+- **CLS**: ≤ 0.1 (Visual stability)
+- **Bundle Size**: ≤ 244KB (JavaScript)
+- **Image Size**: ≤ 500KB (Optimization)
+
+### Monitoring Setup
+
+Add to your app providers:
+
+```typescript
+import { useWebVitals, usePerformanceBudgetPresets } from '@agency/monitoring'
+
+function PerformanceMonitor({ tenantId }: { tenantId: string }) {
+  const monitor = useWebVitals({
+    tenantId,
+    enableRealUserMonitoring: true,
+    onAlert: (alert) => console.warn('Performance alert:', alert),
+  })
+
+  const { getDefaultBudgets, addBudget } = usePerformanceBudgets(monitor)
+
+  useEffect(() => {
+    const budgets = getDefaultBudgets(tenantId)
+    budgets.forEach(budget => addBudget(budget))
+  }, [tenantId])
+
+  return null
+}
+```
+
+### Performance Alerts
+
+Automated alerting for performance regressions:
+
+- **Low**: 1 violation, 1-hour cooldown
+- **Medium**: 3 violations, 30-minute cooldown  
+- **High**: 5 violations, 15-minute cooldown
+- **Critical**: 1 violation, 5-minute cooldown
+
+Alert channels: Webhook, Email, Slack, SMS
+
+### Performance Optimization
+
+#### Quick Wins
+
+1. **Image Optimization**
+   ```bash
+   # Check image sizes
+   pnpm performance:images
+   
+   # Optimize images
+   pnpm performance:optimize-images
+   ```
+
+2. **Bundle Analysis**
+   ```bash
+   # Analyze bundle sizes
+   pnpm build --filter=@agency/firm --analyze
+   ```
+
+3. **Lighthouse Audits**
+   ```bash
+   # Run Lighthouse performance audits
+   pnpm lighthouse:audit
+   ```
+
+#### Advanced Optimization
+
+- **Code Splitting**: Dynamic imports for heavy components
+- **Tree Shaking**: Remove unused code
+- **Critical CSS**: Inline critical CSS, lazy load rest
+- **Service Workers**: Cache strategies for repeat visits
 
 ---
 

@@ -1,20 +1,21 @@
 /**
- * @agency/monitoring - Cost Management Monitoring Infrastructure
+ * @agency/monitoring - Cost Management & Performance Monitoring Infrastructure
  *
- * Comprehensive cost monitoring and optimization system for the agency platform.
- * Provides storage, CI/CD, and bandwidth cost tracking with tenant isolation.
+ * Comprehensive monitoring system for the agency platform.
+ * Provides cost tracking, Core Web Vitals monitoring, and performance optimization.
  *
  * @example
  * ```typescript
- * import { CostMonitoringSystem } from '@agency/monitoring'
- * 
- * const monitoring = new CostMonitoringSystem({
+ * import { CostMonitoringSystem, useWebVitals } from '@agency/monitoring'
+ *
+ * // Cost monitoring
+ * const costMonitoring = new CostMonitoringSystem({
  *   githubToken: process.env.GITHUB_TOKEN,
  *   organization: 'my-org',
  * })
- * 
- * const metrics = await monitoring.collectMetrics()
- * const recommendations = await monitoring.generateRecommendations(metrics)
+ *
+ * // Performance monitoring
+ * const monitor = useWebVitals({ tenantId: 'firm' })
  * ```
  */
 
@@ -28,12 +29,44 @@ export type {
   MonitoringConfig,
   CostQueryFilters,
   CostAggregation,
+  WebVitalsMetrics,
+  PerformanceBudget,
+  PerformanceAlert,
+  PerformanceAggregation,
 } from './types'
 
 export { StorageMonitor } from './storage-monitor'
 export { CicdCostMonitor } from './cicd-costs'
 export { CostAlertEngine } from './cost-alerts'
 export { CostOptimizationEngine } from './optimization-engine'
+export { WebVitalsMonitor, createWebVitalsMonitor } from './web-vitals'
+export {
+  useWebVitals,
+  usePerformanceBudgets,
+  usePerformanceData,
+  usePerformanceBudgetPresets
+} from './web-vitals-hooks'
+export {
+  withPerformanceBudget,
+  createLighthouseBudgets,
+  checkPerformanceBudgets,
+  type PerformanceBudgetPluginOptions
+} from './nextjs-plugin'
+export {
+  DEFAULT_PERFORMANCE_BUDGETS,
+  MOBILE_PERFORMANCE_BUDGETS,
+  STRICT_PERFORMANCE_BUDGETS,
+  APP_BUDGET_CONFIGS,
+  getAppBudgets,
+  validatePerformanceBudgets,
+  generateBudgetReport,
+  type BudgetValidationResult
+} from './performance-budgets'
+export {
+  PerformanceAlertEngine,
+  createPerformanceAlertEngine,
+  ALERT_ESCALATION_POLICIES
+} from './performance-alerts'
 export { createRequestLogger, logInfo, logWarn, logError, type LogContext, type LogLevel } from './logger'
 export {
   DEFAULT_SLOS,

@@ -6,12 +6,28 @@
   "types": "./dist/client.d.mts",
   "exports": {
     ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    },
+    "./client": {
       "import": "./dist/client.mjs",
       "types": "./dist/client.d.mts"
     },
     "./server": {
       "import": "./dist/server.mjs",
       "types": "./dist/server.d.mts"
+    },
+    "./consent": {
+      "import": "./dist/consent.mjs",
+      "types": "./dist/consent.d.mts"
+    },
+    "./consent-context": {
+      "import": "./dist/consent-context.mjs",
+      "types": "./dist/consent-context.d.mts"
+    },
+    "./consent-banner": {
+      "import": "./dist/consent-banner.mjs",
+      "types": "./dist/consent-banner.d.mts"
     }
   },
   "dependencies": {
@@ -41,15 +57,23 @@
   },
   "tsup": {
     "entry": {
+      "index": "src/index.ts",
       "client": "src/client.ts",
-      "server": "src/server.ts"
+      "server": "src/server.ts",
+      "consent": "src/consent.ts",
+      "consent-context": "src/consent-context.tsx",
+      "consent-banner": "src/consent-banner.tsx"
     },
     "format": "esm",
     "dts": true,
     "clean": true,
     "external": [
       "posthog-js",
-      "posthog-node"
+      "posthog-node",
+      "react",
+      "react-dom",
+      "@agency/security",
+      "@agency/analytics"
     ]
   }
 }

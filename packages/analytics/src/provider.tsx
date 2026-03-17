@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { initAnalytics } from '@agency/analytics'
+import { initAnalytics } from './client'
 
 interface AnalyticsProviderProps {
   tenantSlug: string

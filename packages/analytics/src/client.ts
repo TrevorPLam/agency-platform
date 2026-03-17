@@ -8,6 +8,7 @@ let isInitialized = false
  * Initialize PostHog analytics for the client side.
  * This function must be called before any other analytics functions.
  * Sets up tenant-aware tracking as a super property.
+ * NOTE: This should only be called after consent has been granted.
  */
 export function initAnalytics(tenantSlug: string, nonce?: string): void {
   if (typeof window === 'undefined') {
@@ -63,9 +64,16 @@ export function initAnalytics(tenantSlug: string, nonce?: string): void {
 /**
  * Capture an analytics event on the client side.
  * Tenant is automatically included as a super property.
+ * This function will not capture events if consent has not been granted.
  */
 export function captureEvent(event: string, properties?: Record<string, unknown>): void {
   if (typeof window === 'undefined' || !isInitialized) {
+    return
+  }
+
+  // Check if user has granted consent for analytics
+  const posthogClient = posthog
+  if (posthogClient.get_explicit_consent_status() !== 'granted') {
     return
   }
 
@@ -75,6 +83,7 @@ export function captureEvent(event: string, properties?: Record<string, unknown>
 /**
  * Identify a user in PostHog with tenant-aware distinction.
  * Combines user ID with tenant slug for unique identification across tenants.
+ * This function will not identify users if consent has not been granted.
  */
 export function identifyUser(
   userId: string,
@@ -82,6 +91,12 @@ export function identifyUser(
   properties?: Record<string, unknown>
 ): void {
   if (typeof window === 'undefined' || !isInitialized) {
+    return
+  }
+
+  // Check if user has granted consent for analytics
+  const posthogClient = posthog
+  if (posthogClient.get_explicit_consent_status() !== 'granted') {
     return
   }
 
@@ -116,4 +131,62 @@ export function getPostHogClient() {
   }
 
   return posthog
+}
+
+/**
+ * Initialize analytics with consent awareness.
+ * This function should be used instead of initAnalytics when consent management is enabled.
+ * It will only initialize PostHog if consent has been granted for analytics.
+ */
+export function initAnalyticsWithConsent(
+  tenantSlug: string,
+  hasConsent: boolean,
+  nonce?: string
+): void {
+  if (!hasConsent) {
+    return
+  }
+
+  initAnalytics(tenantSlug, nonce)
+}
+
+/**
+ * Grant consent for analytics and initialize tracking.
+ * This should be called when user grants analytics consent.
+ */
+export function grantAnalyticsConsent(tenantSlug: string, nonce?: string): void {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  // If PostHog is already initialized, just opt in
+  if (isInitialized) {
+    posthog.opt_in_capturing()
+  } else {
+    // Initialize PostHog with consent granted
+    initAnalytics(tenantSlug, nonce)
+  }
+}
+
+/**
+ * Revoke consent for analytics.
+ * This should be called when user denies analytics consent.
+ */
+export function revokeAnalyticsConsent(): void {
+  if (typeof window === 'undefined' || !isInitialized) {
+    return
+  }
+
+  posthog.opt_out_capturing()
+}
+
+/**
+ * Check if analytics consent has been granted.
+ */
+export function hasAnalyticsConsent(): boolean {
+  if (typeof window === 'undefined' || !isInitialized) {
+    return false
+  }
+
+  return posthog.get_explicit_consent_status() === 'granted'
 }

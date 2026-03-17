@@ -226,22 +226,35 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-15: Consent and privacy architecture hardening
+## [x] TASK-15: Consent and privacy architecture hardening
 
 **Why:** Consent task exists but needs explicit architecture and event policy.
 
 **Definition of Done**
 
-- Consent state model documented and implemented for public apps.
-- Analytics/event capture honors consent state.
-- data retention/minimization rules documented at implementation level.
+- ✅ Consent state model documented and implemented for public apps.
+- ✅ Analytics/event capture honors consent state.
+- ✅ Data retention/minimization rules documented at implementation level.
+
+**Implementation Summary**
+
+- Created comprehensive consent management system with React Context API
+- Implemented consent-aware analytics using PostHog's built-in consent methods
+- Built consent banner components with granular controls (analytics, marketing, functional)
+- Updated all public apps (firm, riley-day-care, the-barber-cave) to use consent management
+- Documented comprehensive data retention policies following GDPR/CCPA best practices
+- Added consent storage with localStorage persistence
+- Implemented data retention periods: analytics (365 days), marketing (180 days), functional (730 days)
 
 **Target Files**
 
-- `apps/firm/src/components/providers.tsx`
-- `apps/prospective-clients/*/src/components/providers.tsx`
-- `packages/analytics/src/client.ts`
-- `docs/POSTHOG_DEPLOYMENT.md`
+- ✅ `packages/analytics/src/consent.ts` - Consent types and interfaces
+- ✅ `packages/analytics/src/consent-context.tsx` - React Context provider
+- ✅ `packages/analytics/src/consent-banner.tsx` - Consent banner components
+- ✅ `packages/analytics/src/client.ts` - Updated with consent-aware functions
+- ✅ `apps/firm/src/components/providers.tsx` - Consent integration
+- ✅ `apps/prospective-clients/*/src/components/providers.tsx` - Consent integration
+- ✅ `docs/DATA_RETENTION_POLICIES.md` - Comprehensive retention policies
 
 ---
 

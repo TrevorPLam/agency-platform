@@ -1,6 +1,6 @@
 /**
  * Cost monitoring types for agency platform
- * 
+ *
  * Provides comprehensive cost tracking across storage, CI/CD, and bandwidth usage
  * with tenant isolation and security controls.
  */
@@ -220,6 +220,134 @@ export interface CostAggregation {
   trend: {
     direction: 'up' | 'down' | 'stable'
     percentageChange: number
+  }
+  /** Number of data points in this aggregation */
+  dataPoints: number
+  /** Aggregation timestamp */
+  timestamp: string
+}
+
+/**
+ * Core Web Vitals metrics interface
+ * Tracks real user performance data with tenant isolation
+ */
+export interface WebVitalsMetrics {
+  /** Unique identifier for the metric record */
+  id: string
+  /** Tenant this metric belongs to (for RLS isolation) */
+  tenantId: TenantId
+  /** Page URL where metrics were collected */
+  pageUrl: string
+  /** User agent string */
+  userAgent: string
+  /** Device category */
+  deviceCategory: 'mobile' | 'tablet' | 'desktop'
+  /** Connection type */
+  connectionType: 'slow-2g' | '2g' | '3g' | '4g' | '5g' | 'unknown'
+  /** Largest Contentful Paint in milliseconds */
+  lcp: number
+  /** Interaction to Next Paint in milliseconds */
+  inp: number
+  /** Cumulative Layout Shift score */
+  cls: number
+  /** First Contentful Paint in milliseconds */
+  fcp: number
+  /** Time to First Byte in milliseconds */
+  ttfb: number
+  /** Overall performance rating */
+  rating: 'good' | 'needs-improvement' | 'poor'
+  /** Timestamp when metrics were collected */
+  timestamp: string
+  /** Additional context data */
+  context: Record<string, unknown>
+}
+
+/**
+ * Performance budget configuration
+ * Defines performance thresholds and budget rules
+ */
+export interface PerformanceBudget {
+  /** Unique identifier for the budget */
+  id: string
+  /** Tenant this budget belongs to */
+  tenantId: TenantId
+  /** Budget name/description */
+  name: string
+  /** Budget category */
+  category: 'lcp' | 'inp' | 'cls' | 'fcp' | 'ttfb' | 'bundle-size' | 'image-size'
+  /** Threshold value */
+  threshold: number
+  /** Threshold unit (ms for timing, bytes for size) */
+  unit: 'milliseconds' | 'bytes' | 'score'
+  /** Budget type */
+  type: 'maximum' | 'minimum' | 'target'
+  /** Whether this budget is currently active */
+  active: boolean
+  /** Alert severity when budget is exceeded */
+  alertSeverity: 'low' | 'medium' | 'high' | 'critical'
+  /** Budget creation timestamp */
+  createdAt: string
+  /** Budget last updated timestamp */
+  updatedAt: string
+}
+
+/**
+ * Performance alert configuration
+ * Similar to BudgetAlert but specifically for performance metrics
+ */
+export interface PerformanceAlert {
+  /** Unique identifier for the alert */
+  id: string
+  /** Tenant this alert belongs to */
+  tenantId: TenantId
+  /** Alert name/description */
+  name: string
+  /** Performance metric this alert monitors */
+  metric: 'lcp' | 'inp' | 'cls' | 'fcp' | 'ttfb'
+  /** Alert threshold value */
+  threshold: number
+  /** Current metric value */
+  currentValue: number
+  /** Alert threshold type */
+  thresholdType: 'absolute' | 'percentage' | 'rating'
+  /** Alert severity level */
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  /** Whether this alert is currently active */
+  active: boolean
+  /** Number of consecutive violations */
+  violationCount: number
+  /** When this alert was last triggered */
+  lastTriggered?: string
+  /** Alert creation timestamp */
+  createdAt: string
+  /** Alert last updated timestamp */
+  updatedAt: string
+}
+
+/**
+ * Performance aggregation result
+ * Used for performance dashboard analytics
+ */
+export interface PerformanceAggregation {
+  /** Aggregation period */
+  period: 'hourly' | 'daily' | 'weekly' | 'monthly'
+  /** Average LCP in milliseconds */
+  avgLcp: number
+  /** Average INP in milliseconds */
+  avgInp: number
+  /** Average CLS score */
+  avgCls: number
+  /** Performance rating distribution */
+  ratingDistribution: {
+    good: number
+    needsImprovement: number
+    poor: number
+  }
+  /** Trend data for each metric */
+  trends: {
+    lcp: { direction: 'up' | 'down' | 'stable'; percentageChange: number }
+    inp: { direction: 'up' | 'down' | 'stable'; percentageChange: number }
+    cls: { direction: 'up' | 'down' | 'stable'; percentageChange: number }
   }
   /** Number of data points in this aggregation */
   dataPoints: number
