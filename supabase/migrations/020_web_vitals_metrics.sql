@@ -1,9 +1,6 @@
 -- Web Vitals Metrics Table
 -- Stores Core Web Vitals data with tenant isolation for performance monitoring
 
--- Enable Row Level Security
-ALTER TABLE IF EXISTS web_vitals_metrics ENABLE ROW LEVEL SECURITY;
-
 -- Create Web Vitals metrics table
 CREATE TABLE IF NOT EXISTS public.web_vitals_metrics (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,30 +22,32 @@ CREATE TABLE IF NOT EXISTS public.web_vitals_metrics (
   CONSTRAINT web_vitals_metrics_lcp_reasonable CHECK (lcp <= 60000), -- Max 60 seconds
   CONSTRAINT web_vitals_metrics_inp_reasonable CHECK (inp <= 10000), -- Max 10 seconds
   CONSTRAINT web_vitals_metrics_fcp_reasonable CHECK (fcp <= 60000), -- Max 60 seconds
-  CONSTRAINT web_vitals_metrics_ttfb_reasonable CHECK (ttfb <= 30000), -- Max 30 seconds
+  CONSTRAINT web_vitals_metrics_ttfb_reasonable CHECK (ttfb <= 30000) -- Max 30 seconds
 );
 
+ALTER TABLE public.web_vitals_metrics ENABLE ROW LEVEL SECURITY;
+
 -- Create indexes for performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_tenant_id 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_tenant_id 
   ON public.web_vitals_metrics(tenant_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_timestamp 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_timestamp 
   ON public.web_vitals_metrics(timestamp DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_tenant_timestamp 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_tenant_timestamp 
   ON public.web_vitals_metrics(tenant_id, timestamp DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_page_url 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_page_url 
   ON public.web_vitals_metrics(page_url);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_device_category 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_device_category 
   ON public.web_vitals_metrics(device_category);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_rating 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_rating 
   ON public.web_vitals_metrics(rating);
 
 -- Composite index for common dashboard queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_web_vitals_metrics_dashboard 
+CREATE INDEX IF NOT EXISTS idx_web_vitals_metrics_dashboard 
   ON public.web_vitals_metrics(tenant_id, timestamp DESC, rating, device_category);
 
 -- Row Level Security Policies
@@ -87,17 +86,17 @@ CREATE TABLE IF NOT EXISTS public.performance_budgets (
   
   -- Constraints
   CONSTRAINT performance_budgets_threshold_positive CHECK (threshold > 0),
-  CONSTRAINT performance_budgets_unique_tenant_category UNIQUE (tenant_id, category, name),
+  CONSTRAINT performance_budgets_unique_tenant_category UNIQUE (tenant_id, category, name)
 );
 
 -- Indexes for performance budgets
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_budgets_tenant_id 
+CREATE INDEX IF NOT EXISTS idx_performance_budgets_tenant_id 
   ON public.performance_budgets(tenant_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_budgets_active 
+CREATE INDEX IF NOT EXISTS idx_performance_budgets_active 
   ON public.performance_budgets(active);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_budgets_category 
+CREATE INDEX IF NOT EXISTS idx_performance_budgets_category 
   ON public.performance_budgets(category);
 
 -- Row Level Security Policies for performance budgets
@@ -138,20 +137,20 @@ CREATE TABLE IF NOT EXISTS public.performance_alerts (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   
   -- Constraints
-  CONSTRAINT performance_alerts_violation_count_positive CHECK (violation_count > 0),
+  CONSTRAINT performance_alerts_violation_count_positive CHECK (violation_count > 0)
 );
 
 -- Indexes for performance alerts
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_alerts_tenant_id 
+CREATE INDEX IF NOT EXISTS idx_performance_alerts_tenant_id 
   ON public.performance_alerts(tenant_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_alerts_active 
+CREATE INDEX IF NOT EXISTS idx_performance_alerts_active 
   ON public.performance_alerts(active);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_alerts_severity 
+CREATE INDEX IF NOT EXISTS idx_performance_alerts_severity 
   ON public.performance_alerts(severity);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_performance_alerts_last_triggered 
+CREATE INDEX IF NOT EXISTS idx_performance_alerts_last_triggered 
   ON public.performance_alerts(last_triggered DESC);
 
 -- Row Level Security Policies for performance alerts
@@ -240,7 +239,3 @@ GRANT SELECT, INSERT ON public.web_vitals_metrics TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.performance_budgets TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.performance_alerts TO authenticated;
 
--- Grant usage of sequences
-GRANT USAGE ON SEQUENCE public.web_vitals_metrics_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE public.performance_budgets_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE public.performance_alerts_id_seq TO authenticated;

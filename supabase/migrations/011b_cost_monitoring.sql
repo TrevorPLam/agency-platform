@@ -2,11 +2,6 @@
 -- Creates tables for cost metrics, budget alerts, and optimization recommendations
 -- Implements proper Row-Level Security (RLS) for tenant isolation
 
--- Enable Row Level Security
-ALTER TABLE IF EXISTS public.budget_alerts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.cost_metrics ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.optimization_recommendations ENABLE ROW LEVEL SECURITY;
-
 -- Cost Metrics Table
 -- Stores historical cost data with tenant isolation
 CREATE TABLE IF NOT EXISTS public.cost_metrics (
@@ -24,6 +19,8 @@ CREATE TABLE IF NOT EXISTS public.cost_metrics (
     -- Indexes for performance
     CONSTRAINT cost_metrics_tenant_period CHECK (tenant_id IS NOT NULL AND period IS NOT NULL)
 );
+
+ALTER TABLE public.cost_metrics ENABLE ROW LEVEL SECURITY;
 
 -- Budget Alerts Table
 -- Stores alert configurations with tenant isolation
@@ -45,6 +42,8 @@ CREATE TABLE IF NOT EXISTS public.budget_alerts (
     CONSTRAINT budget_alerts_unique_name UNIQUE (tenant_id, name)
 );
 
+ALTER TABLE public.budget_alerts ENABLE ROW LEVEL SECURITY;
+
 -- Optimization Recommendations Table
 -- Stores AI/ML-driven optimization recommendations
 CREATE TABLE IF NOT EXISTS public.optimization_recommendations (
@@ -63,6 +62,8 @@ CREATE TABLE IF NOT EXISTS public.optimization_recommendations (
     -- Constraints
     CONSTRAINT optimization_recommendations_positive_savings CHECK (estimated_savings >= 0)
 );
+
+ALTER TABLE public.optimization_recommendations ENABLE ROW LEVEL SECURITY;
 
 -- Create indexes for performance optimization
 CREATE INDEX IF NOT EXISTS idx_cost_metrics_tenant_id ON public.cost_metrics(tenant_id);
@@ -126,11 +127,6 @@ CREATE POLICY "Users can delete own tenant recommendations" ON public.optimizati
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.cost_metrics TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.budget_alerts TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.optimization_recommendations TO authenticated;
-
--- Grant usage of sequences for UUID generation
-GRANT USAGE ON SEQUENCE public.cost_metrics_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE public.budget_alerts_id_seq TO authenticated;
-GRANT USAGE ON SEQUENCE public.optimization_recommendations_id_seq TO authenticated;
 
 -- Create updated_at trigger function (if not exists)
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

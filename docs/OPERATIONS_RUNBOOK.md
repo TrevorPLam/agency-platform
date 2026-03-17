@@ -63,7 +63,7 @@ Single reference for backup, cost, communication, DORA metrics, geographic distr
 
 ## Artifact management
 
-**Purpose:** Centralized artifact registry, promotion pipelines, policy-driven retention. When implemented: @agency/artifacts (registry, promotion, policies, retention); Supabase with RLS; migrations (e.g. 012_artifact_lifecycle_management.sql).
+**Purpose:** Centralized artifact registry, promotion pipelines, policy-driven retention. When implemented: @agency/artifacts (registry, promotion, policies, retention); Supabase with RLS; migrations (e.g. 012a_artifact_lifecycle_management.sql).
 
 - **Use:** Register artifacts, run promotion workflows, enforce retention policies. CLI/scripts and dashboard per package documentation. See [packages/artifacts/README.md](../../packages/artifacts/README.md) for package-level details.
 
@@ -78,15 +78,18 @@ For severity levels, response team structure, and lifecycle (detection → conta
 ## Error budget and SLO operations
 
 **Target SLOs (30-day rolling):**
+
 - **API availability:** 99.9% successful responses (excluding intentional 4xx client errors).
 - **API latency p95:** 99.0% of requests under 800ms.
 
 **Burn-rate policy:**
+
 - **Fast burn (>=14.4x):** page on-call immediately, pause non-critical deploys.
 - **Medium burn (>=6x):** escalate to incident commander and increase triage frequency.
 - **Slow burn (>=2x):** create reliability issue and schedule remediation in current sprint.
 
 **Verification routine:**
+
 1. Check alert source and confirm request volume/traffic anomalies.
 2. Correlate by `x-request-id`, `traceparent`, and error class code.
 3. Execute the mapped runbook below.

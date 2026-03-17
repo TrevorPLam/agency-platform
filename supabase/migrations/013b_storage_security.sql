@@ -1,9 +1,6 @@
 -- Storage Security Migration
 -- Implements secure file upload tracking with RLS and tenant isolation
 
--- Enable Row Level Security
-ALTER DATABASE SET row_security = on;
-
 -- Files table for tracking uploaded files
 CREATE TABLE IF NOT EXISTS public.files (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

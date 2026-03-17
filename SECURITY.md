@@ -89,13 +89,13 @@ grep -r "NEXT_PUBLIC_.*SERVICE_ROLE\|NEXT_PUBLIC_SUPABASE_SERVICE" --include="*.
 
 ## Baseline Audit
 
-| Date       | Vector | Command / Check                                        | Result                                                                                     |
-| ---------- | ------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| 2026-03-15 | 1      | `grep -r "user_metadata" ... packages/database/ apps/` | Only `packages/database/src/auth.ts` (allowed createUser payload). Zero in apps/.          |
-| 2026-03-15 | 2      | Cache key audit                                        | No Redis in use; rule added to `.cursor/rules/database.mdc`.                               |
-| 2026-03-15 | 3      | SERVICE*ROLE in apps/; NEXT_PUBLIC*.\*SERVICE_ROLE     | Zero in app source (only node*modules). Zero NEXT_PUBLIC* service role in apps/ packages/. |
-| 2026-03-15 | 4      | Admin client review                                    | See Vector 4 baseline review above. All usages tenant- or event-scoped.                    |
-| 2026-03-15 | 5      | HIPAA doc + checklist                                  | Documented in this file; onboarding checklist to reference when created (T-23).            |
+| Date       | Vector | Command / Check                                        | Result                                                                                              |
+| ---------- | ------ | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 2026-03-15 | 1      | `grep -r "user_metadata" ... packages/database/ apps/` | Only `packages/database/src/auth.ts` (allowed createUser payload). Zero in apps/.                   |
+| 2026-03-15 | 2      | Cache key audit                                        | No Redis in use; rule added to `.cursor/rules/database.mdc`.                                        |
+| 2026-03-15 | 3      | SERVICE*ROLE in apps/; NEXT_PUBLIC*.\*SERVICE_ROLE     | Zero in app source (only node*modules). Zero NEXT_PUBLIC* service role in apps/ packages/.          |
+| 2026-03-15 | 4      | Admin client review                                    | See Vector 4 baseline review above. All usages tenant- or event-scoped.                             |
+| 2026-03-15 | 5      | HIPAA doc + checklist                                  | Documented in this file; onboarding checklist to reference when created (T-23).                     |
 | 2026-03-16 | 6      | Supply chain security implementation                   | SBOM generation, SLSA attestations, integrity verification, cryptographic verification implemented. |
 
 ---
@@ -119,6 +119,7 @@ pnpm run verify-signatures
 ```
 
 **Fix:**
+
 - Generate SBOMs for all builds to track dependencies
 - Implement SLSA attestations for build provenance
 - Verify artifact integrity with cryptographic hashes
@@ -126,6 +127,7 @@ pnpm run verify-signatures
 - Sign critical artifacts with digital signatures
 
 **Implementation:** See [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md) for comprehensive supply chain security measures including:
+
 - SBOM generation automation (CycloneDX, SPDX)
 - SLSA Level 3 compliance
 - Artifact integrity verification (SHA-256/384/512)
@@ -150,6 +152,7 @@ grep -r "validateRedirectUrl" --include="*.ts" --include="*.tsx" packages/securi
 ```
 
 **Fix:** All authentication flows must use the `validateRedirectUrl` utility from `@agency/security` which provides:
+
 - Input validation with type checking
 - Full URL decoding with iteration limits (prevents bypass attempts)
 - Protocol-relative URL blocking (`//` attacks)
@@ -177,12 +180,14 @@ grep -A 10 -B 5 "SECURITY DEFINER" --include="*.sql" supabase/migrations/
 ```
 
 **Fix:** All `SECURITY DEFINER` functions must:
+
 1. Extract caller's tenant context from JWT claims (`app_metadata.tenant_id`)
 2. Validate caller authorization (platform admin or own tenant access)
 3. Raise 42501 (UNAUTHORIZED) for cross-tenant access attempts
 4. Document security model in function comments
 
-**Implementation:** See `supabase/migrations/011_cost_monitoring_security_fix.sql` for the comprehensive fix of `get_tenant_cost_summary` function which includes:
+**Implementation:** See `supabase/migrations/011c_cost_monitoring_security_fix.sql` for the comprehensive fix of `get_tenant_cost_summary` function which includes:
+
 - JWT-based tenant validation using `current_setting('request.jwt.claims')`
 - Platform admin enforcement with email allowlist
 - Cross-tenant access prevention with proper error codes

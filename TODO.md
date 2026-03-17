@@ -79,7 +79,7 @@ This roadmap reflects:
 - **Form hardening — partial**: Contact form Zod validation ✅ implemented in all three apps (firm, riley-day-care, the-barber-cave). Remaining: auth pages in riley-day-care and the-barber-cave still use `<a href>` instead of `next/link` (4 files); message `min(1)` should be `min(10)` per spec.
 - **CI failures — partial**: `recovery-test.yml` references 4 shell scripts that do not exist: `scripts/test/cross-region-consistency.sh`, `scripts/test/generate-test-report.sh`, `scripts/communication/send-slack-notification.sh`, `scripts/monitoring/update-metrics.sh`. `governance.yml` runs a `validate-properties` script that requires the governance package to be built first — likely to fail on a clean environment.
 - **Platform wiring — partial**: `@agency/analytics/server` ✅ imported in all 4 cost API routes. `@agency/monitoring` ✅ imported in `performance-dashboard.tsx`. `@agency/error-handling` is empty and unreachable end-to-end.
-- **Migration defects** (new — source verified): 3 duplicate migration number prefixes create ambiguous execution order (`006_customer_auth_mappings`, `006_dora_metrics`, `006_dora_metrics_tenant_isolation`; `011_contact_submissions`, `011_cost_monitoring`, `011_cost_monitoring_security_fix`; `012_artifact_lifecycle_management`, `012_bookings_extend`). `CREATE INDEX CONCURRENTLY` used inside transactional migrations `014_experiments_framework.sql` and `020_web_vitals_metrics.sql` — PostgreSQL forbids this in a transaction block; these fail on `supabase db reset`.
+- **Migration defects** (new — source verified): duplicate migration number prefixes and transactional index creation previously made `supabase db reset` unreliable. Prefix collisions have now been renamed to deterministic `006a/006b/006c`, `011a/011b/011c`, `012a/012b`, and `013a/013b` sequences, and `CREATE INDEX CONCURRENTLY` has been removed from the transactional migrations. A clean `supabase db reset` still needs Docker-backed verification.
 - **`as any` violations** (new — source verified): 3 confirmed locations break the no-`any` rule: `apps/agency-admin/src/components/performance/performance-dashboard.tsx` (`tenantId as any`), `apps/agency-admin/src/components/security/security-dashboard.tsx` (`e.target.value as any`), `apps/agency-admin/src/app/api/upload/route.ts` (`process.env... as any`).
 - **Content stack**: static/hardcoded; no CMS pipeline (intentional deferral per architecture).
 - **Mobile navigation absent** (new — source verified): All 3 apps (firm, riley-day-care, the-barber-cave) have desktop-only `SiteHeader`. Nav links render in a flex row with no hamburger button and no Sheet/drawer for mobile viewports. The `Sheet` molecule already exists in `@agency/ui` but is not wired to any navigation component.
@@ -100,9 +100,9 @@ This roadmap reflects:
 - ~~`apps/agency-admin/src/app/api/costs/*` trusts client-provided `tenant_id`~~ **RESOLVED** (TASK-001): All 4 cost routes now derive tenant context from `validateTenantAccess()` which reads from authenticated session `app_metadata`.
 - ~~`apps/agency-admin/src/components/costs/cost-management-dashboard.tsx` calls cost APIs without tenant_id`~~ **RESOLVED** (TASK-002): Dashboard uses typed error classes; no tenant_id in URL params.
 - ~~`packages/database/src/types.ts` is empty`~~ **PARTIALLY RESOLVED** (TASK-003): File is now non-empty but is hand-written, not auto-generated. CI drift gate (`diff` against `supabase gen types typescript --local`) will fail on any fresh Supabase instance until generated output is committed.
-- `supabase/migrations/012_artifact_lifecycle_management.sql` uses `tenant_id TEXT` (not UUID) → RLS policy type mismatch risk. Migration `013_artifact_tenant_schema_normalization.sql` adds a `tenant_id_uuid` column alongside but does not drop the original TEXT column — dual-column state is unresolved.
-- `supabase/migrations/014_experiments_framework.sql` and `020_web_vitals_metrics.sql` use `CREATE INDEX CONCURRENTLY` inside transactional migration files → PostgreSQL forbids this in a transaction block → these migrations **fail on `supabase db reset`**.
-- 3 duplicate migration number prefixes (`006_`, `011_`, `012_`) create ambiguous alphabetic sort order for Supabase migration execution → potential schema drift between environments.
+- `supabase/migrations/012a_artifact_lifecycle_management.sql` still begins with TEXT tenant identifiers for artifact-domain tables, but the deprecated columns are now documented and guarded so the schema can migrate forward to `013a_artifact_tenant_schema_normalization.sql`.
+- `supabase/migrations/014_experiments_framework.sql` and `020_web_vitals_metrics.sql` were repaired to remove transaction-invalid `CREATE INDEX CONCURRENTLY` usage and other source-visible SQL blockers, but a clean `supabase db reset` still needs local Docker verification.
+- Duplicate migration prefixes across the `006`, `011`, `012`, and `013` ranges were renamed to deterministic lexicographic sequences to remove ambiguous execution order.
 - `.github/workflows/recovery-test.yml` references 4 shell scripts that do not exist: `scripts/test/cross-region-consistency.sh`, `scripts/test/generate-test-report.sh`, `scripts/communication/send-slack-notification.sh`, `scripts/monitoring/update-metrics.sh` → workflow fails on every scheduled and manual run.
 - **Corrected from prior pass (source-verified)**: riley-day-care and the-barber-cave callback routes already use `validateRedirectUrl` ✅. Both apps already have HSTS, `interest-cohort=()`, `sitemap.ts`, `robots.ts`, `metadataBase`, `error.tsx`, `loading.tsx`, `not-found.tsx` ✅. `@agency/analytics/server` is imported in all 4 cost routes ✅. `@agency/monitoring` is imported in `performance-dashboard.tsx` ✅. Contact form Zod validation is implemented in all three apps ✅. These were incorrectly flagged as missing in the prior analysis.
 
@@ -123,6 +123,7 @@ This roadmap reflects:
 **Why:** Current cost routes trust client-provided `tenant_id` and are vulnerable to cross-tenant access/mutation.
 
 **Anti-Patterns to Avoid:**
+
 - **Trusting client headers for tenant scoping**: Never use `x-tenant-id` headers or query params as authoritative; always derive from cryptographically verified session claims.
 - **Middleware-only authorization**: Middleware should sanitize, but handlers must re-validate. Defense in depth prevents bypass via direct internal service calls.
 - **Role-based access without attribute checks**: Platform admins need explicit `platform_admin` claim checks, not just absence of `tenant_id` in JWT.
@@ -136,11 +137,12 @@ This roadmap reflects:
 - Validation remains in place, but authorization is the primary gate.
 
 **Implementation Tips:**
+
 ```typescript
 // Pattern: Context extraction with fallback
-const tenantContext = await validateTenantAccess(req);
+const tenantContext = await validateTenantAccess(req)
 if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
-  return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 }
 // Always use parameterized queries with tenant_id in WHERE clause, not just relying on RLS
 ```
@@ -160,6 +162,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 **Why:** Dashboard calls and route contracts are currently inconsistent, creating guaranteed runtime errors.
 
 **Advanced Patterns:**
+
 - **API Contract Versioning**: Even for internal APIs, version the route (`/api/v1/costs/*`) to allow gradual migration when schemas change.
 - **Schema-First Validation**: Use `zod-to-json-schema` to generate OpenAPI specs from Zod validators, ensuring client and server share exact contracts.
 - **Type-Safe Fetch Wrappers**: Create a `createApiClient<TRequest, TResponse>` utility that binds Zod schemas to fetch calls, catching contract mismatches at build time.
@@ -171,6 +174,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - Error UX for cost dashboard distinguishes auth/authorization failure vs transient backend failure.
 
 **Implementation Tips:**
+
 - Use discriminated unions for error responses: `{ success: false; error: 'auth' | 'network' | 'validation'; message: string }` to drive specific UI states.
 - Implement request deduplication in the dashboard using React Query or a custom `useSWR` hook with appropriate stale-while-revalidate windows for cost data (typically 5 minutes).
 
@@ -189,6 +193,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 **Why:** `packages/database/src/types.ts` is non-empty but hand-written — not generated by `supabase gen types`. The CI drift gate diffs against `supabase gen types typescript --local` output; since the hand-written file format differs from generated output, the gate fails on any fresh Supabase instance. Docker is required to regenerate.
 
 **Anti-Patterns:**
+
 - **Manual type maintenance**: Never hand-write database types. Database schemas are the single source of truth; TypeScript should be generated.
 - **Generated code in source control without generation docs**: Always include `CONTRIBUTING.md` instructions and a `postinstall` or `prepare` script that warns if generated types are stale.
 
@@ -199,12 +204,14 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - CI type drift gate remains green with deterministic regeneration flow.
 
 **Implementation Tips:**
+
 ```bash
 # Recommended package.json scripts
 "db:types": "supabase gen types typescript --local > src/types.ts",
 "db:reset": "supabase db reset && pnpm run db:types",
 "prebuild": "pnpm run db:types -- --check || (echo 'Run pnpm run db:types' && exit 1)"
 ```
+
 - Use `supabase start` in CI to spin up a local instance for type generation before the build step, ensuring the drift gate compares against current schema state, not a potentially stale remote database.
 
 **Target Files**
@@ -214,6 +221,13 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - `.github/workflows/ci.yml`
 - `CONTRIBUTING.md`
 
+**Progress Update (03/17/2026)**
+
+- Root and package scripts normalized around deterministic `:local` and `:linked` generation commands.
+- CI drift check aligned to `--schema public` so local and CI output targets match.
+- Contributor docs updated to reflect the real command surface and the requirement that `supabase db reset` must succeed before generated types can be trusted.
+- Remaining blocker: the committed `packages/database/src/types.ts` is still hand-written because local regeneration is currently blocked by missing Docker Desktop in this environment, and known migration integrity defects in TASK-015 still need to be resolved for a clean reset/generation cycle.
+
 ---
 
 ## [x] TASK-004: Client Scaffold System Overhaul
@@ -221,6 +235,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 **Why:** `scaffold-client.ts` copies `layout.tsx` which imports `SiteHeader` and `SiteFooter` from `@/components/` — but those component files are never copied by the script. The post-scaffold `pnpm exec tsc --noEmit` fails on every single run. Additionally: port `3002` is hardcoded into every new client's `package.json` (conflicts with riley-day-care in local dev), and riley-day-care bleeds day-care-specific nav links and copy (`/programs`, "Riley Day Care") into every new client since string replacement only targets the slug, not the display name in component files.
 
 **Advanced Patterns:**
+
 - **Template Inheritance**: Use a `apps/__template__` directory as the single source of truth, with explicit token placeholders (`{{TEMPLATE_SLUG}}`, `{{TEMPLATE_NAME}}`) rather than regex replacements on existing production code.
 - **Port Discovery Algorithm**: Scan `apps/*/package.json` for existing dev ports, then assign `Math.max(...existingPorts) + 1` to new clients to prevent collisions.
 - **Zero-Copy Scaffold**: Consider using `pnpm create` or `degit`-style cloning rather than selective file copying to avoid partial copy failures.
@@ -235,6 +250,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - Post-scaffold `pnpm exec tsc --noEmit` passes clean
 
 **Implementation Tips:**
+
 - Add a `--dry-run` flag to the scaffold script that logs all file operations and token replacements without executing, allowing pre-flight validation of the template integrity.
 - Include a `health-check.ts` in the template that validates all environment variables are present at build time, failing fast with descriptive errors if `.env.local` is incomplete.
 
@@ -252,6 +268,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 **Why:** Multiple packages export type declarations or subpath entries that their build configurations never actually generate. `packages/error-handling` is completely empty but represents a critical shared pattern that TASK-001 corrections and future API routes will depend on. Two CI workflows reference scripts that do not exist, failing every run.
 
 **Anti-Patterns:**
+
 - **Subpath exports without build artifacts**: Declaring `"./types": "./dist/types.d.ts"` in `package.json` without configuring `tsup` to actually emit that file creates broken imports for consumers.
 - **Dual package hazard**: Avoid mixing CommonJS and ESM exports without `exports` field configuration; use `"type": "module"` consistently across the monorepo.
 
@@ -266,6 +283,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - `pnpm type-check` passes with zero TypeScript errors across all packages
 
 **Implementation Tips:**
+
 ```typescript
 // packages/error-handling pattern
 export class AppError extends Error {
@@ -275,21 +293,21 @@ export class AppError extends Error {
     message: string,
     public cause?: unknown
   ) {
-    super(message);
+    super(message)
   }
 }
 
 export function toHttpResponse(status: number, error: AppError): NextResponse {
   return NextResponse.json(
-    { 
+    {
       type: 'about:blank',
       title: error.code,
       status,
       detail: error.message,
-      instance: error.code 
+      instance: error.code,
     } satisfies RFC9457ProblemDetail,
     { status }
-  );
+  )
 }
 ```
 
@@ -311,6 +329,7 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 **Why:** Test coverage was <5% across entire codebase with no integration testing framework, representing critical quality risk for production deployment.
 
 **Advanced Patterns:**
+
 - **Contract Testing**: Use Pact or MSW (Mock Service Worker) to verify API contracts between frontend and backend without spinning up full services.
 - **Test Data Factories**: Implement `factory.ts` with type-safe builders using `@faker-js/faker` that respect database constraints and produce deterministic seeds via `faker.seed(12345)`.
 - **Visual Regression**: Use Chromatic or Storybook test runner for UI components to catch unintended styling changes in the design system.
@@ -324,6 +343,7 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 - E2E testing framework for critical user journeys
 
 **Implementation Tips:**
+
 - Configure Vitest workspace mode (`vitest.workspace.ts`) to run package-level tests in parallel while sharing global setup (database migrations, mock server).
 - Use `supabase-test-helpers` or equivalent to reset database state between integration test files without dropping the entire schema.
 - Implement the "Testing Pyramid" strictly: 70% unit, 20% integration, 10% E2E to maintain velocity while ensuring critical path coverage.
@@ -345,6 +365,7 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 **Why:** Security headers ✅ implemented in `apps/firm/src/middleware.ts`. `sitemap.ts` ✅ and `robots.ts` ✅ exist. Remaining: no `opengraph-image.tsx`, no JSON-LD structured data in `layout.tsx`, and blog routes have no `generateStaticParams` or ISR revalidation (content is currently static hardcoded data — dynamic generation is required once CMS is in place).
 
 **Advanced Patterns:**
+
 - **Dynamic OG Images**: Use `next/og` (Open Graph Image Generation) with Satori for runtime-generated branded images including dynamic titles, avoiding the need to maintain static image assets for every blog post.
 - **Schema.org Typing**: Use `schema-dts` package for compile-time validation of JSON-LD structures, ensuring valid structured data that Google can parse correctly.
 - **Stale-While-Revalidate Strategy**: Use `revalidate = 3600` with `next.revalidateTag()` for on-demand invalidation when content is updated via CMS webhooks.
@@ -360,6 +381,7 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 - `apps/firm/src/app/blog/page.tsx`: `revalidate = 3600`
 
 **Implementation Tips:**
+
 ```typescript
 // opengraph-image.tsx pattern
 export const runtime = 'edge';
@@ -389,6 +411,7 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 **Why:** Contact form Zod validation ✅ implemented in all three apps. Remaining: auth pages in both prospective-client apps use `<a href>` instead of `next/link` — the only 4 raw internal anchor tags in the codebase, causing full-page navigation and breaking prefetching. Additionally, all three contact form schemas use `message: z.string().min(1)` but the spec requires `min(10)`.
 
 **Anti-Patterns:**
+
 - **Full-page navigation for internal routes**: Using `<a>` instead of `<Link>` destroys SPA benefits, causing unnecessary JavaScript re-download and execution, breaking scroll restoration, and increasing TTFB for subsequent navigations.
 - **Inadequate input validation**: `min(1)` accepts single-character messages which are typically spam or low-quality inquiries; `min(10)` with clear error messaging improves lead quality.
 
@@ -402,6 +425,7 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 - Zero raw `<a href=` for internal navigation across all apps
 
 **Implementation Tips:**
+
 - Add an ESLint rule `"@next/next/no-html-link-for-pages": "error"` to prevent regression on internal `<a>` tags.
 - Consider adding `z.string().trim().min(10)` to prevent whitespace-padding attacks on the minimum length requirement.
 
@@ -422,6 +446,7 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 **Why:** All 3 apps (firm, riley-day-care, the-barber-cave) have desktop-only `SiteHeader` navigation. Nav links are in a flex row that overflows or collapses on mobile screens. No hamburger button and no mobile drawer/menu exist in any app. The `Sheet` molecule already lives in `@agency/ui` and provides a focus-trapped, accessible sliding panel that works natively as a mobile nav. This is a production UX failure for all mobile users.
 
 **Advanced Patterns:**
+
 - **Viewport-Aware Hydration**: Use `useMediaQuery` or CSS-only approaches (`hidden md:flex`) to avoid hydration mismatches between server (no viewport) and client (mobile viewport).
 - **Focus Management**: Ensure the Sheet traps focus via `react-focus-lock` or Radix primitives, with focus returning to the trigger button on close (essential for screen reader users).
 - **Motion Reduced Support**: Respect `prefers-reduced-motion` media query; if user prefers reduced motion, disable slide animation and use instant visibility toggle.
@@ -438,15 +463,17 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 - No new shared component needed — all logic lives in each app's `site-header.tsx`
 
 **Implementation Tips:**
+
 ```typescript
 // Pattern for route-change closing
-const pathname = usePathname();
-const [isOpen, setIsOpen] = useState(false);
+const pathname = usePathname()
+const [isOpen, setIsOpen] = useState(false)
 
 useEffect(() => {
-  setIsOpen(false);
-}, [pathname]);
+  setIsOpen(false)
+}, [pathname])
 ```
+
 - Use `slot` pattern for the Sheet trigger to maintain separation of concerns: the `SiteHeader` controls state, the `Sheet` molecule provides the container.
 
 **Target Files**
@@ -462,6 +489,7 @@ useEffect(() => {
 **Why:** `apps/firm/src/app/layout.tsx` has no `next/font` declaration. The design token CSS declares `--font-primary: Inter, system-ui, sans-serif` but this is a CSS fallback string — if Inter is not already installed on the user's device, the browser renders system-ui. `next/font/google` downloads the font at build time and serves it from the same origin, eliminating the Google Fonts network round-trip and ensuring Inter always renders. This is a measurable performance and brand consistency gap vs the two client apps, which already correctly use `next/font/google`.
 
 **Advanced Patterns:**
+
 - **Font Subsetting Strategy**: Use `subsets: ['latin']` for initial render, then dynamically load extended character sets (Cyrillic, etc.) via `next/font/google` `preload: false` for secondary routes if internationalization is planned.
 - **CSS Variable Injection**: Use the `variable` property to inject CSS custom properties that cascade through the design token system, rather than applying className directly to body (allows dynamic font changes via CSS variables at runtime).
 
@@ -473,6 +501,7 @@ useEffect(() => {
 - `pnpm tsc --noEmit apps/firm/src/app/layout.tsx` passes clean
 
 **Implementation Tips:**
+
 ```typescript
 // layout.tsx
 import { Inter } from 'next/font/google';
@@ -491,6 +520,7 @@ export default function RootLayout({ children }) {
   );
 }
 ```
+
 - Verify font loading in Network tab: you should see Inter served from `/_next/static/media/` (self-hosted), not `fonts.googleapis.com`.
 
 **Target Files**
@@ -505,6 +535,7 @@ export default function RootLayout({ children }) {
 **Why:** `apps/firm/src/app/globals.css` imports `agency.css` (design tokens) but contains no `:root .dark {}` CSS variable override block. The `ThemeToggle` molecule is wired in the firm `SiteHeader` and correctly applies/removes the `.dark` class on `<html>`, but with no dark mode token overrides defined, toggling dark mode produces no visual change in the firm app. Both riley-day-care and the-barber-cave have correct `:root .dark` blocks in their `globals.css`. This is a broken shipped feature.
 
 **Anti-Patterns:**
+
 - **Hardcoded dark values**: Avoid `dark:bg-slate-900` in components; always map through design tokens (`bg-background-primary` which resolves to different values in light/dark).
 - **Color inversion logic**: Don't simply invert hex values; use perceptually uniform color spaces (OKLCH) to maintain contrast ratios and avoid hue shifts in dark mode.
 
@@ -517,6 +548,7 @@ export default function RootLayout({ children }) {
 - Dark mode palette uses the same oklch color space as existing client tokens; background and text values are inverted from the light palette with sufficient contrast (≥ 4.5:1 for body text)
 
 **Implementation Tips:**
+
 ```json
 // agency.json token structure
 {
@@ -528,6 +560,7 @@ export default function RootLayout({ children }) {
   }
 }
 ```
+
 - Or use Style Dictionary transforms to automatically generate dark variants using OKLCH lightness inversion: `lightness: 100 - originalLightness`.
 
 **Target Files**
@@ -545,6 +578,7 @@ export default function RootLayout({ children }) {
 **Why:** `@agency/analytics/server` ✅ already imported in all 4 cost API routes. `@agency/monitoring` ✅ already imported in `performance-dashboard.tsx`. Remaining: `@agency/error-handling` is empty (blocked by TASK-005) and therefore unreachable end-to-end; ISR revalidation is missing on prospective-client content pages.
 
 **Advanced Patterns:**
+
 - **Graceful Degradation**: When error-handling package is unavailable, wrap imports in `try/catch` with fallback to console.error in development, but ensure production builds fail fast (fail closed on missing critical dependencies).
 - **Revalidation Tags**: Use Next.js 15's `revalidateTag` with granular tags (`blog-posts`, `programs`, `services`) rather than time-based revalidation alone, allowing CMS webhooks to trigger specific cache purges.
 
@@ -556,6 +590,7 @@ export default function RootLayout({ children }) {
 - ISR `revalidate` constants added to riley-day-care and the-barber-cave content pages (blog list, programs, services)
 
 **Implementation Tips:**
+
 - Create a `cache-config.ts` in each app exporting `export const REVALIDATE_CONTENT = 3600;` to standardize ISR windows across routes and make cache strategy changes maintainable in one location.
 
 **Target Files**
@@ -572,6 +607,7 @@ export default function RootLayout({ children }) {
 **Why:** `packages/content/src/content-system.ts` contains complete Zod schemas (`BlogPostSchema`, `ServicePageSchema`, `CaseStudySchema`) and a `validateContent()` function, but no app in the monorepo consumes them. All blog and service content is inline hardcoded in page files. Consequences: (1) no type safety for content authors — typos in data are silent; (2) `generateStaticParams` in blog routes cannot derive slugs from a shared registry; (3) `apps/firm/src/app/sitemap.ts` lists only static routes — all blog post URLs are absent from the firm sitemap; (4) the scaffold template (TASK-004) has no content entry point pattern to follow.
 
 **Advanced Patterns:**
+
 - **Content as Code**: Treat content changes as code changes with PR reviews, using the type system as a linter for content structure.
 - **Static Site Generation (SSG) Optimization**: Separate content fetching from rendering; use `cache()` from React to dedupe content fetches across `generateStaticParams`, page render, and sitemap generation in the same build process.
 
@@ -589,19 +625,21 @@ export default function RootLayout({ children }) {
 - `pnpm tsc --noEmit` clean across all three apps after changes
 
 **Implementation Tips:**
+
 ```typescript
 // content/blog.ts pattern
-import { BlogPostSchema, type BlogPost } from '@agency/content';
+import { BlogPostSchema, type BlogPost } from '@agency/content'
 
 export const posts: BlogPost[] = [
   {
     slug: 'welcome',
     title: 'Welcome Post',
     publishedAt: '2026-03-18',
-    content: '...'
-  }
-].map(post => BlogPostSchema.parse(post)); // Runtime validation at import time
+    content: '...',
+  },
+].map((post) => BlogPostSchema.parse(post)) // Runtime validation at import time
 ```
+
 - Use `import { cache } from 'react'` to wrap content loading so multiple calls in the same render (e.g., in `generateStaticParams` and page component) hit the same cached data.
 
 **Target Files**
@@ -628,6 +666,7 @@ export const posts: BlogPost[] = [
 **Why:** `packages/ui/src/organisms/index.ts` exports nothing. The atoms and molecules layers have quality foundational components, but organisms — the page-composable units that combine tokens and primitives into meaningful sections — do not exist. Every app currently builds page sections as duplicated inline JSX with hardcoded Tailwind classes (not design-token classes). This creates: (1) duplicated layout boilerplate across apps; (2) hardcoded slate/gray colors that bypass the client token system; (3) the scaffold template (TASK-004) will produce low-quality starting sites without a Hero or feature section. Organisms must consume design-token classes exclusively (no `slate-*`, `gray-*` hardcoded colors) so client brand tokens compose through automatically.
 
 **Component Design Principles:**
+
 - **Composition over Configuration**: Prefer `children` props and slots over configuration objects for maximum flexibility while maintaining structure.
 - **Design Token Adherence**: All background colors use `bg-background-*`, text uses `text-text-*`, accents use `text-brand-*` or `bg-brand-*`. No raw Tailwind colors.
 - **Responsive by Default**: All organisms must specify responsive behavior (stack on mobile, grid on desktop) internally, not relying on parent layout.
@@ -644,6 +683,7 @@ export const posts: BlogPost[] = [
 - No breaking changes to existing atoms or molecules exports.
 
 **Implementation Tips:**
+
 - Use `cva` (class-variance-authority) for variant management in organisms to ensure type-safe prop combinations.
 - Implement `as` prop pattern using `React.ElementType` for polymorphic headings (h1 vs h2) in HeroSection without losing type safety.
 
@@ -659,11 +699,12 @@ export const posts: BlogPost[] = [
 
 ---
 
-## [ ] TASK-015: Migration Integrity Fixes
+## [~] TASK-015: Migration Integrity Fixes
 
 **Why:** Two categories of database migration defects will cause failures on any fresh `supabase db reset` or new environment deploy: (1) `CREATE INDEX CONCURRENTLY` inside transactional migration files, which PostgreSQL forbids in a transaction block; (2) duplicate migration number prefixes that create ambiguous alphabetic sort order for Supabase's sequential migration execution.
 
 **Anti-Patterns:**
+
 - **CONCURRENTLY in transactions**: PostgreSQL cannot create indexes concurrently (without locking tables) inside a transaction block. These migrations will hard-fail on reset.
 - **Timestamp prefixes without uniqueness**: Supabase migrations rely on lexicographical ordering; duplicate prefixes cause non-deterministic execution order and potential foreign key failures.
 
@@ -671,17 +712,37 @@ export const posts: BlogPost[] = [
 
 - `supabase/migrations/014_experiments_framework.sql`: all `CREATE INDEX CONCURRENTLY` replaced with `CREATE INDEX` (no `CONCURRENTLY`)
 - `supabase/migrations/020_web_vitals_metrics.sql`: same replacement
-- Duplicate `006_` migrations renamed to sequential non-conflicting numbers (e.g., `006b_customer_auth_mappings.sql` or proper renumber)
-- Duplicate `011_` migrations resolved: `011_cost_monitoring_security_fix.sql` merged into or supersedes `011_cost_monitoring.sql`
-- Duplicate `012_` migrations resolved: ensure `012_bookings_extend.sql` has a unique number
+- Duplicate `006_`, `011_`, `012_`, and `013_` migrations renamed to deterministic non-conflicting sequences (`006a/006b/006c`, `011a/011b/011c`, `012a/012b`, `013a/013b`)
+- Cost/performance migrations no longer grant usage on non-existent UUID sequences
+- Artifact lifecycle migrations document deprecated TEXT tenant identifiers and include the missing `promotion_steps.artifact_id` column expected by the normalization path
 - `supabase db reset` completes without errors on a clean local environment
-- `supabase/migrations/012_artifact_lifecycle_management.sql` `tenant_id TEXT` column documented as deprecated; migration 013 normalization path reviewed for completeness
+- `supabase/migrations/012a_artifact_lifecycle_management.sql` `tenant_id TEXT` column documented as deprecated; migration `013a_artifact_tenant_schema_normalization.sql` reviewed for completeness
 
 **Implementation Tips:**
+
 - Use `supabase migration repair` command if you need to mark a broken migration as resolved after fixing it in development environments.
 - For production safety, create a `scripts/verify-migrations.sh` that runs `supabase db reset` in a throwaway CI container to catch these issues before they reach main.
 
 **Target Files**
+
+- `supabase/migrations/006a_customer_auth_mappings.sql`
+- `supabase/migrations/006b_dora_metrics.sql`
+- `supabase/migrations/006c_dora_metrics_tenant_isolation.sql`
+- `supabase/migrations/011a_contact_submissions.sql`
+- `supabase/migrations/011b_cost_monitoring.sql`
+- `supabase/migrations/011c_cost_monitoring_security_fix.sql`
+- `supabase/migrations/012a_artifact_lifecycle_management.sql`
+- `supabase/migrations/012b_bookings_extend.sql`
+- `supabase/migrations/013a_artifact_tenant_schema_normalization.sql`
+- `supabase/migrations/013b_storage_security.sql`
+- `supabase/migrations/014_experiments_framework.sql`
+- `supabase/migrations/020_web_vitals_metrics.sql`
+
+**Progress Update (03/17/2026)**
+
+- Source-visible reset blockers in the migration files were repaired: duplicate prefixes renamed, transaction-invalid concurrent indexes removed, non-existent UUID sequence grants removed, invalid SQL constraints corrected, and artifact normalization aligned with the actual table shape.
+- Workflow and documentation references were updated to the renamed artifact and cost-monitoring migration files.
+- Remaining blocker: `supabase db reset` has not been re-run in this environment because Docker Desktop is still unavailable, so TASK-015 remains partial until runtime verification succeeds.
 
 - `supabase/migrations/014_experiments_framework.sql`
 - `supabase/migrations/020_web_vitals_metrics.sql`
@@ -694,6 +755,7 @@ export const posts: BlogPost[] = [
 **Why:** Three confirmed `as any` casts in `apps/agency-admin` break the no-`any` codebase rule and suppress type errors that could hide real bugs. Two are in client components (selector `onChange` handlers) and one is in an API route environment variable cast.
 
 **Advanced Patterns:**
+
 - **Strict Environment Validation**: Use `envalid` or a custom Zod schema to validate `process.env` at startup, creating a typed `Env` object rather than casting individual accesses.
 - **Discriminated Union Handlers**: For event handlers, type the union of possible values explicitly rather than casting the target value.
 
@@ -705,15 +767,16 @@ export const posts: BlogPost[] = [
 - `pnpm tsc --noEmit` passes on all three files with no `any`-related suppressions
 
 **Implementation Tips:**
+
 ```typescript
 // Environment variable pattern
-import { z } from 'zod';
+import { z } from 'zod'
 
 const EnvSchema = z.object({
   VIRUS_SCAN_PROVIDER: z.enum(['clamav', 'virustotal', 'none']).default('none'),
-});
+})
 
-const env = EnvSchema.parse(process.env);
+const env = EnvSchema.parse(process.env)
 // Now env.VIRUS_SCAN_PROVIDER is typed as the enum
 ```
 
@@ -732,6 +795,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** No automated collection of key engineering metrics for organizational improvement.
 
 **Advanced Patterns:**
+
 - **Four Keys Pipeline**: Implement the Google Cloud Four Keys methodology (Deployment Frequency, Lead Time for Changes, Change Failure Rate, MTTR) using GitHub webhooks and commit parsing rather than manual entry.
 - **Causal Analysis**: Correlate DORA metrics with deployment events (e.g., "Did the addition of Vitest testing correlate with reduced change failure rate?").
 
@@ -758,6 +822,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Current supply chain security is basic GitHub scanning; industry leaders implement SLSA and comprehensive SBOM.
 
 **Advanced Patterns:**
+
 - **Provenance Attestation**: Use Sigstore/Cosign to sign build artifacts and generate SLSA Level 3 provenance attestations, allowing consumers to verify that the artifact they deploy is exactly what was built in CI.
 - **SBOM Lifecycle Tracking**: Generate CycloneDX SBOMs at build time and compare against vulnerability databases (OSV) in the deployment pipeline.
 
@@ -787,6 +852,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Manual repository management doesn't scale; enterprise requires dynamic policy targeting.
 
 **Advanced Patterns:**
+
 - **GitHub Repository Rulesets**: Programmatically manage rulesets (not legacy branch protection) based on repository classification tags, allowing different policies for `client-sites` vs `platform-infrastructure`.
 - **Auto-Labeling**: Use semantic analysis of file paths and commit messages to auto-classify repositories (e.g., detects `/supabase/migrations` → labels as `database-heavy` → applies stricter review requirements).
 
@@ -815,6 +881,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** No centralized artifact registry or automated promotion pipelines.
 
 **Advanced Patterns:**
+
 - **Immutable Tags**: Enforce that docker images and npm packages published to the registry use content-addressable SHA tags, never mutable `latest`, ensuring reproducible deployments.
 - **Promotion Gates**: Implement automated quality gates (security scan pass, integration test pass) that must clear before an artifact can move from `staging` to `production` registry repositories.
 
@@ -843,6 +910,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Current monorepo lacks performance optimizations needed at scale.
 
 **Advanced Patterns:**
+
 - **Sparse Checkout**: Configure `.git/info/sparse-checkout` to allow developers to work on single apps without downloading the full history of all binary assets.
 - **Merge Queue**: Implement GitHub Merge Queue to ensure main branch stays green by testing the exact result of merge commits before they land, eliminating "semantic merge conflicts" where two PRs pass individually but break when combined.
 
@@ -872,6 +940,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Knowledge is siloed in documentation; not embedded in daily workflows.
 
 **Advanced Patterns:**
+
 - **Semantic Code Search**: Implement vector embeddings of code and documentation using `unstructured.io` or similar, allowing natural language queries like "How do we handle tenant isolation?" to surface relevant code and ADRs.
 - **Expertise Graph**: Build a graph database (Neo4j/memgraph) mapping who last touched which packages and their confidence levels, routing questions to the right maintainers automatically.
 
@@ -900,6 +969,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** No monitoring of storage costs, CI/CD resource usage, or optimization budgeting.
 
 **Advanced Patterns:**
+
 - **FinOps Tagging Strategy**: Enforce that all cloud resources (Supabase projects, Vercel deployments) are tagged with `cost-center`, `environment`, and `tenant-id` for chargeback accounting.
 - **Predictive Scaling**: Use historical traffic patterns to scale down preview deployments during off-hours (nights/weekends) automatically, reducing compute costs by ~60%.
 
@@ -928,6 +998,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Relies only on GitHub; no documented recovery procedures or geographic distribution.
 
 **Advanced Patterns:**
+
 - **Git Multi-Remote Strategy**: Configure mirrors to both GitHub and GitLab (or AWS CodeCommit) with automated sync hooks, ensuring version control availability even during provider outages.
 - **Infrastructure as Code (IaC) State Backup**: Terraform/Supabase state files should be backed up to geographically separated object storage (multi-region S3) with versioning enabled, as these are often single points of failure harder to recreate than application code.
 
@@ -956,6 +1027,7 @@ const env = EnvSchema.parse(process.env);
 **Why:** Basic Copilot integration exists; no advanced AI-driven repository automation.
 
 **Advanced Patterns:**
+
 - **Deterministic Agent Workflows**: Use LangChain or OpenAI Functions with structured output schemas to ensure AI agents produce parseable, verifiable results (e.g., "Generate a migration file" must output valid SQL in a specific JSON format).
 - **Self-Healing CI**: Implement agents that can analyze failed build logs, search the codebase for similar past fixes, and generate a patch PR automatically for common failure modes (dependency updates, lint fixes).
 

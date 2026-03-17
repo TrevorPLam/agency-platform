@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - 'packages/artifacts/**'
-      - 'supabase/migrations/012_artifact_lifecycle_management.sql'
+      - 'supabase/migrations/012a_artifact_lifecycle_management.sql'
   push:
     branches: [main]
     paths:
       - 'packages/artifacts/**'
-      - 'supabase/migrations/012_artifact_lifecycle_management.sql'
+      - 'supabase/migrations/012a_artifact_lifecycle_management.sql'
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -195,7 +195,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -249,7 +249,7 @@ jobs:
           echo "📤 Testing artifact upload to GitHub..."
           # Create a test artifact
           echo "integration-test-$(date +%s)" > test-integration.txt
-          
+
           # Upload as GitHub Actions artifact
           echo "✅ Artifact upload tested"
 
@@ -276,13 +276,13 @@ jobs:
       - name: Validate documentation
         run: |
           echo "📚 Validating documentation..."
-          
+
           # Check if README exists
           if [ !f "packages/artifacts/README.md" ]; then
             echo "❌ README.md missing"
             exit 1
           fi
-          
+
           # Check documentation structure
           echo "✅ Documentation structure validated"
 
@@ -302,7 +302,15 @@ jobs:
   final-validation:
     name: Final Validation & Reporting
     runs-on: ubuntu-latest
-    needs: [build-and-validate, database-integration, security-validation, performance-validation, workflow-integration, documentation-validation]
+    needs:
+      [
+        build-and-validate,
+        database-integration,
+        security-validation,
+        performance-validation,
+        workflow-integration,
+        documentation-validation,
+      ]
     if: always()
     steps:
       - name: Generate integration report

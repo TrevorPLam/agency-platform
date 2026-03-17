@@ -55,7 +55,7 @@ npx inngest-cli@latest dev -u http://localhost:3001/api/inngest
 pnpm tokens:build
 ```
 
-**Important:** (1) Start Supabase before `pnpm dev` or app DB calls will fail. (2) After changing any file under `packages/design-tokens/tokens/**/*.json`, run `pnpm tokens:build` or client apps will use stale CSS. (3) After adding or changing migrations, run `pnpm db:generate-types` and commit the updated `packages/database/src/types.ts`.
+**Important:** (1) Start Supabase before `pnpm dev` or app DB calls will fail. (2) After changing any file under `packages/design-tokens/tokens/**/*.json`, run `pnpm tokens:build` or client apps will use stale CSS. (3) After adding or changing migrations, run `pnpm db:generate-types:local` and commit the updated `packages/database/src/types.ts`.
 
 ---
 
@@ -66,6 +66,7 @@ This project uses automatically generated TypeScript types from the database sch
 ### When to Regenerate Types
 
 You **must** regenerate database types after any of these changes:
+
 - Adding new tables or columns
 - Modifying existing column types or constraints
 - Adding new enums or views
@@ -75,24 +76,26 @@ You **must** regenerate database types after any of these changes:
 ### Type Generation Commands
 
 ```bash
-# Local development (requires Docker Desktop and supabase start)
+# Local development (requires Docker Desktop and a running local Supabase DB)
 pnpm db:generate-types:local
 
-# Production (requires SUPABASE_ACCESS_TOKEN env var)
-pnpm db:generate-types --project-id=your-project-ref
+# Linked remote project (requires `supabase link`)
+pnpm db:generate-types:linked
 ```
 
 ### Type Generation Process
 
-1. **Ensure Supabase is running locally**: `supabase start` and `supabase db reset`
-2. **Generate types**: Run `pnpm db:generate-types:local` from the database package directory
+1. **Ensure Supabase is running locally**: `supabase db start` or `supabase start`, then `supabase db reset`
+2. **Generate types**: Run `pnpm db:generate-types:local` from the repository root, or `pnpm --filter @agency/database db:generate-types:local` from the package
 3. **Review changes**: Check the updated `packages/database/src/types.ts` file
 4. **Commit changes**: Include both migration files and updated types in the same commit
 
 ### CI Type Drift Gate
 
 The CI pipeline includes a type drift check that:
+
 - Generates fresh types from the current database schema
+- Generates only the `public` schema so local scripts and CI compare the same output
 - Compares them with the committed `types.ts` file
 - Fails the build if types are out of sync
 - Provides clear error messages with diff output
@@ -107,25 +110,27 @@ The CI pipeline includes a type drift check that:
 ### Troubleshooting
 
 If type generation fails:
+
 1. Verify Docker Desktop is running
 2. Ensure local Supabase is started: `supabase start`
 3. Reset database state: `supabase db reset`
-4. Check for syntax errors in recent migrations
+4. Check for syntax errors or transactional issues in recent migrations
 5. Verify migration files follow naming convention (XXX_description.sql)
+6. If `supabase db reset` fails, fix the migration integrity issues before trusting regenerated types
 
 ---
 
 ## Port assignments
 
-| Port  | Service                   |
-| ----- | ------------------------- |
-| 3000  | firm (agency marketing)   |
-| 3001  | agency-admin app          |
-| 3002  | riley-day-care client app |
+| Port  | Service                    |
+| ----- | -------------------------- |
+| 3000  | firm (agency marketing)    |
+| 3001  | agency-admin app           |
+| 3002  | riley-day-care client app  |
 | 3003  | the-barber-cave client app |
-| 54321 | Supabase API              |
-| 54323 | Supabase Studio           |
-| 8288  | Inngest dev UI            |
+| 54321 | Supabase API               |
+| 54323 | Supabase Studio            |
+| 8288  | Inngest dev UI             |
 
 To run a single app: `pnpm turbo run dev --filter=@agency/<name>` (e.g. `--filter=@agency/firm`).
 
@@ -240,7 +245,7 @@ See [docs/governance/GOVERNANCE.md](docs/governance/GOVERNANCE.md) for design sy
 
 1. **Create** a new migration under `supabase/migrations/` with the next sequential number (e.g. `010_my_feature.sql`).
 2. **Test locally:** `supabase db reset` then `supabase test db`. All pgTAP tests must pass.
-3. **Update types:** `pnpm db:generate-types` and commit `packages/database/src/types.ts`.
+3. **Update types:** `pnpm db:generate-types:local` and commit `packages/database/src/types.ts`.
 4. **Commit** the migration file and the updated types (and see non-negotiable requirements below).
 5. **CI** runs on every PR: types drift check, RLS tests, affected build/lint/type-check.
 6. **On merge to `main`:** If the PR changed `supabase/migrations/**`, the deploy workflow runs `supabase db push` to apply migrations to the linked production project.
@@ -368,6 +373,7 @@ Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets*
 All branches must follow our naming conventions to maintain organization and enable automation:
 
 ### ✅ Valid Branch Name Patterns
+
 - `feature/branch-name` - New features
 - `feat/branch-name` - New features (short)
 - `fix/branch-name` - Bug fixes
@@ -383,12 +389,14 @@ All branches must follow our naming conventions to maintain organization and ena
 - `deploy/branch-name` - Deployment configurations
 
 ### 📝 Branch Name Rules
+
 - Use lowercase letters, numbers, and hyphens only
 - No spaces or special characters except hyphens
 - Be descriptive but concise
 - Examples: `feature/user-authentication`, `fix/login-bug`, `hotfix/security-patch`
 
 ### 🔧 Branch Validation
+
 Branch names are automatically validated by GitHub Actions. Invalid branch names will be rejected with helpful feedback.
 
 ---
@@ -398,6 +406,7 @@ Branch names are automatically validated by GitHub Actions. Invalid branch names
 Use our comprehensive PR templates to ensure all required information is included:
 
 ### 📝 Required Information
+
 - Related issue numbers
 - Clear description of changes
 - Type of change (bug fix, feature, etc.)
@@ -406,6 +415,7 @@ Use our comprehensive PR templates to ensure all required information is include
 - Documentation updates
 
 ### 🎯 PR Types
+
 - 🐛 Bug fix
 - ✨ New feature
 - 💥 Breaking change
@@ -415,7 +425,9 @@ Use our comprehensive PR templates to ensure all required information is include
 - 🧪 Test addition
 
 ### 📊 Review Process
+
 All PRs must pass:
+
 - Format check (`pnpm format:check`)
 - Linting (`pnpm lint`)
 - Type checking (`pnpm type-check`)
@@ -428,12 +440,14 @@ All PRs must pass:
 ## 🧹 Branch Maintenance
 
 ### 📅 Stale Branch Cleanup
+
 - Stale branches (90+ days inactive) are automatically cleaned up weekly
 - Branches with open PRs are protected from deletion
 - Owners are notified before branch deletion
 - Protected branches: `main`, `develop`, `staging`, `production`
 
 ### 🔄 Merge Queue
+
 - High-traffic branches use merge queues to prevent conflicts
 - PRs are validated in queue order
 - Failed PRs are automatically removed from queue
@@ -444,18 +458,21 @@ All PRs must pass:
 ## 📦 Dependency Management
 
 ### 🤖 Automated Updates
+
 - **Daily**: Production dependency updates
 - **Weekly**: Development dependency updates
 - **Weekly**: GitHub Actions updates
 - **Security**: Immediate vulnerability fixes
 
 ### 🔍 Dependency Reports
+
 - Comprehensive dependency reports generated weekly
 - Security vulnerability monitoring
 - License compliance checking
 - Update recommendations
 
 ### 📋 Update Categories
+
 - 🟢 **Patch updates**: Auto-merged if tests pass
 - 🟡 **Minor updates**: Require review
 - 🔴 **Major updates**: Require planning and testing

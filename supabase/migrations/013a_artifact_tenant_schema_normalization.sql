@@ -1,9 +1,6 @@
 -- Artifact Tenant Schema Normalization Migration
 -- Aligns artifact tenant columns with canonical tenant UUID model
 
--- Enable Row Level Security
-ALTER DATABASE SET row_security = on;
-
 -- Add new UUID tenant_id columns to artifact tables
 ALTER TABLE public.artifacts 
 ADD COLUMN tenant_id_uuid uuid;
@@ -108,12 +105,20 @@ END $$;
 
 -- Update RLS policies to use UUID tenant_id
 DROP POLICY IF EXISTS "Artifacts tenant isolation" ON public.artifacts;
+DROP POLICY IF EXISTS "Users can view artifacts in their tenant" ON public.artifacts;
+DROP POLICY IF EXISTS "Users can insert artifacts in their tenant" ON public.artifacts;
+DROP POLICY IF EXISTS "Users can update artifacts in their tenant" ON public.artifacts;
+DROP POLICY IF EXISTS "Users can delete artifacts in their tenant" ON public.artifacts;
 CREATE POLICY "Artifacts tenant isolation" ON public.artifacts
     FOR ALL
     USING (tenant_id_uuid = public.tenant_id())
     WITH CHECK (tenant_id_uuid = public.tenant_id());
 
 DROP POLICY IF EXISTS "Promotion steps tenant isolation" ON public.promotion_steps;
+DROP POLICY IF EXISTS "Users can view promotion steps in their tenant" ON public.promotion_steps;
+DROP POLICY IF EXISTS "Users can insert promotion steps in their tenant" ON public.promotion_steps;
+DROP POLICY IF EXISTS "Users can update promotion steps in their tenant" ON public.promotion_steps;
+DROP POLICY IF EXISTS "Users can delete promotion steps in their tenant" ON public.promotion_steps;
 CREATE POLICY "Promotion steps tenant isolation" ON public.promotion_steps
     FOR ALL
     USING (tenant_id_uuid = public.tenant_id())

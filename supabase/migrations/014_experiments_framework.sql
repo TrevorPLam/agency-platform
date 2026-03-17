@@ -4,6 +4,7 @@
 
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Core experiments table
 CREATE TABLE public.experiments (
@@ -27,7 +28,7 @@ CREATE TABLE public.experiments (
   traffic_percentage INTEGER DEFAULT 100 CHECK (traffic_percentage BETWEEN 0 AND 100),
   
   -- Owner and metadata
-  owner_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  owner_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   hypothesis TEXT NOT NULL, -- Clear hypothesis statement
   
   -- Timestamps
@@ -60,8 +61,7 @@ CREATE TABLE public.experiment_variants (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
   UNIQUE(experiment_id, key),
-  CHECK (traffic_percentage >= 0),
-  UNIQUE(experiment_id, is_control) WHERE is_control = true -- Only one control variant
+  CHECK (traffic_percentage >= 0)
 );
 
 -- User experiment assignments
@@ -80,8 +80,7 @@ CREATE TABLE public.experiment_assignments (
   assignment_source TEXT DEFAULT 'server' CHECK (assignment_source IN ('server', 'client')),
   
   -- Constraints
-  UNIQUE(user_pseudonym, experiment_id), -- One assignment per user per experiment
-  CHECK (assigned_at >= COALESCE((SELECT started_at FROM public.experiments WHERE id = experiment_id), '1970-01-01'::timestamp))
+  UNIQUE(user_pseudonym, experiment_id) -- One assignment per user per experiment
 );
 
 -- Experiment results and metrics
@@ -130,28 +129,29 @@ CREATE TABLE public.experiment_events (
 );
 
 -- Indexes for performance
-CREATE INDEX CONCURRENTLY idx_experiments_tenant_id ON public.experiments(tenant_id);
-CREATE INDEX CONCURRENTLY idx_experiments_status ON public.experiments(status);
-CREATE INDEX CONCURRENTLY idx_experiments_tenant_status ON public.experiments(tenant_id, status);
-CREATE INDEX CONCURRENTLY idx_experiments_created_at ON public.experiments(created_at);
+CREATE INDEX idx_experiments_tenant_id ON public.experiments(tenant_id);
+CREATE INDEX idx_experiments_status ON public.experiments(status);
+CREATE INDEX idx_experiments_tenant_status ON public.experiments(tenant_id, status);
+CREATE INDEX idx_experiments_created_at ON public.experiments(created_at);
 
-CREATE INDEX CONCURRENTLY idx_experiment_variants_experiment_id ON public.experiment_variants(experiment_id);
-CREATE INDEX CONCURRENTLY idx_experiment_variants_tenant_id ON public.experiment_variants(tenant_id);
-CREATE INDEX CONCURRENTLY idx_experiment_variants_experiment_tenant ON public.experiment_variants(experiment_id, tenant_id);
+CREATE INDEX idx_experiment_variants_experiment_id ON public.experiment_variants(experiment_id);
+CREATE INDEX idx_experiment_variants_tenant_id ON public.experiment_variants(tenant_id);
+CREATE INDEX idx_experiment_variants_experiment_tenant ON public.experiment_variants(experiment_id, tenant_id);
+CREATE UNIQUE INDEX idx_experiment_variants_single_control ON public.experiment_variants(experiment_id) WHERE is_control = true;
 
-CREATE INDEX CONCURRENTLY idx_experiment_assignments_tenant_id ON public.experiment_assignments(tenant_id);
-CREATE INDEX CONCURRENTLY idx_experiment_assignments_experiment_id ON public.experiment_assignments(experiment_id);
-CREATE INDEX CONCURRENTLY idx_experiment_assignments_user_pseudonym ON public.experiment_assignments(user_pseudonym);
-CREATE INDEX CONCURRENTLY idx_experiment_assignments_assigned_at ON public.experiment_assignments(assigned_at);
+CREATE INDEX idx_experiment_assignments_tenant_id ON public.experiment_assignments(tenant_id);
+CREATE INDEX idx_experiment_assignments_experiment_id ON public.experiment_assignments(experiment_id);
+CREATE INDEX idx_experiment_assignments_user_pseudonym ON public.experiment_assignments(user_pseudonym);
+CREATE INDEX idx_experiment_assignments_assigned_at ON public.experiment_assignments(assigned_at);
 
-CREATE INDEX CONCURRENTLY idx_experiment_metrics_tenant_id ON public.experiment_metrics(tenant_id);
-CREATE INDEX CONCURRENTLY idx_experiment_metrics_experiment_id ON public.experiment_metrics(experiment_id);
-CREATE INDEX CONCURRENTLY idx_experiment_metrics_variant_id ON public.experiment_metrics(variant_id);
-CREATE INDEX CONCURRENTLY idx_experiment_metrics_window ON public.experiment_metrics(window_start, window_end);
+CREATE INDEX idx_experiment_metrics_tenant_id ON public.experiment_metrics(tenant_id);
+CREATE INDEX idx_experiment_metrics_experiment_id ON public.experiment_metrics(experiment_id);
+CREATE INDEX idx_experiment_metrics_variant_id ON public.experiment_metrics(variant_id);
+CREATE INDEX idx_experiment_metrics_window ON public.experiment_metrics(window_start, window_end);
 
-CREATE INDEX CONCURRENTLY idx_experiment_events_tenant_id ON public.experiment_events(tenant_id);
-CREATE INDEX CONCURRENTLY idx_experiment_events_experiment_id ON public.experiment_events(experiment_id);
-CREATE INDEX CONCURRENTLY idx_experiment_events_created_at ON public.experiment_events(created_at);
+CREATE INDEX idx_experiment_events_tenant_id ON public.experiment_events(tenant_id);
+CREATE INDEX idx_experiment_events_experiment_id ON public.experiment_events(experiment_id);
+CREATE INDEX idx_experiment_events_created_at ON public.experiment_events(created_at);
 
 -- Updated timestamp trigger
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
@@ -177,7 +177,7 @@ RETURNS TEXT AS $$
 BEGIN
   -- Create a consistent, non-reversible hash for user identification
   -- This prevents PII exposure while maintaining consistency
-  RETURN encode(sha256(user_id || tenant_id::TEXT || 'experiment_salt'), 'hex');
+  RETURN encode(digest(user_id || tenant_id::TEXT || 'experiment_salt', 'sha256'), 'hex');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -199,7 +199,7 @@ DECLARE
   v_user_pseudonym TEXT;
   v_existing_variant_key TEXT;
   v_hash_result INTEGER;
-  v_total_percentage INTEGER;
+  variant_record RECORD;
 BEGIN
   -- Get experiment ID
   SELECT id INTO v_experiment_id
@@ -238,7 +238,7 @@ BEGIN
   END IF;
   
   -- New assignment: use consistent hashing
-  v_hash_result := (public.get_user_experiment_pseudonym(p_user_id, p_tenant_id)::bigint % 100);
+  v_hash_result := mod(abs(hashtext(v_user_pseudonym)), 100);
   
   -- Find variant based on traffic percentage
   SELECT ev.id, ev.key, ev.configuration INTO v_variant_id, variant_key, variant_config

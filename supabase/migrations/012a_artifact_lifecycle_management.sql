@@ -1,9 +1,6 @@
 -- Artifact Lifecycle Management Migration
 -- Implements centralized artifact registry with RLS and tenant isolation
 
--- Enable Row Level Security
-ALTER DATABASE SET row_security = on;
-
 -- Artifacts table
 CREATE TABLE IF NOT EXISTS public.artifacts (
   id TEXT PRIMARY KEY,
@@ -28,6 +25,8 @@ CREATE TABLE IF NOT EXISTS public.artifacts (
   CONSTRAINT artifacts_integrity_format CHECK (integrity ~ '^sha256:[a-f0-9]{64}$')
 );
 
+COMMENT ON COLUMN public.artifacts.tenant_id IS 'Deprecated TEXT tenant identifier; normalized to tenant_id_uuid in 013a_artifact_tenant_schema_normalization.sql.';
+
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_artifacts_tenant_id ON public.artifacts(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_artifacts_tenant_created_at ON public.artifacts(tenant_id, created_at);
@@ -40,6 +39,7 @@ CREATE INDEX IF NOT EXISTS idx_artifacts_name_version_tenant ON public.artifacts
 -- Promotion steps table
 CREATE TABLE IF NOT EXISTS public.promotion_steps (
   id TEXT PRIMARY KEY,
+  artifact_id TEXT NOT NULL REFERENCES public.artifacts(id) ON DELETE CASCADE,
   from_environment TEXT NOT NULL CHECK (from_environment IN ('development', 'staging', 'production')),
   to_environment TEXT NOT NULL CHECK (to_environment IN ('development', 'staging', 'production')),
   status TEXT NOT NULL CHECK (status IN ('pending', 'approved', 'rejected', 'completed', 'failed')),
@@ -56,6 +56,8 @@ CREATE TABLE IF NOT EXISTS public.promotion_steps (
   CONSTRAINT promotion_steps_approvals_check CHECK (current_approvals >= 0 AND current_approvals <= required_approvals),
   CONSTRAINT promotion_steps_environment_check CHECK (from_environment != to_environment)
 );
+
+COMMENT ON COLUMN public.promotion_steps.tenant_id IS 'Deprecated TEXT tenant identifier; normalized to tenant_id_uuid in 013a_artifact_tenant_schema_normalization.sql.';
 
 -- Create indexes for promotion steps
 CREATE INDEX IF NOT EXISTS idx_promotion_steps_tenant_id ON public.promotion_steps(tenant_id);
@@ -185,79 +187,79 @@ ALTER TABLE public.promotion_checks ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for artifacts table
 CREATE POLICY "Users can view artifacts in their tenant" ON public.artifacts
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert artifacts in their tenant" ON public.artifacts
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can update artifacts in their tenant" ON public.artifacts
-  FOR UPDATE USING (tenant_id = public.tenant_id());
+  FOR UPDATE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can delete artifacts in their tenant" ON public.artifacts
-  FOR DELETE USING (tenant_id = public.tenant_id());
+  FOR DELETE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for promotion_steps table
 CREATE POLICY "Users can view promotion steps in their tenant" ON public.promotion_steps
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert promotion steps in their tenant" ON public.promotion_steps
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can update promotion steps in their tenant" ON public.promotion_steps
-  FOR UPDATE USING (tenant_id = public.tenant_id());
+  FOR UPDATE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can delete promotion steps in their tenant" ON public.promotion_steps
-  FOR DELETE USING (tenant_id = public.tenant_id());
+  FOR DELETE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for promotion_approvals table
 CREATE POLICY "Users can view promotion approvals in their tenant" ON public.promotion_approvals
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert promotion approvals in their tenant" ON public.promotion_approvals
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for promotion_rejections table
 CREATE POLICY "Users can view promotion rejections in their tenant" ON public.promotion_rejections
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert promotion rejections in their tenant" ON public.promotion_rejections
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for policy_rules table
 CREATE POLICY "Users can view policy rules in their tenant" ON public.policy_rules
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert policy rules in their tenant" ON public.policy_rules
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can update policy rules in their tenant" ON public.policy_rules
-  FOR UPDATE USING (tenant_id = public.tenant_id());
+  FOR UPDATE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can delete policy rules in their tenant" ON public.policy_rules
-  FOR DELETE USING (tenant_id = public.tenant_id());
+  FOR DELETE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for retention_policies table
 CREATE POLICY "Users can view retention policies in their tenant" ON public.retention_policies
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert retention policies in their tenant" ON public.retention_policies
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can update retention policies in their tenant" ON public.retention_policies
-  FOR UPDATE USING (tenant_id = public.tenant_id());
+  FOR UPDATE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can delete retention policies in their tenant" ON public.retention_policies
-  FOR DELETE USING (tenant_id = public.tenant_id());
+  FOR DELETE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- RLS Policies for promotion_checks table
 CREATE POLICY "Users can view promotion checks in their tenant" ON public.promotion_checks
-  FOR SELECT USING (tenant_id = public.tenant_id());
+  FOR SELECT USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can insert promotion checks in their tenant" ON public.promotion_checks
-  FOR INSERT WITH CHECK (tenant_id = public.tenant_id());
+  FOR INSERT WITH CHECK (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 CREATE POLICY "Users can update promotion checks in their tenant" ON public.promotion_checks
-  FOR UPDATE USING (tenant_id = public.tenant_id());
+  FOR UPDATE USING (tenant_id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' AND tenant_id::uuid = public.tenant_id());
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION public.handle_updated_at()

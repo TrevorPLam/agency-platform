@@ -22,7 +22,7 @@ on:
     branches: [main]
     paths:
       - 'packages/artifacts/**'
-      - 'supabase/migrations/012_artifact_lifecycle_management.sql'
+      - 'supabase/migrations/012a_artifact_lifecycle_management.sql'
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -74,7 +74,7 @@ jobs:
         run: |
           # Create a test artifact for demonstration
           echo "test-artifact-content" > test-artifact.txt
-          
+
           pnpm tsx scripts/artifacts/register-artifact.ts \
             --name "test-artifact" \
             --version "1.0.0" \
@@ -88,7 +88,7 @@ jobs:
             --description "Test artifact for promotion workflow" \
             --tags "test,demo,workflow" \
           | tee artifact-registration.log
-          
+
           # Extract artifact ID from output
           ARTIFACT_ID=$(grep " ID:" artifact-registration.log | sed 's/ ID: //')
           echo "artifact-id=${{ github.event.inputs.artifact_id || '$ARTIFACT_ID' }}" >> $GITHUB_OUTPUT
@@ -101,7 +101,7 @@ jobs:
     if: |
       github.event.inputs.target_environment == 'staging' || 
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    environment: 
+    environment:
       name: staging
       url: ${{ steps.promotion.outputs.promotion-url }}
     steps:
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -129,13 +129,13 @@ jobs:
         run: |
           ARTIFACT_ID="${{ github.event.inputs.artifact_id || needs.build-artifacts.outputs.artifact-id }}"
           REQUIRED_APPROVALS="${{ github.event.inputs.required_approvals || '1' }}"
-          
+
           pnpm tsx scripts/artifacts/promote-artifact.ts \
             --artifact-id "$ARTIFACT_ID" \
             --environment "staging" \
             --required-approvals "$REQUIRED_APPROVALS" \
           | tee promotion-staging.log
-          
+
           # Extract promotion ID from output
           PROMOTION_ID=$(grep " ID:" promotion-staging.log | sed 's/ ID: //')
           echo "promotion-id=$PROMOTION_ID" >> $GITHUB_OUTPUT
@@ -161,7 +161,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-artifacts, promote-to-staging]
     if: github.event.inputs.target_environment == 'production'
-    environment: 
+    environment:
       name: production
       url: ${{ steps.promotion.outputs.promotion-url }}
     steps:
@@ -174,7 +174,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -189,13 +189,13 @@ jobs:
         run: |
           ARTIFACT_ID="${{ github.event.inputs.artifact_id }}"
           REQUIRED_APPROVALS="${{ github.event.inputs.required_approvals || '2' }}"
-          
+
           pnpm tsx scripts/artifacts/promote-artifact.ts \
             --artifact-id "$ARTIFACT_ID" \
             --environment "production" \
             --required-approvals "$REQUIRED_APPROVALS" \
           | tee promotion-production.log
-          
+
           # Extract promotion ID from output
           PROMOTION_ID=$(grep " ID:" promotion-production.log | sed 's/ ID: //')
           echo "promotion-id=$PROMOTION_ID" >> $GITHUB_OUTPUT
@@ -240,7 +240,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -282,7 +282,7 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version-file: '.nvmrc'
-          cache: "pnpm"
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -329,6 +329,6 @@ jobs:
           echo "   Production Promotion: ${{ needs.promote-to-production.result }}"
           echo "   Retention Cleanup: ${{ needs.retention-cleanup.result }}"
           echo "   Security Checks: ${{ needs.security-checks.result }}"
-          
+
           # This would integrate with notification systems (Slack, Teams, etc.)
           echo "✅ Notification sent"
