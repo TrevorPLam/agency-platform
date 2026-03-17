@@ -203,25 +203,23 @@ The app uses design tokens from `@agency/design-tokens` with potential customiza
 ### **E2E Testing with Playwright**
 ```bash
 # Run all E2E tests
-pnpm test
+pnpm test:e2e
 
 # Run specific test file
-pnpm test contact-form.spec.ts
+pnpm test:e2e e2e/smoke.spec.ts
 
 # Run tests in headed mode
-pnpm test --headed
+pnpm test:e2e --headed
 
 # Run tests with UI mode
-pnpm test --ui
+pnpm test:e2e --ui
 ```
 
 ### **Test Structure**
 ```
 e2e/
-├── contact-form.spec.ts      # Contact form functionality
-├── booking-flow.spec.ts      # Booking process
-├── navigation.spec.ts        # Site navigation
-└── accessibility.spec.ts     # A11y compliance tests
+├── smoke.spec.ts             # Primary render smoke checks
+└── error-handling.spec.ts    # Not-found and form surface checks
 ```
 
 ### **Testing Guidelines**

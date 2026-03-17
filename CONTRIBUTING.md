@@ -1,6 +1,6 @@
 # Contributing to Agency Platform
 
-This document covers everything you need to get running locally and contribute correctly. For tool versions and verification, see [TOOLCHAIN.md](./TOOLCHAIN.md). For high-level architecture, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+This document covers everything you need to get running locally and contribute correctly. For tool versions and verification, see [TOOLCHAIN.md](./TOOLCHAIN.md). For high-level architecture, see [docs/architecture/ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md).
 
 ---
 
@@ -207,7 +207,7 @@ Repository properties automatically trigger governance policies:
 Risk scores are calculated automatically based on repository properties. Categories:
 
 - **Critical** (3.5-4.0): Enhanced monitoring, quarterly reviews
-- **High** (2.8-3.4): Monthly reviews, enhanced policies  
+- **High** (2.8-3.4): Monthly reviews, enhanced policies
 - **Medium** (2.0-2.7): Quarterly reviews, standard policies
 - **Low** (1.0-1.9): Semi-annual reviews, basic policies
 
@@ -216,7 +216,7 @@ Risk scores are calculated automatically based on repository properties. Categor
 Based on repository classification and compliance frameworks:
 
 - **SOC2**: Access controls, data classification, change management
-- **ISO27001**: Asset management, access control, vulnerability management  
+- **ISO27001**: Asset management, access control, vulnerability management
 - **HIPAA**: Administrative safeguards, technical safeguards, audit controls
 - **PCI-DSS**: Data protection, encryption, access controls
 - **GDPR**: Data protection by design, security of processing
@@ -465,6 +465,28 @@ All PRs must pass:
 ## Documentation maintenance
 
 Update platform metrics (docs/README "Current Status") when adding or removing apps or packages; keep structure and workflow in ARCHITECTURE and CONTRIBUTING only; do not duplicate structure or setup in the root README.
+
+### Link Checking
+
+All documentation links must be valid. To check links:
+
+```bash
+# Run comprehensive link check
+./scripts/check-links.sh
+
+# Or check specific file
+npx markdown-link-check --config .markdownlinkcheck.json README.md
+```
+
+Link checking is automated in CI and will fail builds if broken links are found.
+
+### Documentation Standards
+
+- **Internal links**: Use relative paths (`docs/README.md`)
+- **External links**: Use HTTPS when available
+- **Placeholder links**: Use `your-org` for GitHub placeholders
+- **Localhost links**: Ignored by automated checks
+- **Images**: Use alt text and check for broken image links
 
 ## Day-to-day workflow summary
 

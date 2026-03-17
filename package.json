@@ -37,10 +37,11 @@
   "license": "ISC",
   "devDependencies": {
     "@agency/database": "workspace:*",
+    "@changesets/cli": "catalog:",
     "@stryker-mutator/core": "catalog:",
     "@stryker-mutator/vitest-runner": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "@changesets/cli": "catalog:",
+    "markdown-link-check": "catalog:",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "catalog:",
     "tsx": "catalog:",

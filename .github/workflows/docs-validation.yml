@@ -1,0 +1,69 @@
+name: Documentation Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC to catch external link rot
+    - cron: '0 2 * * *'
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Markdown links
+        uses: tcort/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.markdownlinkcheck.json'
+
+  docs-structure-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for broken documentation references
+        run: |
+          echo "Checking for broken documentation references..."
+          
+          # Check for references to non-existent docs/architecture/ directory
+          if grep -r "docs/architecture/" --include="*.md" .; then
+            echo "❌ Found references to docs/architecture/ directory"
+            echo "This directory doesn't exist. References should point to docs/ARCHITECTURE.md"
+            exit 1
+          fi
+          
+          # Check for references to non-existent docs/guides/ subdirectories  
+          if find docs/guides/ -name "*.md" | head -1 | grep -q .; then
+            echo "✅ docs/guides/ directory exists and has content"
+          else
+            echo "❌ docs/guides/ directory is empty or missing"
+            exit 1
+          fi
+          
+          # Verify critical documentation files exist
+          critical_files=(
+            "README.md"
+            "CONTRIBUTING.md" 
+            "SECURITY.md"
+            "docs/ARCHITECTURE.md"
+            "docs/README.md"
+          )
+          
+          for file in "${critical_files[@]}"; do
+            if [ -f "$file" ]; then
+              echo "✅ $file exists"
+            else
+              echo "❌ $file is missing"
+              exit 1
+            fi
+          done
+          
+          echo "✅ All documentation structure checks passed"

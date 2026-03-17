@@ -8,10 +8,10 @@
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
     "type-check": "tsc --noEmit",
-    "test": "pnpm exec vitest run",
+    "test": "pnpm dlx vitest run",
     "test:e2e": "playwright test",
-    "test:ci": "pnpm exec vitest run --reporter=dot && playwright test --reporter=line",
-    "test:coverage": "pnpm exec vitest run --coverage"
+    "test:ci": "pnpm dlx vitest run --reporter=dot && playwright test --reporter=line",
+    "test:coverage": "pnpm dlx vitest run --coverage"
   },
   "dependencies": {
     "@agency/ui": "workspace:*",

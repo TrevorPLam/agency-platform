@@ -1,0 +1,50 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http://localhost"
+    },
+    {
+      "pattern": "^http://127.0.0.1"
+    },
+    {
+      "pattern": "^https://placehold.co"
+    },
+    {
+      "pattern": "^http://.*:300[0-9]"
+    },
+    {
+      "pattern": "^https://github.com/.*/agency-platform"
+    }
+  ],
+  "replacementPatterns": [
+    {
+      "pattern": "^http://localhost:3000",
+      "replacement": "https://agency-platform.vercel.app"
+    },
+    {
+      "pattern": "^http://localhost:3001",
+      "replacement": "https://agency-admin.vercel.app"
+    },
+    {
+      "pattern": "^http://localhost:3002",
+      "replacement": "https://riley-day-care.vercel.app"
+    },
+    {
+      "pattern": "^http://localhost:3003",
+      "replacement": "https://the-barber-cave.vercel.app"
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 2,
+  "fallbackRetryDelay": "30s",
+  "httpHeaders": [
+    {
+      "urls": ["https://github.com"],
+      "headers": {
+        "Accept": "text/html",
+        "User-Agent": "markdown-link-check/3.14.2"
+      }
+    }
+  ]
+}

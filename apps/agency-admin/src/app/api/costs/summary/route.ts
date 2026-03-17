@@ -30,6 +30,12 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
  * Returns cost summary data for a tenant including total costs, trend data,
  * and cost breakdowns by category.
  * 
+ * SECURITY MODEL:
+ * - Uses secure database function with caller authorization enforcement
+ * - Platform admins can access any tenant data
+ * - Regular users can only access their assigned tenant data
+ * - Database function validates JWT claims and prevents cross-tenant access
+ * 
  * @route GET /api/costs/summary
  * @access Private - Requires authentication and tenant access
  * @param {string} [searchParams.tenant_id] - Tenant ID (platform admins only)
@@ -49,7 +55,7 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
  * }
  * 
  * @error {401} Unauthorized - User not authenticated
- * @error {403} Forbidden - User lacks tenant access
+ * @error {403} Forbidden - User lacks tenant access or attempts cross-tenant access
  * @error {500} Internal Server Error - Database or service failure
  */
 export const GET = withApiErrorHandling(async (request: NextRequest) => {
@@ -70,12 +76,17 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const admin = getAdminClient()
+  // Call the secure function - it will enforce authorization internally
   const { data, error } = await admin.rpc('get_tenant_cost_summary', {
     p_tenant_id: tenantId,
     p_days: 7,
   })
 
   if (error) {
+    // Handle authorization errors specifically
+    if (error.code === '42501') {
+      throw new AuthorizationError('Access denied: Cannot access cost summary for this tenant.')
+    }
     throw new DatabaseOperationError('Failed to fetch cost summary.')
   }
 

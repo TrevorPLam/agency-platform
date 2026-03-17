@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-17T01:30:00Z",
+  "flakyTests": [
+    {
+      "name": "Database connection timeout test",
+      "file": "packages/database/src/operations.integration.test.ts",
+      "pattern": "should handle connection timeouts",
+      "flakiness": 0.15,
+      "lastFlaky": "2026-03-16T18:45:00Z",
+      "environment": ["ci", "local"],
+      "reason": "Network timing variations",
+      "mitigation": "Increase timeout or add retry logic"
+    },
+    {
+      "name": "Analytics event capture test",
+      "file": "packages/analytics/src/server.test.ts", 
+      "pattern": "should capture analytics events",
+      "flakiness": 0.08,
+      "lastFlaky": "2026-03-15T14:20:00Z",
+      "environment": ["ci"],
+      "reason": "External API rate limiting",
+      "mitigation": "Mock external API in tests"
+    },
+    {
+      "name": "File upload size validation",
+      "file": "packages/security/src/redirect-validator.test.ts",
+      "pattern": "should validate large file uploads",
+      "flakiness": 0.12,
+      "lastFlaky": "2026-03-14T09:30:00Z",
+      "environment": ["ci"],
+      "reason": "Resource constraints in CI",
+      "mitigation": "Use smaller test files or mock file system"
+    }
+  ],
+  "quarantinedTests": [],
+  "statistics": {
+    "totalTests": 118,
+    "flakyTests": 3,
+    "flakinessRate": 2.54,
+    "averageFlakiness": 0.12
+  },
+  "trends": {
+    "weeklyFlakiness": [
+      {"date": "2026-03-10", "rate": 3.2},
+      {"date": "2026-03-11", "rate": 2.8},
+      {"date": "2026-03-12", "rate": 2.5},
+      {"date": "2026-03-13", "rate": 2.7},
+      {"date": "2026-03-14", "rate": 2.9},
+      {"date": "2026-03-15", "rate": 2.6},
+      {"date": "2026-03-16", "rate": 2.5}
+    ]
+  }
+}

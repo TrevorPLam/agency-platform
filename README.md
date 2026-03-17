@@ -18,7 +18,7 @@ Built with Next.js 16, Turborepo, and modern tooling for scalable client applica
 
 ## 🏗️ Architecture
 
-This is a **monorepo** using pnpm workspaces and Turborepo for efficient development and deployment across multiple client applications. For directory structure and isolation layers, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+This is a **monorepo** using pnpm workspaces and Turborepo for efficient development and deployment across multiple client applications. For directory structure and isolation layers, see [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md).
 
 ### 🎯 Design Principles
 
@@ -67,7 +67,7 @@ This is a **monorepo** using pnpm workspaces and Turborepo for efficient develop
    ```
 
 5. **Verify deployment**
-   
+
    Open your browser to:
    - **Agency Website**: http://localhost:3000
    - **Admin Dashboard**: http://localhost:3001
@@ -163,7 +163,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 - pgTAP database isolation tests
 - GitHub security vulnerability scanning
 
-> 📖 **See:** [SECURITY.md](SECURITY.md) and [docs/SUPPLY_CHAIN_SECURITY.md](docs/SUPPLY_CHAIN_SECURITY.md)
+> 📖 **See:** [SECURITY.md](SECURITY.md) and [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md)
 
 ## 📚 Documentation
 
@@ -172,7 +172,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 - **[docs/README.md](docs/README.md)** — Complete platform documentation and guides
 
 ### 🏗️ Architecture & Design
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Monorepo structure, isolation layers, and scaling phases
+- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Monorepo structure, isolation layers, and scaling phases
 - **[docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md)** — Frontend architecture patterns and component hierarchy
 
 ### 🔒 Security & Compliance
@@ -213,8 +213,8 @@ Need help? We're here to support you:
 - **📧 Email Support**: support@agency.com (response within 24h)
 - **💬 Discord Community**: [Join our Discord](https://discord.gg/agency) (real-time help)
 - **📚 Documentation**: [Complete docs](docs/) (searchable guides)
-- **🐛 Bug Reports**: [GitHub Issues](https://github.com/agency/platform/issues) (track issues)
-- **🎯 Feature Requests**: [GitHub Discussions](https://github.com/agency/platform/discussions) (share ideas)
+- **🐛 Bug Reports**: [GitHub Issues](https://github.com/your-org/agency-platform/issues) (track issues)
+- **🎯 Feature Requests**: [GitHub Discussions](https://github.com/your-org/agency-platform/discussions) (share ideas)
 
 ### 🔧 **Development Workflow**
 
@@ -251,7 +251,7 @@ git push origin feature/your-feature-name
 
 **Getting Help:**
 1. Check [docs/troubleshooting/](docs/troubleshooting/) for detailed guides
-2. Search existing [GitHub Issues](https://github.com/agency/platform/issues)
+2. Search existing [GitHub Issues](https://github.com/your-org/agency-platform/issues)
 3. Join our [Discord Community](https://discord.gg/agency) for live help
 4. Email support@agency.com for priority issues
 

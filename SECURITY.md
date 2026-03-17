@@ -1,8 +1,8 @@
 # Security — Five Attack Vectors
 
-This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/MULTI_TENANT_SECURITY.md](docs/MULTI_TENANT_SECURITY.md) for full context.
+This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [docs/MULTI_TENANT_SECURITY.md](docs/MULTI_TENANT_SECURITY.md) for full context.
 
-**Supply Chain Security**: For comprehensive supply chain security measures including SBOM generation, SLSA attestations, and cryptographic verification, see [docs/SUPPLY_CHAIN_SECURITY.md](docs/SUPPLY_CHAIN_SECURITY.md).
+**Supply Chain Security**: For comprehensive supply chain security measures including SBOM generation, SLSA attestations, and cryptographic verification, see [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md).
 
 ---
 
@@ -118,7 +118,7 @@ pnpm run verify-integrity --path dist/
 pnpm run verify-signatures
 ```
 
-**Fix:** 
+**Fix:**
 - Generate SBOMs for all builds to track dependencies
 - Implement SLSA attestations for build provenance
 - Verify artifact integrity with cryptographic hashes
@@ -151,7 +151,7 @@ grep -r "validateRedirectUrl" --include="*.ts" --include="*.tsx" packages/securi
 
 **Fix:** All authentication flows must use the `validateRedirectUrl` utility from `@agency/security` which provides:
 - Input validation with type checking
-- Full URL decoding with iteration limits (prevents bypass attempts)  
+- Full URL decoding with iteration limits (prevents bypass attempts)
 - Protocol-relative URL blocking (`//` attacks)
 - Absolute URL rejection for auth flows
 - Relative URL validation with suspicious pattern detection
@@ -159,6 +159,34 @@ grep -r "validateRedirectUrl" --include="*.ts" --include="*.tsx" packages/securi
 - Safe default fallbacks
 
 **Implementation:** See `packages/security/src/redirect-validator.ts` for the comprehensive `RedirectValidator` class. All auth flows in `apps/*/src/app/(auth)/` are protected.
+
+---
+
+## Vector 8: SECURITY DEFINER Function Authorization Bypass
+
+**What it is:** Database functions with `SECURITY DEFINER` execute with elevated privileges and can bypass Row-Level Security (RLS) policies. If these functions don't validate caller authorization internally, any authenticated user can access cross-tenant data.
+
+**Detection:**
+
+```bash
+# Find SECURITY DEFINER functions
+grep -r "SECURITY DEFINER" --include="*.sql" supabase/migrations/
+
+# Verify functions have internal authorization checks
+grep -A 10 -B 5 "SECURITY DEFINER" --include="*.sql" supabase/migrations/
+```
+
+**Fix:** All `SECURITY DEFINER` functions must:
+1. Extract caller's tenant context from JWT claims (`app_metadata.tenant_id`)
+2. Validate caller authorization (platform admin or own tenant access)
+3. Raise 42501 (UNAUTHORIZED) for cross-tenant access attempts
+4. Document security model in function comments
+
+**Implementation:** See `supabase/migrations/011_cost_monitoring_security_fix.sql` for the comprehensive fix of `get_tenant_cost_summary` function which includes:
+- JWT-based tenant validation using `current_setting('request.jwt.claims')`
+- Platform admin enforcement with email allowlist
+- Cross-tenant access prevention with proper error codes
+- Comprehensive pgTAP test coverage in `supabase/tests/database/05-cost-summary-function-auth.sql`
 
 ---
 

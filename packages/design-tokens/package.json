@@ -18,9 +18,9 @@
     "build:js": "tsup",
     "build:tokens": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts",
     "tokens:build": "node --experimental-strip-types scripts/build-clients.ts && node --experimental-strip-types sd.config.ts",
-    "test": "pnpm exec vitest run",
-    "test:ci": "pnpm exec vitest run --reporter=dot",
-    "test:coverage": "pnpm exec vitest run --coverage"
+    "test": "pnpm dlx vitest run",
+    "test:ci": "pnpm dlx vitest run --reporter=dot",
+    "test:coverage": "pnpm dlx vitest run --coverage"
   },
   "dependencies": {
     "style-dictionary": "catalog:"

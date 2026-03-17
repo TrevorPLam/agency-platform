@@ -1754,6 +1754,20 @@ This pipeline means: every time you (or an AI agent) push code, GitHub automatic
 | **Visual Regression** | **Chromatic** | Screenshot comparison (UI didn't break) | 5-10 minutes |
 | **Performance** | **Lighthouse CI** | Core Web Vitals on every PR | 3-5 minutes |
 
+For monorepo enforcement, add three repository-level commands and require all of them in CI:
+
+```bash
+pnpm test        # Functional suite (unit/component/e2e where defined)
+pnpm test:ci     # Deterministic CI profile (affected workspaces)
+pnpm test:coverage  # Strict line/function/branch/statements gate
+```
+
+Use mutation testing as a second quality gate where coverage can be misleading:
+
+```bash
+pnpm test:mutation
+```
+
 Write these four Playwright tests on day one for every client site. They catch 90% of production-breaking issues:
 
 ```typescript
