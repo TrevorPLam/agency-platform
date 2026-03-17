@@ -73,8 +73,8 @@
   "editor.wordWrap": "on",
   "editor.minimap.enabled": false,
   "editor.codeLens": false,
-  "editor.lightbulb.enabled": false,
-  "editor.hover.enabled": true,
+  "editor.lightbulb.enabled": "off",
+  "editor.hover.enabled": "on",
   "editor.suggestSelection": "first",
   "editor.quickSuggestions": {
     "comments": false,
@@ -114,7 +114,7 @@
   // Extension management
   "extensions.autoUpdate": false,
   "extensions.autoCheckUpdates": false,
-  "extensions.ignoreRecommendations": false,
+  "extensions.ignoreRecommendations": true,
 
   // Workbench performance
   "workbench.editor.enablePreview": false,
@@ -274,7 +274,7 @@
   "editor.acceptSuggestionOnCommitCharacter": true,
   "editor.acceptSuggestionOnEnter": "on",
   "editor.snippetSuggestions": "top",
-  "editor.wordBasedSuggestions": true,
+  "editor.wordBasedSuggestions": "matchingDocuments",
   "editor.wordBasedSuggestionsMode": "currentDocument",
 
   // Error and warning performance

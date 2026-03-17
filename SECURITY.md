@@ -1,8 +1,8 @@
 # Security — Five Attack Vectors
 
-This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See docs/ARCHITECTURE.md and docs/MULTI_TENANT_AUTH.md for full context.
+This document describes the five attack vectors the agency platform hardens against, how to detect them, and the baseline audit record. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/MULTI_TENANT_SECURITY.md](docs/MULTI_TENANT_SECURITY.md) for full context.
 
-**Supply Chain Security**: For comprehensive supply chain security measures including SBOM generation, SLSA attestations, and cryptographic verification, see [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md).
+**Supply Chain Security**: For comprehensive supply chain security measures including SBOM generation, SLSA attestations, and cryptographic verification, see [docs/SUPPLY_CHAIN_SECURITY.md](docs/SUPPLY_CHAIN_SECURITY.md).
 
 ---
 

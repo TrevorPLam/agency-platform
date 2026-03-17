@@ -2,51 +2,21 @@
 
 A multi-client marketing agency monorepo built with Next.js 16, Turborepo, and modern tooling for scalable client application development.
 
-## 🏗️ Architecture
+## Architecture
 
-This is a **monorepo** using pnpm workspaces and Turborepo for efficient development and deployment across multiple client applications.
+This is a **monorepo** using pnpm workspaces and Turborepo for efficient development and deployment across multiple client applications. For directory structure and isolation layers, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-### Directory Structure
+## Quick Start
 
-```
-agency-platform/
-├── apps/
-│   ├── firm/              # Agency marketing site
-│   ├── agency-admin/      # Internal agency management
-│   ├── prospective-clients/  # Demo/test sites (riley-day-care, the-barber-cave)
-│   └── clients/             # Production clients only (empty until first go-live)
-├── packages/              # Shared packages
-│   ├── ui/               # Shared UI components (shadcn/ui)
-│   ├── database/         # Supabase client factories
-│   ├── analytics/        # PostHog analytics wrapper
-│   ├── design-tokens/    # W3C DTCG token system
-│   ├── typescript-config/ # Shared TypeScript configs
-│   └── eslint-config/    # Shared ESLint configs
-├── supabase/
-│   ├── migrations/       # Database schema migrations
-│   └── tests/database/   # Database tests
-├── scripts/              # Build and utility scripts
-├── docs/                 # Architecture documentation
-└── .github/             # GitHub workflows and CODEOWNERS
-```
+**Prerequisites:** Node.js 22.x, pnpm 10.x, Docker Desktop (for local Supabase). See [TOOLCHAIN.md](TOOLCHAIN.md) for versions and install commands.
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Node.js** 22.x LTS (use `nvm use 22`)
-- **pnpm** 10.x (`npm install -g pnpm@latest`)
-- **Docker Desktop** (for local Supabase)
-
-### First Run
-
-Repeat these steps **on each machine** where you develop (e.g. PC, laptop). Each environment has its own clone and `.env.local`; the repo is designed for multi-environment use.
+Repeat these steps **on each machine** where you develop. Each environment has its own clone and `.env.local`; the repo is designed for multi-environment use.
 
 1. **Clone and setup**
 
    ```bash
    git clone <repository-url>
-   cd agency-platform
+   cd <repository-root>   # e.g. firm or agency-platform — your clone directory name
    nvm use 22
    ```
 
@@ -77,65 +47,34 @@ Repeat these steps **on each machine** where you develop (e.g. PC, laptop). Each
 - `pnpm type-check` - TypeScript type checking
 - `pnpm tokens:build` - Build design token CSS files
 
-## 🎨 Design System
+## Design System
 
-This platform uses a **three-tier design token hierarchy** following W3C DTCG standards:
+This platform uses a **three-tier design token hierarchy** following W3C DTCG standards (primitive, semantic, component tokens). Each client gets custom token compilation for brand consistency while sharing core components. See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [docs/](docs/) for details.
 
-1. **Primitive tokens** - Raw values (colors, spacing)
-2. **Semantic tokens** - Design intent (brand-primary, text-primary)
-3. **Component tokens** - Component-specific overrides
+## Technology Stack
 
-Each client gets custom token compilation for brand consistency while sharing core components.
+Next.js 16.1 with App Router, Turborepo 2.7, pnpm 10, Tailwind CSS v4, shadcn/ui, Supabase, PostHog, Inngest, Vercel. See [docs/README.md](docs/README.md) for platform overview and metrics.
 
-## 🔧 Technology Stack
+## Multi-Tenant Architecture
 
-- **Framework**: Next.js 16.1 with App Router
-- **Monorepo**: Turborepo 2.7 + pnpm 10
-- **Styling**: Tailwind CSS v4 with CSS variables
-- **UI Components**: shadcn/ui (New York style)
-- **Database**: Supabase (PostgreSQL + Auth + Storage)
-- **Analytics**: PostHog
-- **Background Jobs**: Inngest
-- **Deployment**: Vercel
+Row-Level Security ensures data isolation between clients; tenant resolution via hostname and middleware; per-client branding through the design token system. See [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md).
 
-## 🏢 Multi-Tenant Architecture
+## Security
 
-- **Row-Level Security** ensures data isolation between clients
-- **Tenant resolution** via hostname and middleware
-- **Per-client branding** through design token system
-- **Shared codebase** with client-specific customizations
+Environment variables never committed to git; service role keys server-side only; RLS on all database tables; branch protection; dependency scanning; supply chain security (SBOM, SLSA). See [SECURITY.md](SECURITY.md) and [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md).
 
-## 📊 Development Workflow
+## Documentation
 
-1. **Feature development** in feature branches
-2. **Code review** with automatic CODEOWNERS assignment
-3. **Automated testing** and type checking
-4. **Design token updates** automatically propagate to all apps
-5. **Deployment** through Vercel with preview environments
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Development guidelines, local runbook, and contribution requirements
+- [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) — Monorepo structure, isolation layers, and scaling phases
+- [TOOLCHAIN.md](TOOLCHAIN.md) — Tool versions and setup
+- [docs/](docs/) — Architecture decisions and guides
 
-## 🔐 Security
+## Contributing
 
-- **Environment variables** never committed to git
-- **Service role keys** server-side only
-- **Row-Level Security** on all database tables
-- **Branch protection** on main branch
-- **Dependency scanning** through GitHub security
-- **Supply chain security** with SBOM generation, SLSA attestations, and cryptographic verification
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines, coding standards, and PR process.
 
-See [SECURITY.md](./SECURITY.md) for detailed security measures and [docs/security/SUPPLY_CHAIN_SECURITY.md](./docs/security/SUPPLY_CHAIN_SECURITY.md) for comprehensive supply chain security implementation.
-
-## 📚 Documentation
-
-- [CONTRIBUTING.md](./CONTRIBUTING.md) — Development guidelines, local runbook, and contribution requirements
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — Monorepo structure, isolation layers, and scaling phases
-- [TOOLCHAIN.md](./TOOLCHAIN.md) — Tool versions and setup
-- [docs/](./docs/) — Architecture decisions and guides
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed development guidelines, coding standards, and PR process.
-
-## 📄 License
+## License
 
 Private - All rights reserved to the agency and its clients.
 

@@ -61,7 +61,8 @@ nvm install 22 && nvm use 22
 npm install -g pnpm@latest
 
 # Turborepo
-npm install -g turbo
+pnpm add -g turbo
+# or: npm install -g turbo
 
 # Supabase CLI
 npm install supabase  # Local install

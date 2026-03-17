@@ -35,4 +35,4 @@ RLS is verified by the pgTAP suite in `supabase/tests/database/`. Run:
 supabase test db
 ```
 
-See `docs/RLS_VERIFICATION.md` for manual index verification.
+See `docs/security/MULTI_TENANT_SECURITY.md` for manual index verification.

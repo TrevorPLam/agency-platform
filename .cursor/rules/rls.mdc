@@ -22,4 +22,4 @@ alwaysApply: false
 
 ## Performance
 - public.tenant_id() is evaluated once per query (initplan); every tenant_id column must have an index — without it RLS causes full table scans
-- Verify with EXPLAIN (ANALYZE, BUFFERS); see docs/RLS_VERIFICATION.md and supabase/verify-rls-indexes.sql
+- Verify with EXPLAIN (ANALYZE, BUFFERS); see docs/security/MULTI_TENANT_SECURITY.md and supabase/verify-rls-indexes.sql

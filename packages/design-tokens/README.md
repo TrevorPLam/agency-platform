@@ -26,4 +26,4 @@ Tokens that support WCAG 2.1 AA and 2.2:
 
 Focus-not-obscured (WCAG 2.2): ensure modals/overlays do not fully cover focused elements; layout and component behavior, not token values.
 
-See [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](../../docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §5 for full a11y build order.
+See [docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](../../docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §5 for full a11y build order.

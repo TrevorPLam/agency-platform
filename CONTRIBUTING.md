@@ -6,47 +6,23 @@ This document covers everything you need to get running locally and contribute c
 
 ## Prerequisites and first-run setup
 
-1. **Install required tools** (see [TOOLCHAIN.md](./TOOLCHAIN.md)):
-   - Node.js 22.x LTS: `nvm install 22 && nvm use 22`
-   - pnpm 10.x: `npm install -g pnpm@latest`
-   - Turborepo: `pnpm add -g turbo` (or `npm install -g turbo`)
-   - Supabase CLI: `npm install -g supabase`
-   - Docker Desktop (required for `supabase start`)
+1. **Install required tools** (see [TOOLCHAIN.md](./TOOLCHAIN.md) for versions and install commands):
+   - Node.js 22.x LTS, pnpm 10.x, Turborepo, Supabase CLI, Docker Desktop (required for `supabase start`)
 
 2. **Clone and install dependencies**
 
    ```bash
    git clone <repository-url>
-   cd agency-platform
+   cd <repository-root>   # e.g. firm or agency-platform — your clone directory name
    nvm use 22   # or fnm use 22
    pnpm install
    ```
 
-   All dependencies use the **catalog** in `pnpm-workspace.yaml` — versions are centralised there. Internal packages use `workspace:*`. Do not add version strings to `package.json` for catalogued packages; use `catalog:` and add the entry to the root catalog if needed. See [docs/PNPM_NOTES.md](./docs/PNPM_NOTES.md) for the `catalogMode: strict` workaround.
+   All dependencies use the **catalog** in `pnpm-workspace.yaml` — versions are centralised there. Internal packages use `workspace:*`. Do not add version strings to `package.json` for catalogued packages; use `catalog:` and add the entry to the root catalog if needed.
 
-3. **Performance optimization**
+3. **Performance optimization (optional)**
 
-   ```bash
-   # Apply Git performance optimizations for large repositories
-   ./scripts/performance/git-tuning.sh apply standard
-   
-   # Enable background maintenance
-   git maintenance register
-   git maintenance start
-   
-   # Set up sparse checkout for better performance
-   ./scripts/performance/sparse-checkout.sh init
-   ./scripts/performance/sparse-checkout.sh role frontend
-   
-   # Optimize IDE performance
-   ./scripts/performance/ide-optimization.ts optimize
-   
-   # Verify performance
-   ./scripts/performance/git-tuning.sh benchmark
-   ./scripts/performance/dx-monitor.ts health
-   ```
-
-   For detailed Git performance guidance, see [docs/development/GIT_PERFORMANCE.md](./docs/development/GIT_PERFORMANCE.md).
+   For Git tuning, sparse checkout, and IDE optimization, see the development section in the main documentation.
 
 4. **Environment setup**
 
@@ -110,8 +86,8 @@ This repository uses a comprehensive metadata governance system for automated co
 All repositories must have proper classification properties set:
 
 ```bash
-# Apply appropriate template to your repository
-pnpm run manage-properties template <your-repo> <template>
+# Apply appropriate template to your repository (run from repository root)
+pnpm exec tsx scripts/governance/manage-properties.ts template <your-repo> <template>
 
 # Available templates: platform, application, library, infrastructure
 ```
@@ -132,21 +108,23 @@ pnpm run manage-properties template <your-repo> <template>
 
 ### Governance Commands
 
+Run from the repository root (scripts live in `scripts/governance/`):
+
 ```bash
 # Check repository properties
-pnpm run manage-properties get <your-repo>
+pnpm exec tsx scripts/governance/manage-properties.ts get <your-repo>
 
 # Set properties from JSON file
-pnpm run manage-properties set <your-repo> properties.json
+pnpm exec tsx scripts/governance/manage-properties.ts set <your-repo> properties.json
 
 # Run compliance checks
-pnpm run compliance-automation check <your-repo>
+pnpm exec tsx scripts/governance/compliance-automation.ts check <your-repo>
 
 # Assess repository risk
-pnpm run risk-assessment assess <your-repo>
+pnpm exec tsx scripts/governance/risk-assessment.ts assess <your-repo>
 
-# View governance status
-pnpm run governance validate
+# View governance status (after building @agency/governance)
+pnpm turbo run validate-properties --filter=@agency/governance
 ```
 
 ### Automated Policies
@@ -198,7 +176,7 @@ Automated workflows trigger based on property changes:
 
 ### Documentation
 
-See [docs/governance/METADATA_GOVERNANCE.md](docs/governance/METADATA_GOVERNANCE.md) for comprehensive governance documentation.
+See [docs/governance/GOVERNANCE.md](docs/governance/GOVERNANCE.md) for design system and governance documentation.
 
 ---
 
@@ -216,17 +194,17 @@ See [docs/governance/METADATA_GOVERNANCE.md](docs/governance/METADATA_GOVERNANCE
 ## Non-negotiable contribution requirements (migrations)
 
 - **Every new migration** that adds or removes a **public table** must:
-  1. Update `supabase/tests/EXPECTED_TABLE_COUNT.txt` to the new integer count of public tables.
+  1. Update the expected table count in `supabase/tests/database/00-rls-coverage.sql` (the literal in the "Expected exactly N tables in public schema" assertion) to the new integer count of public tables.
   2. Add at least four pgTAP assertions in `supabase/tests/database/01-tenant-isolation.sql` (one per CRUD operation) for the new table.
 - **Every new tenant-scoped table** must have the full RLS checklist: RLS enabled, `tenant_id` index, all four policy types (SELECT, INSERT, UPDATE, DELETE) using `public.tenant_id()`. See `.cursor/rules/rls.mdc` and the RLS policy template in `.cursor/rules/database.mdc`.
 
-A PR that adds a migration without updating `EXPECTED_TABLE_COUNT.txt` and adding the corresponding pgTAP tests will fail CI when the table count or tests do not match.
+A PR that adds a migration without updating the expected table count in `00-rls-coverage.sql` and adding the corresponding pgTAP tests will fail CI when the table count or tests do not match.
 
 ---
 
 ## Onboarding a new client
 
-Use the full checklist in [docs/ONBOARDING_CHECKLIST.md](./docs/ONBOARDING_CHECKLIST.md). In short:
+Use the full checklist in [docs/guides/CLIENT_ONBOARDING.md](./docs/guides/CLIENT_ONBOARDING.md). In short:
 
 1. Run `pnpm scaffold` and choose **prospective** (demo) or **real** (production). Prospective apps go to `apps/prospective-clients/[slug]/`, production to `apps/clients/[slug]/`.
 2. Edit `packages/design-tokens/tokens/clients/[slug].json` with a distinct palette, then run `pnpm tokens:build`.
@@ -269,7 +247,7 @@ Prettier is enforced in CI. Use the repo's `prettier.config.mjs` (semi: false, s
 
 ## Style drift prevention
 
-Prefer **design tokens** over arbitrary Tailwind values: use token-based spacing, colors, and typography (e.g. from `@agency/design-tokens`) instead of arbitrary values like `w-[17px]` or `text-[#abc]` where an equivalent token exists. This keeps client sites aligned with the design system and makes global changes safe. An optional ESLint rule (e.g. `eslint-plugin-tailwindcss` with `flat/recommended`, or a custom rule limiting arbitrary values) can be added to enforce this; see [packages/eslint-config](./packages/eslint-config) and [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) (style drift prevention).
+Prefer **design tokens** over arbitrary Tailwind values: use token-based spacing, colors, and typography (e.g. from `@agency/design-tokens`) instead of arbitrary values like `w-[17px]` or `text-[#abc]` where an equivalent token exists. This keeps client sites aligned with the design system and makes global changes safe. An optional ESLint rule (e.g. `eslint-plugin-tailwindcss` with `flat/recommended`, or a custom rule limiting arbitrary values) can be added to enforce this; see [packages/eslint-config](./packages/eslint-config) and [docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) (style drift prevention).
 
 ---
 
@@ -319,13 +297,13 @@ Monitor repository health with automated tools:
 ./scripts/benchmark/git-performance.ts --trends
 ```
 
-For complete Git performance guidance, see [docs/development/PERFORMANCE_GUIDE.md](./docs/development/PERFORMANCE_GUIDE.md).
+For complete Git and monorepo performance guidance, see [docs/development/PERFORMANCE.md](./docs/development/PERFORMANCE.md).
 
 ---
 
 ## Versioning and releases
 
-Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets** for changelogs and semver bumps. When your PR changes one of these packages, add a changeset from the repo root: `pnpm changeset` (choose packages and bump type, then commit the new file under `.changeset/`). To apply changesets and update versions/changelogs before a release: `pnpm version`. Full policy (semver meaning, breaking vs non-breaking, support window) is in [docs/VERSIONING.md](./docs/VERSIONING.md). See also [docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §3a.
+Design-system packages (`@agency/ui`, `@agency/design-tokens`) use **Changesets** for changelogs and semver bumps. When your PR changes one of these packages, add a changeset from the repo root: `pnpm changeset` (choose packages and bump type, then commit the new file under `.changeset/`). To apply changesets and update versions/changelogs before a release: `pnpm version`. Full policy (semver meaning, breaking vs non-breaking, support window) is in [docs/development/VERSIONING.md](./docs/development/VERSIONING.md). See also [docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](./docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §3a.
 
 ---
 
@@ -427,6 +405,10 @@ All PRs must pass:
 - 🔴 **Major updates**: Require planning and testing
 
 ---
+
+## Documentation maintenance
+
+Update platform metrics (docs/README "Current Status") when adding or removing apps or packages; keep structure and workflow in ARCHITECTURE and CONTRIBUTING only; do not duplicate structure or setup in the root README.
 
 ## Day-to-day workflow summary
 

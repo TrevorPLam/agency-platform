@@ -40,7 +40,7 @@ Related to #(issue number)
 - [ ] Security implications have been considered
 - [ ] Database changes (if any) follow RLS requirements
 - [ ] Migration requirements met (if applicable):
-  - [ ] Updated `EXPECTED_TABLE_COUNT.txt`
+  - [ ] Updated expected table count in `supabase/tests/database/00-rls-coverage.sql`
   - [ ] Added pgTAP tests for new tables
   - [ ] Generated and committed updated types
 
