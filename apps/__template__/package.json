@@ -1,0 +1,33 @@
+{
+  "name": "@agency/TEMPLATE_SLUG",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p TEMPLATE_PORT",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "test": "pnpm dlx vitest run",
+    "test:e2e": "playwright test",
+    "test:ci": "pnpm dlx vitest run --reporter=dot && playwright test --reporter=line",
+    "test:coverage": "pnpm dlx vitest run --coverage"
+  },
+  "dependencies": {
+    "@agency/ui": "workspace:*",
+    "@agency/database": "workspace:*",
+    "@agency/analytics": "workspace:*",
+    "@agency/email": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  }
+}

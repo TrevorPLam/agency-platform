@@ -9,7 +9,7 @@ export default defineConfig({
     // provenance: 'src/provenance/index.ts',
   },
   format: ['cjs', 'esm'],
-  dts: false, // Temporarily disabled due to type errors
+  dts: true,
   clean: true,
   external: ['@agency/database'],
   sourcemap: true,

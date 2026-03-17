@@ -4,8 +4,6 @@
   "description": "Design tokens package using Style Dictionary v4 and W3C DTCG format",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

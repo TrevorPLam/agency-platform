@@ -1,16 +1,26 @@
 /**
- * Client scaffolding script (T-19). Run with: pnpm scaffold
- * Creates under apps/prospective-clients (demo) or apps/clients (real).
- * Template: apps/prospective-clients/riley-day-care.
+ * Client scaffolding script — TASK-004.
+ * Sources from apps/__template__ (industry-neutral).
+ * Usage: pnpm scaffold
+ * Or non-interactive: SCAFFOLD_SLUG=my-client SCAFFOLD_NAME="My Client" [SCAFFOLD_PROSPECTIVE=true] pnpm scaffold
  */
 import { execSync } from 'child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
-import { join } from 'path'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  copyFileSync,
+  statSync,
+  writeFileSync,
+} from 'fs'
+import { join, dirname } from 'path'
 import { createInterface } from 'readline'
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
 
-const ask = (question: string) => new Promise<string>((resolve) => rl.question(question, resolve))
+const ask = (question: string) =>
+  new Promise<string>((resolve) => rl.question(question, resolve))
 
 /** Slug must be kebab-case: lowercase letters/digits, single hyphens, no leading/trailing/consecutive hyphens */
 const KEBAB_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/
@@ -19,69 +29,142 @@ function validateSlug(slug: string): boolean {
   return KEBAB_REGEX.test(slug) && slug.length > 0
 }
 
-function readTemplate(root: string, ...pathSegments: string[]): string {
-  const filePath = join(root, ...pathSegments)
-  if (!existsSync(filePath)) {
-    throw new Error(`Template missing: ${filePath}`)
-  }
-  return readFileSync(filePath, 'utf-8')
+/**
+ * Recursively copy a directory, applying token replacements to all file contents.
+ */
+const TEXT_EXTENSIONS = new Set([
+  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
+  '.json', '.css', '.md', '.txt', '.env', '.mdc',
+  '.html', '.xml', '.yaml', '.yml',
+])
+
+function isTextFile(filePath: string): boolean {
+  const lastDot = filePath.lastIndexOf('.')
+  if (lastDot === -1) return false
+  return TEXT_EXTENSIONS.has(filePath.slice(lastDot))
 }
 
-/** Copy a template file into the app dir, replacing riley-day-care with slug. pathSegments are relative to templateRoot (e.g. 'src', 'app', '(auth)', 'login', 'page.tsx'). */
-function copyTemplateFile(
-  templateRoot: string,
-  appDir: string,
-  slug: string,
-  ...pathSegments: string[]
-): void {
-  const content = readTemplate(templateRoot, ...pathSegments).replace(
-    /riley-day-care/g,
-    slug
-  )
-  const outPath = join(appDir, 'src', 'app', ...pathSegments.slice(2)) // pathSegments: src, app, ...
-  mkdirSync(join(outPath, '..'), { recursive: true })
-  writeFileSync(outPath, content)
+function applyTokens(content: string, slug: string, name: string, port: number): string {
+  return content
+    .replaceAll('TEMPLATE_SLUG', slug)
+    .replaceAll('TEMPLATE_NAME', name)
+    .replaceAll('TEMPLATE_PORT', String(port))
 }
+
+function copyDirRecursive(
+  srcDir: string,
+  destDir: string,
+  slug: string,
+  name: string,
+  port: number
+): void {
+  mkdirSync(destDir, { recursive: true })
+
+  for (const entry of readdirSync(srcDir)) {
+    const srcPath = join(srcDir, entry)
+    // Translate TEMPLATE_SLUG in directory/file names
+    const destEntry = entry.replaceAll('TEMPLATE_SLUG', slug)
+    const destPath = join(destDir, destEntry)
+
+    const stat = statSync(srcPath)
+    if (stat.isDirectory()) {
+      copyDirRecursive(srcPath, destPath, slug, name, port)
+    } else {
+      mkdirSync(dirname(destPath), { recursive: true })
+      if (isTextFile(srcPath)) {
+        const content = readFileSync(srcPath, 'utf-8')
+        writeFileSync(destPath, applyTokens(content, slug, name, port), 'utf-8')
+      } else {
+        copyFileSync(srcPath, destPath)
+      }
+    }
+  }
+}
+
+/**
+ * Scan all app package.json files for existing dev ports.
+ * Returns the next available port starting from 3002.
+ */
+function assignNextPort(root: string): number {
+  const searchDirs = [
+    join(root, 'apps', 'prospective-clients'),
+    join(root, 'apps', 'clients'),
+  ]
+
+  const usedPorts = new Set<number>()
+
+  for (const dir of searchDirs) {
+    if (!existsSync(dir)) continue
+    for (const entry of readdirSync(dir)) {
+      const pkgPath = join(dir, entry, 'package.json')
+      if (!existsSync(pkgPath)) continue
+      try {
+        const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8')) as {
+          scripts?: Record<string, string>
+        }
+        const devScript = pkg.scripts?.dev ?? ''
+        const match = devScript.match(/-p\s+(\d+)/)
+        if (match) usedPorts.add(Number(match[1]))
+      } catch {
+        // ignore malformed package.json
+      }
+    }
+  }
+
+  // firm = 3000, agency-admin = 3001; client ports start at 3002
+  let port = 3002
+  while (usedPorts.has(port)) port++
+  return port
+}
+
+/** Dry-run flag: set SCAFFOLD_DRY_RUN=true to log operations without writing files. */
+const DRY_RUN =
+  process.env.SCAFFOLD_DRY_RUN === 'true' || process.env.SCAFFOLD_DRY_RUN === '1'
 
 async function main() {
   console.log('\n🏗  Agency Platform — Client Scaffolder\n')
+  if (DRY_RUN) console.log('⚠️  DRY RUN — no files will be written\n')
 
   let name: string
   let slug: string
-  let industry: string
-  let domain: string
-
   let isProspective: boolean
+
   if (process.env.SCAFFOLD_SLUG) {
     name = process.env.SCAFFOLD_NAME ?? process.env.SCAFFOLD_SLUG
     slug = process.env.SCAFFOLD_SLUG.trim()
-    industry = process.env.SCAFFOLD_INDUSTRY ?? 'general'
-    domain = process.env.SCAFFOLD_DOMAIN ?? ''
     isProspective =
       process.env.SCAFFOLD_PROSPECTIVE === 'true' || process.env.SCAFFOLD_PROSPECTIVE === '1'
   } else {
-    name = await ask('Client display name (e.g. Riley Day Care): ')
-    slug = (await ask('Client slug (e.g. riley-day-care): ')).trim()
-    industry = await ask('Industry (healthcare/ecommerce/hospitality/general): ')
-    domain = await ask('Production domain (e.g. rileydaycare.com): ')
+    name = await ask('Client display name (e.g. Acme Plumbing): ')
+    slug = (await ask('Client slug (e.g. acme-plumbing): ')).trim()
     const prospectAnswer = (await ask('Prospective (demo) or real client? (p/r): '))
       .trim()
       .toLowerCase()
     isProspective = prospectAnswer === 'p' || prospectAnswer === 'prospective'
   }
 
+  rl.close()
+
   if (!validateSlug(slug)) {
     console.error(
-      '\n❌ Invalid slug. Use kebab-case only: lowercase letters, digits, single hyphens (e.g. the-barber-cave, riley-day-care). No spaces or special characters.\n'
+      '\n❌ Invalid slug. Use kebab-case only: lowercase letters, digits, single hyphens (e.g. acme-plumbing). No spaces or special characters.\n'
     )
     process.exit(1)
   }
 
   const root = process.cwd()
+  const templateRoot = join(root, 'apps', '__template__')
   const appSubdir = isProspective ? 'prospective-clients' : 'clients'
   const appDir = join(root, 'apps', appSubdir, slug)
   const tokenDir = join(root, 'packages', 'design-tokens', 'tokens', 'clients')
-  const templateRoot = join(root, 'apps', 'prospective-clients', 'riley-day-care')
+  const templateTokenPath = join(tokenDir, '__template__.json')
+
+  if (!existsSync(templateRoot)) {
+    console.error(
+      `\n❌ Template directory not found: apps/__template__/\n   This directory is the scaffold source. Ensure it exists before running this script.\n`
+    )
+    process.exit(1)
+  }
 
   if (existsSync(appDir)) {
     console.error(
@@ -90,106 +173,26 @@ async function main() {
     process.exit(1)
   }
 
-  rl.close()
+  const port = assignNextPort(root)
 
-  mkdirSync(join(appDir, 'src', 'app'), { recursive: true })
-  mkdirSync(join(appDir, 'src', 'components'), { recursive: true })
-  mkdirSync(join(appDir, 'tokens'), { recursive: true })
+  console.log(`\nScaffolding @agency/${slug}`)
+  console.log(`  Display name : ${name}`)
+  console.log(`  Subdirectory : apps/${appSubdir}/${slug}`)
+  console.log(`  Dev port     : ${port}`)
+  console.log(`  Template     : apps/__template__\n`)
 
-  const packageJson = JSON.parse(readTemplate(templateRoot, 'package.json'))
-  packageJson.name = `@agency/${slug}`
-  writeFileSync(join(appDir, 'package.json'), JSON.stringify(packageJson, null, 2))
-
-  writeFileSync(join(appDir, 'tsconfig.json'), readTemplate(templateRoot, 'tsconfig.json'))
-  writeFileSync(join(appDir, 'next.config.ts'), readTemplate(templateRoot, 'next.config.ts'))
-  writeFileSync(
-    join(appDir, 'postcss.config.mjs'),
-    readTemplate(templateRoot, 'postcss.config.mjs')
-  )
-  writeFileSync(join(appDir, 'eslint.config.mjs'), readTemplate(templateRoot, 'eslint.config.mjs'))
-
-  const globalsCss = readTemplate(templateRoot, 'src', 'app', 'globals.css').replace(
-    /riley-day-care\.css/,
-    `${slug}.css`
-  )
-  writeFileSync(join(appDir, 'src', 'app', 'globals.css'), globalsCss)
-
-  const layoutContent = readTemplate(templateRoot, 'src', 'app', 'layout.tsx')
-    .replace(/Riley Day Care/g, name.replace(/'/g, "\\'"))
-    .replace(/Quality child care and early learning/g, `${name} — client`.replace(/'/g, "\\'"))
-  writeFileSync(join(appDir, 'src', 'app', 'layout.tsx'), layoutContent)
-
-  const safeName = name.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const pageContent = readTemplate(templateRoot, 'src', 'app', 'page.tsx')
-    .replace(/Riley Day Care/g, safeName)
-    .replace(
-      /Quality child care and early learning in a safe, nurturing environment/g,
-      'Your experience starts here'
-    )
-  writeFileSync(join(appDir, 'src', 'app', 'page.tsx'), pageContent)
-
-  writeFileSync(
-    join(appDir, 'src', 'middleware.ts'),
-    readTemplate(templateRoot, 'src', 'middleware.ts').replace(/riley-day-care/g, slug)
-  )
-
-  // Copy (auth) route group and dashboard so new clients have login/signup/dashboard
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'login', 'page.tsx')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'login', 'actions.ts')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'signup', 'page.tsx')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'signup', 'actions.ts')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', '(auth)', 'callback', 'route.ts')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', 'dashboard', 'page.tsx')
-  copyTemplateFile(templateRoot, appDir, slug, 'src', 'app', 'actions', 'auth.ts')
-
-  const providersContent = readTemplate(templateRoot, 'src', 'components', 'providers.tsx').replace(
-    /riley-day-care/g,
-    slug
-  )
-  writeFileSync(join(appDir, 'src', 'components', 'providers.tsx'), providersContent)
-
-  writeFileSync(
-    join(appDir, 'src', 'components', 'auth-analytics.tsx'),
-    readTemplate(templateRoot, 'src', 'components', 'auth-analytics.tsx')
-  )
-
-  const templateToken = JSON.parse(
-    readTemplate(root, 'packages', 'design-tokens', 'tokens', 'clients', 'riley-day-care.json')
-  )
-  const placeholderTokens = {
-    ...templateToken,
-    brand: {
-      primary: { $type: 'color', $value: '#000000' },
-      secondary: { $type: 'color', $value: '#666666' },
-      accent: { $type: 'color', $value: '#000000' },
-    },
-    color: {
-      ...templateToken.color,
-      semantic: {
-        ...templateToken.color.semantic,
-        background: {
-          primary: { $type: 'color', $value: '{brand.primary}' },
-          secondary: { $type: 'color', $value: 'oklch(0.98 0.02 198.41)' },
-          accent: { $type: 'color', $value: '{brand.accent}' },
-        },
-        text: {
-          primary: { $type: 'color', $value: 'oklch(0.15 0.02 198.41)' },
-          secondary: { $type: 'color', $value: 'oklch(0.89 0.02 198.41)' },
-          inverse: { $type: 'color', $value: 'oklch(0.15 0.02 198.41)' },
-          accent: { $type: 'color', $value: '{brand.accent}' },
-        },
-        interactive: {
-          primary: {
-            default: { $type: 'color', $value: '{brand.primary}' },
-            hover: { $type: 'color', $value: 'oklch(0.25 0.02 198.41)' },
-            active: { $type: 'color', $value: 'oklch(0.20 0.02 198.41)' },
-            disabled: { $type: 'color', $value: 'oklch(0.89 0.02 198.41)' },
-          },
-        },
-      },
-    },
+  if (DRY_RUN) {
+    console.log('DRY RUN complete — no files were written.')
+    return
   }
-  writeFileSync(join(tokenDir, `${slug}.json`), JSON.stringify(placeholderTokens, null, 2))
+
+  // Recursively copy template with token replacement
+  copyDirRecursive(templateRoot, appDir, slug, name, port)
+
+  // Copy design token placeholder
+  if (existsSync(templateTokenPath)) {
+    writeFileSync(join(tokenDir, `${slug}.json`), readFileSync(templateTokenPath, 'utf-8'))
+  }
 
   // Add new app to root tsconfig.json references
   const rootTsconfigPath = join(root, 'tsconfig.json')
@@ -204,25 +207,29 @@ async function main() {
     writeFileSync(rootTsconfigPath, JSON.stringify(rootTsconfig, null, 2))
   }
 
+  console.log('Installing dependencies…')
   execSync('pnpm install', { cwd: root, stdio: 'pipe', encoding: 'utf-8' })
 
+  console.log('Building design tokens…')
   execSync('pnpm tokens:build', { cwd: root, stdio: 'pipe', encoding: 'utf-8' })
 
+  console.log('Running post-scaffold type-check…')
   try {
     execSync('pnpm exec tsc --noEmit', {
       cwd: appDir,
       stdio: 'pipe',
       encoding: 'utf-8',
     })
+    console.log('✅ Type-check passed.')
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
     const stderr =
       err && typeof err === 'object' && 'stderr' in err
         ? String((err as { stderr?: unknown }).stderr)
-        : ''
+        : err instanceof Error
+          ? err.message
+          : String(err)
     console.error('\n❌ Post-scaffold type-check failed. Fix template or dependencies.\n')
-    if (stderr) console.error(stderr)
-    else console.error(msg)
+    console.error(stderr)
     process.exit(1)
   }
 

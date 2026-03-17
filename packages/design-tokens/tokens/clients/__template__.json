@@ -1,0 +1,100 @@
+{
+  "brand": {
+    "primary": {
+      "$type": "color",
+      "$value": "oklch(0.55 0.18 260)"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "oklch(0.75 0.12 260)"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "oklch(0.70 0.15 200)"
+    }
+  },
+  "font": {
+    "primary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "system-ui", "sans-serif"]
+    },
+    "secondary": {
+      "$type": "fontFamily",
+      "$value": ["Inter", "Georgia", "serif"]
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": ["JetBrains Mono", "Consolas", "monospace"]
+    }
+  },
+  "color": {
+    "semantic": {
+      "background": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.01 260)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.96 0.01 260)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "text": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.15 0.02 260)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.40 0.02 260)"
+        },
+        "inverse": {
+          "$type": "color",
+          "$value": "oklch(0.98 0.01 260)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "border": {
+        "primary": {
+          "$type": "color",
+          "$value": "oklch(0.88 0.01 260)"
+        },
+        "secondary": {
+          "$type": "color",
+          "$value": "oklch(0.80 0.01 260)"
+        },
+        "accent": {
+          "$type": "color",
+          "$value": "{brand.accent}"
+        }
+      },
+      "interactive": {
+        "primary": {
+          "default": {
+            "$type": "color",
+            "$value": "{brand.primary}"
+          },
+          "hover": {
+            "$type": "color",
+            "$value": "oklch(0.50 0.18 260)"
+          },
+          "active": {
+            "$type": "color",
+            "$value": "oklch(0.45 0.18 260)"
+          },
+          "disabled": {
+            "$type": "color",
+            "$value": "oklch(0.89 0.01 260)"
+          }
+        }
+      }
+    }
+  }
+}
