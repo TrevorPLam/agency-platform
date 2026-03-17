@@ -18,6 +18,34 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
   }
 }
 
+/**
+ * Cost Summary API Route
+ * 
+ * Returns cost summary data for a tenant including total costs, trend data,
+ * and cost breakdowns by category.
+ * 
+ * @route GET /api/costs/summary
+ * @access Private - Requires authentication and tenant access
+ * @param {string} [searchParams.tenant_id] - Tenant ID (platform admins only)
+ * @returns {Promise<CostSummary>} Cost summary data
+ * 
+ * @example
+ * // GET /api/costs/summary
+ * // Response:
+ * {
+ *   "totalCost": 150.75,
+ *   "storageCost": 45.20,
+ *   "cicdCost": 85.30,
+ *   "bandwidthCost": 20.25,
+ *   "averageDailyCost": 21.53,
+ *   "trendDirection": "up",
+ *   "trendPercentage": 12.5
+ * }
+ * 
+ * @error {401} Unauthorized - User not authenticated
+ * @error {403} Forbidden - User lacks tenant access
+ * @error {500} Internal Server Error - Database or service failure
+ */
 export async function GET(request: NextRequest) {
   try {
     // Authenticate and validate tenant access

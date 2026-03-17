@@ -1,8 +1,27 @@
 # @agency/ui Package
 
+## User Information
+
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
+
 ## Purpose
 
 Shared shadcn/ui components with Storybook integration and tenant-aware theming. This package provides a consistent design system across all agency applications.
+
+## Agent Skills (Available Commands)
+- `pnpm storybook` - Start Storybook development server
+- `pnpm build-storybook` - Build Storybook for deployment
+- `pnpm test` - Run component tests with coverage
+- `pnpm tokens:build` - Build design tokens for components
+
+## Integration Points
+- Depends on: `@agency/design-tokens` for theming, `@radix-ui/*` for primitives
+- Used by: All applications for UI components
+- See also: `@packages/design-tokens/AGENTS.md` for token patterns
+- Reference: `storybook.localhost:6006` for interactive documentation
 
 ## Core Patterns
 

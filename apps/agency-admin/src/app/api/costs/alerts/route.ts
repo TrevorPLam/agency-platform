@@ -18,6 +18,55 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
   }
 }
 
+/**
+ * Budget Alerts API Route
+ * 
+ * Manages budget alerts for cost monitoring with CRUD operations.
+ * Supports filtering by active status and category.
+ * 
+ * @route GET /api/costs/alerts
+ * @access Private - Requires authentication and tenant access
+ * @param {string} [searchParams.tenant_id] - Tenant ID (platform admins only)
+ * @param {boolean} [searchParams.active] - Filter by active status
+ * @returns {Promise<BudgetAlert[]>} Array of budget alert entries
+ * 
+ * @route POST /api/costs/alerts
+ * @access Private - Requires authentication and tenant access
+ * @param {object} body - Alert data
+ * @param {string} [body.tenantId] - Tenant ID (platform admins only)
+ * @param {string} body.name - Alert name
+ * @param {string} body.category - Category: 'storage', 'compute', 'bandwidth', 'total'
+ * @param {number} body.threshold - Alert threshold value
+ * @param {string} [body.thresholdType=absolute] - Threshold type: 'absolute', 'percentage'
+ * @param {string} [body.severity=medium] - Severity: 'low', 'medium', 'high', 'critical'
+ * @param {boolean} [body.active=true] - Alert active status
+ * @param {string[]} [body.notificationChannels=[]] - Notification channels
+ * @returns {Promise<BudgetAlert>} Created alert entry
+ * 
+ * @example
+ * // GET /api/costs/alerts?active=true
+ * // Response:
+ * [{
+ *   "id": "uuid",
+ *   "tenantId": "tenant-uuid",
+ *   "name": "Storage Budget Alert",
+ *   "category": "storage",
+ *   "threshold": 100,
+ *   "current": 85.5,
+ *   "thresholdType": "absolute",
+ *   "severity": "medium",
+ *   "active": true,
+ *   "notificationChannels": ["email"],
+ *   "lastTriggered": "2026-03-15T10:30:00Z",
+ *   "createdAt": "2026-03-10T12:00:00Z",
+ *   "updatedAt": "2026-03-16T09:15:00Z"
+ * }]
+ * 
+ * @error {401} Unauthorized - User not authenticated
+ * @error {403} Forbidden - User lacks tenant access
+ * @error {400} Bad Request - Invalid parameters or missing required fields
+ * @error {500} Internal Server Error - Database or service failure
+ */
 export async function GET(request: NextRequest) {
   try {
     // Authenticate and validate tenant access

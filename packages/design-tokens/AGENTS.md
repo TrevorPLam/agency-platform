@@ -1,8 +1,27 @@
 # @agency/design-tokens Package
 
+## User Information
+
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
+
 ## Purpose
 
 W3C DTCG (Design Token Community Group) compliant token system for multi-tenant theming. This package provides a centralized design token management system with tenant-specific compilation.
+
+## Agent Skills (Available Commands)
+- `pnpm tokens:build` - Compile design tokens to CSS and TypeScript
+- `pnpm tokens:build --tenant=tenant-1` - Build specific tenant tokens
+- `pnpm tokens:watch` - Watch for token changes and rebuild
+- `pnpm tokens:validate` - Validate token structure against schema
+
+## Integration Points
+- Depends on: `style-dictionary` for token compilation
+- Used by: All applications for theming and styling
+- See also: `@packages/ui/AGENTS.md` for component integration
+- Reference: `docs/TAILWIND.md` for CSS-first styling guide
 
 ## Core Patterns
 

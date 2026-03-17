@@ -31,51 +31,17 @@ import {
   Target,
   Lightbulb
 } from 'lucide-react'
+import type {
+  CostSummary,
+  CostMetrics,
+  BudgetAlert,
+  OptimizationRecommendation,
+  HTTP_STATUS,
+  AuthenticationError,
+  AuthorizationError,
+  NetworkError,
+} from '@/types/cost-api'
 
-// Types for the dashboard
-interface CostMetrics {
-  id: string
-  storageUsage: number
-  cicdRuntime: number
-  bandwidthUsage: number
-  totalCost: number
-  currency: string
-  timestamp: string
-  period: string
-  metadata: Record<string, unknown>
-}
-
-interface BudgetAlert {
-  id: string
-  name: string
-  category: 'storage' | 'compute' | 'bandwidth' | 'total'
-  threshold: number
-  current: number
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  active: boolean
-  lastTriggered?: string
-}
-
-interface OptimizationRecommendation {
-  id: string
-  category: 'storage' | 'compute' | 'bandwidth' | 'general'
-  title: string
-  description: string
-  estimatedSavings: number
-  difficulty: 'easy' | 'medium' | 'hard'
-  priority: 'low' | 'medium' | 'high'
-  status: 'pending' | 'in_progress' | 'completed' | 'dismissed'
-}
-
-interface CostSummary {
-  totalCost: number
-  storageCost: number
-  cicdCost: number
-  bandwidthCost: number
-  averageDailyCost: number
-  trendDirection: 'up' | 'down' | 'stable'
-  trendPercentage: number
-}
 
 export function CostManagementDashboard() {
   const [costSummary, setCostSummary] = useState<CostSummary | null>(null)
@@ -94,32 +60,76 @@ export function CostManagementDashboard() {
       setLoading(true)
       setError(null)
 
-      // Fetch cost summary
+      // Fetch cost summary with proper error handling
       const summaryResponse = await fetch('/api/costs/summary')
-      if (!summaryResponse.ok) throw new Error('Failed to fetch cost summary')
+      if (!summaryResponse.ok) {
+        // Handle different error types appropriately
+        if (summaryResponse.status === HTTP_STATUS.UNAUTHORIZED) {
+          throw new AuthenticationError('Please log in again to access cost data.')
+        }
+        if (summaryResponse.status === HTTP_STATUS.FORBIDDEN) {
+          throw new AuthorizationError('You do not have permission to access cost data.')
+        }
+        throw new NetworkError(`Failed to fetch cost summary (${summaryResponse.status})`)
+      }
       const summaryData = await summaryResponse.json()
       setCostSummary(summaryData)
 
-      // Fetch metrics
+      // Fetch metrics with proper error handling
       const metricsResponse = await fetch('/api/costs/metrics')
-      if (!metricsResponse.ok) throw new Error('Failed to fetch metrics')
+      if (!metricsResponse.ok) {
+        if (metricsResponse.status === HTTP_STATUS.UNAUTHORIZED) {
+          throw new AuthenticationError('Please log in again to access metrics data.')
+        }
+        if (metricsResponse.status === HTTP_STATUS.FORBIDDEN) {
+          throw new AuthorizationError('You do not have permission to access metrics data.')
+        }
+        throw new NetworkError(`Failed to fetch metrics (${metricsResponse.status})`)
+      }
       const metricsData = await metricsResponse.json()
       setMetrics(metricsData)
 
-      // Fetch alerts
+      // Fetch alerts with proper error handling
       const alertsResponse = await fetch('/api/costs/alerts')
-      if (!alertsResponse.ok) throw new Error('Failed to fetch alerts')
+      if (!alertsResponse.ok) {
+        if (alertsResponse.status === HTTP_STATUS.UNAUTHORIZED) {
+          throw new AuthenticationError('Please log in again to access alerts data.')
+        }
+        if (alertsResponse.status === HTTP_STATUS.FORBIDDEN) {
+          throw new AuthorizationError('You do not have permission to access alerts data.')
+        }
+        throw new NetworkError(`Failed to fetch alerts (${alertsResponse.status})`)
+      }
       const alertsData = await alertsResponse.json()
       setAlerts(alertsData)
 
-      // Fetch recommendations
+      // Fetch recommendations with proper error handling
       const recommendationsResponse = await fetch('/api/costs/recommendations')
-      if (!recommendationsResponse.ok) throw new Error('Failed to fetch recommendations')
+      if (!recommendationsResponse.ok) {
+        if (recommendationsResponse.status === HTTP_STATUS.UNAUTHORIZED) {
+          throw new AuthenticationError('Please log in again to access recommendations data.')
+        }
+        if (recommendationsResponse.status === HTTP_STATUS.FORBIDDEN) {
+          throw new AuthorizationError('You do not have permission to access recommendations data.')
+        }
+        throw new NetworkError(`Failed to fetch recommendations (${recommendationsResponse.status})`)
+      }
       const recommendationsData = await recommendationsResponse.json()
       setRecommendations(recommendationsData)
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
+      // Use proper error type detection for better UX
+      if (err instanceof AuthenticationError) {
+        setError('Authentication required. Please refresh the page and log in again.')
+      } else if (err instanceof AuthorizationError) {
+        setError('Access denied. You do not have permission to view cost data.')
+      } else if (err instanceof NetworkError) {
+        setError('Unable to connect to the cost management service. Please try again later.')
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('An unexpected error occurred. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

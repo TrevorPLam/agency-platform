@@ -1,8 +1,28 @@
 # Firm Application
 
+## User Information
+
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
+
 ## Purpose
 
 Agency marketing website and public-facing content. Port 3000. This is the main marketing site for prospective clients.
+
+## Agent Skills (Available Commands)
+- `pnpm dev` - Start development server
+- `pnpm build` - Build application
+- `pnpm build:production` - Build for production deployment
+- `pnpm test` - Run tests with coverage
+- `pnpm test:e2e` - Run end-to-end tests
+
+## Integration Points
+- Depends on: `@agency/database` for data access, `@agency/ui` for components
+- Uses: Marketing analytics and lead capture systems
+- See also: `@.agents/security.md` for security patterns
+- Reference: `@packages/ui/AGENTS.md` for component usage
 
 ## Application-Specific Patterns
 

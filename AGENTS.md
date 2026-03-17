@@ -1,80 +1,121 @@
 # Agency Platform
 
-Multi-client marketing agency monorepo. Each client is isolated by tenant_id at the database layer (Row-Level Security). Shared code lives in packages/. Client-specific code lives in apps/clients/[slug]/.
+Multi-client marketing agency monorepo with tenant isolation via Row-Level Security. Uses pnpm workspaces and Turborepo.
 
-## User-Information
+## User Information
 
-- User has no formal software development experience or education. 
-- User develops repositories 100% through agentic coding as a "solo-developer."
-- User prefers best practices and highest standards. 
-- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns. 
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
 
-## Task-Based Navigation
+## Quick Start
+- Development: `pnpm dev`
+- Build: `pnpm build`
+- Test: `pnpm test`
 
-**For database work**: Read @.agents/database.md  
-**For UI components**: Read @packages/ui/AGENTS.md  
-**For client applications**: Read specific app AGENTS.md  
-**For design tokens**: Read @packages/design-tokens/AGENTS.md  
-**For security patterns**: Read @.agents/security.md  
-**For testing**: Read @.agents/testing.md  
+## Architecture
+- **Apps**: `apps/` (agency-admin, firm, prospective-clients)
+- **Packages**: `packages/` (shared code)
+- **Database**: Supabase on port 6543 (never 5432)
 
-## Quick Commands
+## Critical Rules
+- Never use `user_metadata` for tenant_id (use `app_metadata`)
+- Never expose SUPABASE_SERVICE_ROLE_KEY to client
+- Never import between apps (use packages/)
+- Never write `any` types (use `unknown` + narrowing)
 
-### Development
+## Commands
+
+### Single File Operations (Preferred)
 ```bash
-pnpm dev                    # Start all apps in watch mode
-pnpm turbo run dev --filter=@agency/riley-day-care  # Start one app
+# Type check single file
+pnpm tsc --noEmit path/to/file.ts
+
+# Format single file  
+pnpm prettier --write path/to/file.ts
+
+# Lint single file
+pnpm eslint --fix path/to/file.ts
+
+# Test single file
+pnpm vitest run path/to/file.test.ts
 ```
 
-### Build & Test
+### Project-Wide Operations (Use Sparingly)
 ```bash
-pnpm tokens:build           # Compile design tokens to CSS
-supabase test db           # Run pgTAP RLS isolation tests
-supabase start             # Start local Supabase (requires Docker)
+# Full build (only when explicitly requested)
+pnpm build
+
+# Full test suite
+pnpm test
+
+# Type check all files
+pnpm type-check
 ```
 
-### Code Quality
-```bash
-pnpm lint                  # ESLint + Prettier
-pnpm type-check           # TypeScript strict mode check
-```
+Note: Always prefer single-file operations for faster feedback loops.
 
-## Core Architecture Rules
+## Safety & Permissions
 
-### Multi-Tenant Security
-- **Never** use `user_metadata` for tenant_id. Always use `app_metadata`.
-- **Never** put SUPABASE_SERVICE_ROLE_KEY in any NEXT_PUBLIC_ variable.
-- **Never** connect to Supabase via Port 5432 — always use Port 6543.
-- **Never** call Supabase directly from app code — always use @agency/database.
+### ✅ Always Allowed (No Prompt Needed)
+- Read files and list directories
+- Single file operations (tsc, prettier, eslint, vitest)
+- Follow existing patterns and examples
+- Use progressive documentation links
 
-### Code Standards
-- **Never** write `any` type. Use `unknown` and narrow, or define the type.
-- **Never** add 'use client' unless genuinely needed for browser APIs or interactivity.
-- **Never** import from one app into another. Use packages/.
-- **Never** use tailwind.config.js — Tailwind v4 uses CSS @theme {} only.
-- **Never** use theme() in CSS files — use var(--token-name) instead.
-
-## Permission Boundaries
-
-### ✅ Always do
-- Read files, list directories
-- Single file linting, type checking, formatting
-- Unit tests on specific files
-- Follow architecture rules above
-
-### ⚠️ Ask first
-- Package installations (pnpm add, npm install)
+### ⚠️ Ask First (Requires Confirmation)
+- Package installations (`pnpm add`)
 - Database schema changes
-- Git operations (git push, git commit)
+- Git operations (commit, push)
+- Running full build or test suites
 - Modifying CI/CD configuration
-- Running full build or E2E test suites
+- Deleting files or directories
 
-### 🚫 Never do
+### 🚫 Never Allowed (Prohibited)
 - Commit secrets or API keys
-- Edit node_modules/ or vendor/
+- Edit node_modules/ or vendor/ directories
 - Bypass RLS policies
 - Connect to Supabase on port 5432
-- Import between apps
+- Import between applications
+
+## Project Structure Index
+
+### Key Files for Context
+- `apps/firm/src/app/layout.tsx` - Main app layout
+- `apps/agency-admin/src/app/layout.tsx` - Admin layout
+- `packages/database/src/client.ts` - Database client factory
+- `packages/ui/src/components/` - Shared component library
+- `packages/design-tokens/src/tokens/` - Design token definitions
+
+### Common Patterns
+- Forms: See `apps/firm/src/components/forms/`
+- Tables: See `packages/ui/src/components/data-table.tsx`
+- Auth: See `packages/database/src/auth.ts`
+- API routes: See `apps/*/src/app/api/`
+
+## When Stuck
+
+If unsure about implementation:
+1. Ask a clarifying question
+2. Propose a short plan with options
+3. Reference existing similar patterns
+4. Create draft PR with notes for review
+
+Never push large speculative changes without confirmation.
+
+## Test-First Mode (For Complex Features)
+
+When implementing new features:
+1. Write/update unit tests first
+2. Code until tests pass
+3. Add integration tests for critical paths
+4. Update documentation
+
+For bug fixes:
+1. Add failing test that reproduces issue
+2. Fix code to make test pass
+3. Verify no regressions
 
 ## File Structure
 
@@ -110,10 +151,11 @@ supabase/
 - **Turborepo 2.7** (turbo.json defines the task pipeline)
 - **Supabase** (PostgreSQL + Auth + Storage) — Port 6543 (Supavisor), not 5432
 
-## Progressive Documentation
+## Navigation
 
-For detailed conventions, see:
-- `docs/TYPESCRIPT.md` - TypeScript patterns and strict mode rules
-- `docs/TAILWIND.md` - CSS-first styling and design tokens
-- `docs/DATABASE.md` - RLS patterns and multi-tenant security
-- `docs/SECURITY.md` - Security guidelines and audit procedures
+For detailed patterns, see:
+- Database work: `@.agents/database.md`
+- UI components: `@packages/ui/AGENTS.md`
+- Security: `@.agents/security.md`
+- Testing: `@.agents/testing.md`
+- Client apps: See specific app AGENTS.md files

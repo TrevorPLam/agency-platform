@@ -18,6 +18,63 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
   }
 }
 
+/**
+ * Optimization Recommendations API Route
+ * 
+ * Manages cost optimization recommendations with CRUD operations.
+ * Supports filtering by status, priority, and category.
+ * 
+ * @route GET /api/costs/recommendations
+ * @access Private - Requires authentication and tenant access
+ * @param {string} [searchParams.tenant_id] - Tenant ID (platform admins only)
+ * @param {string} [searchParams.status] - Filter by status: 'pending', 'in_progress', 'completed', 'dismissed'
+ * @param {string} [searchParams.priority] - Filter by priority: 'low', 'medium', 'high'
+ * @returns {Promise<OptimizationRecommendation[]>} Array of recommendation entries
+ * 
+ * @route POST /api/costs/recommendations
+ * @access Private - Requires authentication and tenant access
+ * @param {object} body - Recommendation data
+ * @param {string} [body.tenantId] - Tenant ID (platform admins only)
+ * @param {string} body.category - Category: 'storage', 'compute', 'bandwidth', 'general'
+ * @param {string} body.title - Recommendation title
+ * @param {string} body.description - Detailed description
+ * @param {number} [body.estimatedSavings=0] - Estimated cost savings
+ * @param {string} [body.difficulty=medium] - Difficulty: 'easy', 'medium', 'hard'
+ * @param {string} [body.priority=medium] - Priority: 'low', 'medium', 'high'
+ * @param {string} [body.status=pending] - Status: 'pending', 'in_progress', 'completed', 'dismissed'
+ * @param {string} [body.reviewBy] - Review assignment
+ * @returns {Promise<OptimizationRecommendation>} Created recommendation entry
+ * 
+ * @route PATCH /api/costs/recommendations
+ * @access Private - Requires authentication and tenant access
+ * @param {object} body - Update data
+ * @param {string} body.id - Recommendation ID (must belong to user's tenant)
+ * @param {string} body.status - New status value
+ * @returns {Promise<OptimizationRecommendation>} Updated recommendation entry
+ * 
+ * @example
+ * // GET /api/costs/recommendations?status=pending&priority=high
+ * // Response:
+ * [{
+ *   "id": "uuid",
+ *   "tenantId": "tenant-uuid",
+ *   "category": "storage",
+ *   "title": "Compress Unused Images",
+ *   "description": "Compress old images to reduce storage costs",
+ *   "estimatedSavings": 25.50,
+ *   "difficulty": "easy",
+ *   "priority": "high",
+ *   "status": "pending",
+ *   "createdAt": "2026-03-16T10:00:00Z",
+ *   "reviewBy": "admin@example.com"
+ * }]
+ * 
+ * @error {401} Unauthorized - User not authenticated
+ * @error {403} Forbidden - User lacks tenant access or cross-tenant access attempt
+ * @error {400} Bad Request - Invalid parameters or missing required fields
+ * @error {404} Not Found - Recommendation not found (PATCH only)
+ * @error {500} Internal Server Error - Database or service failure
+ */
 export async function GET(request: NextRequest) {
   try {
     // Authenticate and validate tenant access

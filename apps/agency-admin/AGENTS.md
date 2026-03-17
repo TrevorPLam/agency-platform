@@ -1,8 +1,27 @@
 # Agency Admin Application
 
+## User Information
+
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
+
 ## Purpose
 
 Internal management interface for agency operations, client management, and administrative functions. Port 3001.
+
+## Agent Skills (Available Commands)
+- `pnpm dev` - Start development server
+- `pnpm build` - Build application
+- `pnpm test` - Run tests with coverage
+- `pnpm test:e2e` - Run end-to-end tests
+
+## Integration Points
+- Depends on: `@agency/database` for data access, `@agency/ui` for components
+- Uses: Admin-specific authentication and permissions
+- See also: `@.agents/security.md` for admin security patterns
+- Reference: `@packages/database/AGENTS.md` for database usage
 
 ## Application-Specific Patterns
 

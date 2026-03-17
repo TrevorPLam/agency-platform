@@ -1,8 +1,26 @@
 # @agency/database Package
 
+## User Information
+
+- User has no formal software development experience or education
+- User develops repositories 100% through agentic coding as a "solo-developer"
+- User prefers best practices and highest standards
+- User prefers up to date (2026) research conducted before task execution on proper implementation, best practices, and advanced coding patterns
+
 ## Purpose
 
 Supabase client factories with TypeScript types and tenant-aware utilities. This package provides a secure, typed interface to the multi-tenant database.
+
+## Agent Skills (Available Commands)
+- `supabase gen types typescript --local > src/types.ts` - Generate types from database
+- `supabase test db` - Run pgTAP RLS isolation tests
+- `pnpm test` - Run package tests with coverage
+
+## Integration Points
+- Depends on: `@supabase/supabase-js` for Supabase client
+- Used by: All applications for database access
+- See also: `@.agents/database.md` for database patterns
+- Reference: `@.agents/security.md` for security guidelines
 
 ## Core Patterns
 

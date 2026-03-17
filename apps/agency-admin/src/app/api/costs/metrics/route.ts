@@ -18,6 +18,52 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
   }
 }
 
+/**
+ * Cost Metrics API Route
+ * 
+ * Retrieves historical cost metrics and allows creation of new metric entries.
+ * Supports filtering by period and date range.
+ * 
+ * @route GET /api/costs/metrics
+ * @access Private - Requires authentication and tenant access
+ * @param {string} [searchParams.tenant_id] - Tenant ID (platform admins only)
+ * @param {string} [searchParams.period=daily] - Period: 'daily', 'weekly', 'monthly'
+ * @param {number} [searchParams.days=30] - Number of days to retrieve
+ * @returns {Promise<CostMetrics[]>} Array of cost metric entries
+ * 
+ * @route POST /api/costs/metrics
+ * @access Private - Requires authentication and tenant access
+ * @param {object} body - Metric data
+ * @param {string} [body.tenantId] - Tenant ID (platform admins only)
+ * @param {number} [body.storageUsage=0] - Storage usage in bytes
+ * @param {number} [body.cicdRuntime=0] - CI/CD runtime in minutes
+ * @param {number} [body.bandwidthUsage=0] - Bandwidth usage in bytes
+ * @param {number} [body.totalCost=0] - Total cost in currency
+ * @param {string} [body.currency=USD] - Currency code
+ * @param {string} [body.period=daily] - Period: 'daily', 'weekly', 'monthly'
+ * @param {object} [body.metadata={}] - Additional metadata
+ * @returns {Promise<CostMetrics>} Created metric entry
+ * 
+ * @example
+ * // GET /api/costs/metrics?period=daily&days=7
+ * // Response:
+ * [{
+ *   "id": "uuid",
+ *   "storageUsage": 1073741824,
+ *   "cicdRuntime": 45,
+ *   "bandwidthUsage": 536870912,
+ *   "totalCost": 25.50,
+ *   "currency": "USD",
+ *   "timestamp": "2026-03-16T12:00:00Z",
+ *   "period": "daily",
+ *   "metadata": {}
+ * }]
+ * 
+ * @error {401} Unauthorized - User not authenticated
+ * @error {403} Forbidden - User lacks tenant access
+ * @error {400} Bad Request - Invalid parameters
+ * @error {500} Internal Server Error - Database or service failure
+ */
 export async function GET(request: NextRequest) {
   try {
     // Authenticate and validate tenant access
