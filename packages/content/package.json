@@ -1,0 +1,52 @@
+{
+  "name": "@agency/content",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Content management system for agency platform",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint . --max-warnings 0",
+    "type-check": "tsc --noEmit",
+    "test": "pnpm dlx vitest run"
+  },
+  "dependencies": {
+    "zod": "catalog:",
+    "react": "catalog:",
+    "next": "catalog:"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "files": [
+    "dist"
+  ],
+  "tsup": {
+    "entry": {
+      "index": "src/index.ts"
+    },
+    "format": ["esm", "cjs"],
+    "dts": true,
+    "clean": true,
+    "external": ["react", "next", "zod"],
+    "splitting": false,
+    "sourcemap": true,
+    "minify": false
+  }
+}
