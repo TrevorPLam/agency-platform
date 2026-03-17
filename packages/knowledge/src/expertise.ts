@@ -702,13 +702,13 @@ export class ExpertiseMapper {
     
     for (const line of lines.slice(0, 10)) {
       const classMatch = line.match(/class\s+(\w+)/)
-      if (classMatch) return classMatch[1]
+      if (classMatch?.[1]) return classMatch[1]
       
       const functionMatch = line.match(/(?:function|def)\s+(\w+)/)
-      if (functionMatch) return functionMatch[1]
+      if (functionMatch?.[1]) return functionMatch[1]
       
       const interfaceMatch = line.match(/interface\s+(\w+)/)
-      if (interfaceMatch) return interfaceMatch[1]
+      if (interfaceMatch?.[1]) return interfaceMatch[1]
     }
     
     return fileName
