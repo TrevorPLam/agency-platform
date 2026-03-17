@@ -5,6 +5,9 @@ import { SiteHeader } from '../components/site-header'
 import { SiteFooter } from '../components/site-footer'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
+  ),
   title: { default: 'Agency — Digital Marketing Excellence', template: '%s | Agency' },
   description:
     'Leading digital agency delivering exceptional marketing solutions that drive growth.',

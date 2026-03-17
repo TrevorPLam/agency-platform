@@ -132,7 +132,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-02: Metadata, sitemap, and robots for indexable apps
+## [x] TASK-02: Metadata, sitemap, and robots for indexable apps
 
 **Why:** SEO/indexability is underconfigured in current apps.
 
@@ -141,16 +141,27 @@ This roadmap reflects:
 - `sitemap.ts` and `robots.ts` created for `firm` and client sites intended for indexing.
 - URLs derived from env-safe base URL convention.
 
-**Target Files**
-- `apps/firm/src/app/layout.tsx`
-- `apps/firm/src/app/sitemap.ts`
-- `apps/firm/src/app/robots.ts`
-- `apps/prospective-clients/riley-day-care/src/app/layout.tsx`
-- `apps/prospective-clients/riley-day-care/src/app/sitemap.ts`
-- `apps/prospective-clients/riley-day-care/src/app/robots.ts`
-- `apps/prospective-clients/the-barber-cave/src/app/layout.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/sitemap.ts`
-- `apps/prospective-clients/the-barber-cave/src/app/robots.ts`
+**Implementation Notes:**
+- Added `metadataBase` with environment-safe URL handling to all three indexable apps:
+  - `firm`: localhost:3000 (production uses VERCEL_URL)
+  - `riley-day-care`: localhost:3002 (production uses VERCEL_URL)  
+  - `the-barber-cave`: localhost:3003 (production uses VERCEL_URL)
+- Created dynamic sitemap.ts files using TypeScript with proper MetadataRoute types
+- Created dynamic robots.ts files that reference sitemaps and protect sensitive routes
+- Used Vercel Academy best practices for environment detection
+- All sitemaps include appropriate pages with priorities and change frequencies
+- Robots.txt files allow crawling while disallowing API/dashboard/auth routes
+
+**Target Files** - COMPLETED
+- `apps/firm/src/app/layout.tsx` ✅
+- `apps/firm/src/app/sitemap.ts` ✅
+- `apps/firm/src/app/robots.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/layout.tsx` ✅
+- `apps/prospective-clients/riley-day-care/src/app/sitemap.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/robots.ts` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/layout.tsx` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/sitemap.ts` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/robots.ts` ✅
 
 ---
 

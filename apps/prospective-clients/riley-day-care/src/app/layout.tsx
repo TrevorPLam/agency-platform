@@ -8,6 +8,9 @@ import { SiteFooter } from '@/components/site-footer'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3002'
+  ),
   title: { default: 'Riley Day Care', template: '%s | Riley Day Care' },
   description: 'Quality child care and early learning in a safe, nurturing environment.',
   openGraph: { title: 'Riley Day Care', description: 'Quality child care and early learning.' },
