@@ -27,15 +27,15 @@ Align with [docs/development/VERSIONING.md](../development/VERSIONING.md): patch
 
 ---
 
-## Repository classification (planned)
+## Repository classification
 
-When adopted, repositories can be classified via structured metadata (e.g. GitHub custom properties) for governance, compliance, and policy: business_criticality, owner_team, service_tier, compliance_frameworks, data_classification, environment, security_classification, lifecycle_stage, automated_tests, ci_cd_enabled. Full schema and profiles to be documented when the system is implemented.
+Repositories are classified via structured metadata (e.g. GitHub custom properties) for governance, compliance, and policy: business_criticality, owner_team, service_tier, compliance_frameworks, data_classification, environment, security_classification, lifecycle_stage, automated_tests, ci_cd_enabled. Schema and profiles are implemented in `packages/governance/src/types.ts` and `packages/governance/src/schema.ts`.
 
 ---
 
-## Metadata governance (planned)
+## Metadata governance
 
-When adopted, metadata governance provides: classification schema, custom properties management, policy engine, compliance automation, risk assessment, and workflow automation, integrated with GitHub. Full architecture to be documented when implemented.
+Metadata governance provides: classification schema, custom properties management, policy engine, compliance automation, risk assessment, and workflow automation, integrated with GitHub. Architecture is implemented in `@agency/governance` package with automated validation via `scripts/governance/compliance-automation.ts`.
 
 ---
 

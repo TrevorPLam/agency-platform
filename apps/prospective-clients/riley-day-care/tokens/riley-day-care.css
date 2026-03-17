@@ -1,0 +1,27 @@
+/* Client-specific design tokens for riley-day-care */
+@theme inline {
+  --color-semantic-background-primary: oklch(0.55 0.18 145);
+  --color-semantic-background-secondary: oklch(0.98 0.02 145);
+  --color-semantic-background-accent: oklch(0.70 0.15 250);
+  --color-semantic-text-primary: oklch(0.98 0.02 145);
+  --color-semantic-text-secondary: oklch(0.89 0.02 145);
+  --color-semantic-text-inverse: oklch(0.15 0.02 145);
+  --color-semantic-text-accent: oklch(0.70 0.15 250);
+  --color-semantic-border-primary: oklch(0.89 0.01 238.66);
+  --color-semantic-border-secondary: oklch(0.53 0.02 0.00);
+  --color-semantic-border-accent: oklch(0.62 0.18 238.66);
+  --color-semantic-interactive-primary-default: oklch(0.55 0.18 145);
+  --color-semantic-interactive-primary-hover: oklch(0.50 0.18 145);
+  --color-semantic-interactive-primary-active: oklch(0.45 0.18 145);
+  --color-semantic-interactive-primary-disabled: oklch(0.89 0.02 145);
+  --color-semantic-interactive-secondary-default: oklch(1.00 0.00 0.00);
+  --color-semantic-interactive-secondary-hover: oklch(0.98 0.01 238.66);
+  --color-semantic-interactive-secondary-active: oklch(0.95 0.01 238.66);
+  --color-semantic-interactive-secondary-disabled: oklch(0.89 0.01 238.66);
+  --brand-primary: oklch(0.55 0.18 145);
+  --brand-secondary: oklch(0.75 0.12 85);
+  --brand-accent: oklch(0.70 0.15 250);
+  --font-primary: Inter, system-ui, sans-serif;
+  --font-secondary: Inter, Georgia, serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
+}

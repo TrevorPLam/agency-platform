@@ -21,8 +21,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className={`${inter.className} flex min-h-screen flex-col`}>
         <Providers>
+          <a 
+            href="#main-content" 
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          >
+            Skip to main content
+          </a>
           <SiteHeader />
-          <div className="flex-1">{children}</div>
+          <main id="main-content" className="flex-1">
+            {children}
+          </main>
           <SiteFooter />
         </Providers>
       </body>

@@ -241,6 +241,81 @@ Edit under `apps/prospective-clients/<slug>` or `apps/clients/<slug>`. If you ch
 
 ---
 
+## AI Agent Governance
+
+The agency platform includes comprehensive governance for AI agents, extending the existing governance and security frameworks. AI agents working in this repository should be aware of the following governance capabilities:
+
+### Agent Classification and Risk Assessment
+
+AI agents are classified using the `@agency/governance` framework with properties including:
+- **Agent Type**: Autonomous, Semi-Autonomous, Scripted, or Orchestrator
+- **Autonomy Level**: Low, Medium, High, or Critical
+- **Decision Scope**: Internal, Customer-Facing, System-Admin, or Cross-System
+- **Authority Boundaries**: Defined decision, data, action, and system boundaries
+- **Human Oversight**: Required review mechanisms and escalation paths
+- **Compliance Frameworks**: HIPAA, GDPR, SOC2, ISO 27001, and custom frameworks
+
+### Security and Auditing
+
+AI agents are monitored through the `@agency/security` framework with:
+- **AgentAuditingSystem**: Comprehensive audit trails and compliance validation
+- **Behavior Monitoring**: Real-time anomaly detection and threat analysis
+- **Compliance Automation**: Framework-specific validation (HIPAA, GDPR, SOC2)
+- **Session Management**: Secure agent sessions with timeout and access controls
+
+### Agent Registration and Monitoring
+
+AI agents should be registered for governance and security monitoring:
+
+```bash
+# Register agent for governance and security monitoring
+pnpm agent-governance register --agent-id <agent-id>
+
+# Start continuous monitoring
+pnpm agent-security monitor --agent-id <agent-id>
+
+# Generate compliance report
+pnpm agent-governance compliance --agent-id <agent-id>
+```
+
+### Implementation Examples
+
+```typescript
+// Agent registration with governance and security
+import { AgentProperties, AgentAuthorization } from '@agency/governance/types'
+import { SecurityManager } from '@agency/security'
+
+const agentProperties: AgentProperties = {
+  agent_type: 'Semi-Autonomous',
+  autonomy_level: 'Medium',
+  decision_scope: 'Internal',
+  authority_boundaries: [...],
+  human_oversight_required: true,
+  compliance_frameworks: ['SOC2', 'GDPR'],
+  audit_trail_required: true
+}
+
+const securityManager = new SecurityManager(config)
+securityManager.registerAgent(agentId, agentProperties, authorization, frameworks)
+```
+
+### Governance Automation
+
+Agent governance is automated through specialized scripts:
+- **`scripts/governance/agent-governance.ts`**: Agent validation and compliance checking
+- **`scripts/security/agent-security.ts`**: Continuous security monitoring and analysis
+- **CI/CD Integration**: Automated agent validation in existing workflows
+
+### Documentation and Resources
+
+- **`AGENTS.md`**: Comprehensive AI agent research and implementation guide
+- **`packages/governance/src/types.ts`**: Agent governance type definitions
+- **`packages/security/src/agent-auditing.ts`**: Agent security implementation
+- **`packages/governance/src/authorization.ts`**: Agent authorization system
+- **`packages/governance/src/risk.ts`**: Agent risk assessment engine
+
+---
+
 ## Useful Commands
 
 - `pnpm dev` — Run all apps in watch mode

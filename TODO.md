@@ -633,21 +633,41 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-11: Test coverage baseline expansion
+## [ ] TASK-11: Comprehensive Testing Strategy Implementation
 
-**Why:** Existing test surface is too narrow for platform confidence.
+**Why:** Current test coverage is <5% with only 2 test files (1 unit, 1 E2E), creating high quality risk and deployment uncertainty.
 
 **Definition of Done**
-- Playwright coverage expands beyond homepage smoke.
-- At least one app-level Vitest setup exists for unit testing.
-- Data-testid strategy added for stable E2E selectors where needed.
+- Unit test coverage >80% across all packages with comprehensive edge case testing
+- Integration testing framework for API endpoints and database operations
+- Expanded E2E coverage for critical user journeys across all applications
+- Visual regression testing for UI components with Storybook integration
+- Performance testing automation for critical paths
+- Accessibility testing automation in CI/CD pipeline
+- Test data management with factories and fixtures
+- Coverage reporting with minimum thresholds enforced in CI
+- Parallel test execution and optimized test performance
+- Test quality gates and deployment safety mechanisms
+
+**Implementation Phases**
+1. **Unit Test Foundation** - Vitest setup across packages, test data factories, coverage reporting
+2. **Integration Testing** - API endpoint tests, database integration tests, middleware tests
+3. **E2E Expansion** - Critical user journeys, cross-browser testing, mobile testing
+4. **Advanced Testing** - Visual regression, performance testing, accessibility automation
+5. **CI/CD Integration** - Parallel execution, quality gates, coverage thresholds
 
 **Target Files**
-- `apps/firm/e2e/*`
-- `apps/firm/playwright.config.ts`
-- `apps/firm/vitest.config.ts`
-- `apps/firm/src/**/*.test.ts`
-- `apps/firm/src/**/*` (for selectors where required)
+- `packages/*/vitest.config.ts` (all packages)
+- `packages/*/src/**/*.test.ts` (comprehensive unit tests)
+- `apps/*/vitest.config.ts` (app-level unit tests)
+- `apps/*/e2e/**/*.spec.ts` (expanded E2E coverage)
+- `apps/*/playwright.config.ts` (optimized configurations)
+- `packages/ui/src/**/*.stories.tsx` (Storybook for visual testing)
+- `packages/database/src/**/*.test.ts` (database integration tests)
+- `test/fixtures/` (test data factories)
+- `test/utils/` (testing utilities)
+- `.github/workflows/ci.yml` (testing integration)
+- `vitest.workspace.ts` (workspace test configuration)
 
 ---
 
@@ -665,6 +685,203 @@ This roadmap reflects:
 - `packages/database/package.json`
 - `packages/analytics/package.json`
 - `packages/monitoring/package.json`
+
+---
+
+## [ ] TASK-13: API Rate Limiting Implementation
+
+**Why:** No API rate limiting detected, creating vulnerability to abuse and DoS attacks.
+
+**Definition of Done**
+- Implement rate limiting middleware for all API endpoints
+- Configure tiered rate limits (100 requests/hour for general, 1000/hour for authenticated)
+- Add rate limit headers to responses
+- Implement Redis-based rate limit storage for production
+- Add rate limit bypass for service operations
+
+**Implementation Notes**
+- Add rate limiting to existing middleware.ts files
+- Use IP-based limiting with exponential backoff
+- Include tenant context in rate limit keys for multi-tenant fairness
+- Add monitoring for rate limit violations
+
+**Target Files**
+- `apps/agency-admin/src/middleware.ts`
+- `apps/prospective-clients/riley-day-care/src/middleware.ts`
+- `apps/prospective-clients/the-barber-cave/src/middleware.ts`
+- `packages/database/src/rate-limiter.ts` (new utility)
+
+---
+
+## [ ] TASK-14: Content Security Policy Hardening
+
+**Why:** Current CSP uses 'unsafe-inline' which allows XSS attacks through script/style injection.
+
+**Definition of Done**
+- Remove 'unsafe-inline' from script-src directive
+- Implement nonce-based CSP for dynamic scripts
+- Add object-src 'none' and media-src restrictions
+- Configure CSP for PostHog analytics with proper allowlist
+- Add CSP violation reporting endpoint
+
+**Implementation Notes**
+- Use CSP nonces for any required inline scripts
+- Hash-based CSP for static inline content
+- Maintain backward compatibility with existing analytics
+- Test CSP in development before production rollout
+
+**Target Files**
+- `apps/agency-admin/next.config.ts`
+- `apps/firm/next.config.ts`
+- `apps/prospective-clients/riley-day-care/next.config.ts`
+- `apps/prospective-clients/the-barber-cave/next.config.ts`
+
+---
+
+## [ ] TASK-15: CORS Policy Configuration
+
+**Why:** No CORS configuration found, potential for cross-origin attacks.
+
+**Definition of Done**
+- Implement CORS middleware with strict origin allowlist
+- Configure preflight handling for API endpoints
+- Add CORS headers to all API responses
+- Environment-specific CORS policies (development vs production)
+- Add CORS error handling and logging
+
+**Implementation Notes**
+- Use environment variables for allowed origins
+- Implement credential handling for authenticated requests
+- Add CORS validation to API routes
+- Monitor CORS violations for security insights
+
+**Target Files**
+- `apps/agency-admin/src/middleware.ts`
+- `apps/prospective-clients/riley-day-care/src/middleware.ts`
+- `apps/prospective-clients/the-barber-cave/src/middleware.ts`
+- `.env.local.example` (CORS configuration docs)
+
+---
+
+## [ ] TASK-16: Security Monitoring and Alerting
+
+**Why:** No security monitoring or alerting systems detected.
+
+**Definition of Done**
+- Implement security event logging for authentication failures
+- Add rate limit violation monitoring
+- Configure security alerts for suspicious patterns
+- Create security dashboard in agency-admin
+- Add automated security scanning to CI/CD pipeline
+
+**Implementation Notes**
+- Use existing analytics package for security events
+- Implement real-time alerting for critical security events
+- Add security metrics to cost monitoring dashboard
+- Integrate with external security tools (Snyk, OWASP ZAP)
+
+**Target Files**
+- `apps/agency-admin/src/app/api/security/` (new endpoints)
+- `packages/analytics/src/security-events.ts` (new module)
+- `apps/agency-admin/src/components/security/security-dashboard.tsx` (new)
+- `.github/workflows/security-scan.yml` (new workflow)
+
+---
+
+## [ ] TASK-17: File Upload Security Enhancement
+
+**Why:** Basic file upload limits exist but lack comprehensive security validation.
+
+**Definition of Done**
+- Implement file type validation with magic number verification
+- Add virus scanning for uploaded files
+- Configure storage bucket permissions with least privilege
+- Add file size limits per user/tenant
+- Implement file access logging and audit trails
+
+**Implementation Notes**
+- Use Supabase Storage with enhanced validation
+- Add client-side and server-side file validation
+- Implement file quarantine for suspicious uploads
+- Add file retention policies and cleanup automation
+
+**Target Files**
+- `packages/storage/src/file-validator.ts` (new utility)
+- `apps/agency-admin/src/app/api/upload/route.ts` (new endpoint)
+- `supabase/migrations/013_storage_security.sql` (new migration)
+- `packages/analytics/src/file-events.ts` (new module)
+
+---
+
+## [ ] TASK-18: Security Headers Testing and Compliance
+
+**Why:** Security headers need automated testing to prevent regressions.
+
+**Definition of Done**
+- Create automated security header testing suite
+- Add CSP compliance validation
+- Implement security header monitoring in production
+- Add security score reporting to agency-admin
+- Create security compliance dashboard
+
+**Implementation Notes**
+- Use Playwright for security header testing
+- Implement continuous security monitoring
+- Add security score calculation based on headers
+- Create security remediation workflows
+
+**Target Files**
+- `apps/*/e2e/security-headers.spec.ts` (new tests)
+- `packages/security/src/header-validator.ts` (new utility)
+- `apps/agency-admin/src/components/security/compliance-dashboard.tsx` (new)
+- `.github/workflows/security-compliance.yml` (new workflow)
+
+---
+
+## [x] TASK-15: Agentic Governance Extension Implementation
+
+**Why:** Extend existing governance and security infrastructure to support AI/agent-specific capabilities.
+
+**Definition of Done**
+- Extended `@agency/governance` package with agent-specific types and risk assessment ✅
+- Extended `@agency/security` package with agent auditing and monitoring capabilities ✅
+- Created agent authorization system with bounded autonomy and permission management ✅
+- Implemented agent risk assessment engine with autonomy, decision impact, and bias risk factors ✅
+- Created automation scripts for agent governance and security monitoring ✅
+- Updated documentation to reflect new agent governance capabilities ✅
+- Integrated with existing compliance frameworks (HIPAA, GDPR, SOC2, ISO 27001) ✅
+
+**Implementation Notes:**
+- ✅ **Governance Extensions**: Added `AgentProperties`, `AgentAuthorization`, `AgentAuditTrail`, and `AgentRiskAssessment` types
+- ✅ **Security Integration**: Created `AgentAuditingSystem` for comprehensive audit trails and compliance validation
+- ✅ **Risk Assessment**: Extended `RiskAssessmentEngine` with agent-specific risk factors and mitigation strategies
+- ✅ **Authorization Management**: Implemented `AgentAuthorizationManager` for bounded autonomy and access control
+- ✅ **Automation Scripts**: Created `scripts/governance/agent-governance.ts` and `scripts/security/agent-security.ts`
+- ✅ **Documentation Updates**: Updated `AGENTS.md`, `docs/GOVERNANCE.md`, `docs/AI_DEVELOPMENT_GUIDE.md`, and `README.md`
+- ✅ **Compliance Frameworks**: Integrated support for HIPAA, GDPR, SOC2, ISO 27001, and custom frameworks
+- ✅ **Real-time Monitoring**: Implemented behavior monitoring and anomaly detection for AI agents
+
+**Technical Benefits Achieved:**
+- **Enterprise-Grade Agent Governance**: Comprehensive framework for AI agent classification, risk assessment, and compliance
+- **Security Integration**: Seamless integration with existing supply chain security and audit systems
+- **Automation**: Automated agent validation, compliance checking, and security monitoring
+- **Scalability**: Designed to support multiple agents and complex orchestration patterns
+- **Compliance**: Built-in support for major compliance frameworks with automated validation
+
+**Target Files** - COMPLETED
+- `packages/governance/src/types.ts` ✅
+- `packages/governance/src/schema.ts` ✅
+- `packages/governance/src/authorization.ts` ✅
+- `packages/governance/src/risk.ts` ✅
+- `packages/security/src/agent-auditing.ts` ✅
+- `packages/security/src/security-manager.ts` ✅
+- `scripts/governance/agent-governance.ts` ✅
+- `scripts/security/agent-security.ts` ✅
+- `AGENTS.md` ✅
+- `docs/GOVERNANCE.md` ✅
+- `docs/AI_DEVELOPMENT_GUIDE.md` ✅
+- `docs/SUPPLY_CHAIN_SECURITY.md` ✅
+- `README.md` ✅
 
 ---
 
@@ -770,17 +987,296 @@ This roadmap reflects:
 
 ---
 
+## P4 - Advanced Repository Management (Industry-Leading)
+
+## [ ] TASK-19: DORA Metrics Implementation & Automation
+
+**Why:** No automated collection of key engineering metrics for organizational improvement.
+
+**Definition of Done**
+- Automated DORA metrics collection pipeline implemented
+- Deployment frequency, lead time, change failure rate, MTTR tracked
+- Metrics dashboard in agency-admin with historical trends
+- Integration with existing CI/CD pipeline for automatic data capture
+- Alerting for metric regressions and improvements
+
+**Target Files**
+- `scripts/metrics/dora-collector.ts`
+- `scripts/metrics/metrics-dashboard.ts`
+- `apps/agency-admin/src/app/(dashboard)/metrics/*`
+- `.github/workflows/metrics.yml`
+- `packages/metrics/src/dora.ts`
+
+---
+
+## [ ] TASK-20: Advanced Supply Chain Security (SLSA & SBOM)
+
+**Why:** Current supply chain security is basic GitHub scanning; industry leaders implement SLSA and comprehensive SBOM.
+
+**Definition of Done**
+- SBOM generation automation for all builds and releases
+- SLSA attestation implementation (Levels 1-3)
+- Build provenance tracking and verification
+- Cryptographic artifact integrity verification
+- Supply chain monitoring and vulnerability correlation
+- Integration with existing security workflows
+
+**Target Files**
+- `scripts/security/generate-sbom.ts`
+- `scripts/security/generate-attestation.ts`
+- `scripts/security/verify-integrity.ts`
+- `scripts/security/track-provenance.ts`
+- `packages/security/src/slsa.ts`
+- `packages/security/src/sbom.ts`
+- `.github/workflows/supply-chain.yml`
+
+---
+
+## [ ] TASK-21: Repository Metadata & Classification System
+
+**Why:** Manual repository management doesn't scale; enterprise requires dynamic policy targeting.
+
+**Definition of Done**
+- Custom repository properties implementation
+- Repository classification schema (risk-based categorization)
+- Dynamic policy targeting based on repository metadata
+- Automated compliance checks and policy enforcement
+- Repository metadata-driven automation
+- Integration with GitHub Enterprise governance features
+
+**Target Files**
+- `scripts/governance/manage-properties.ts`
+- `scripts/governance/metadata-workflows.ts`
+- `scripts/governance/dynamic-policies.ts`
+- `scripts/governance/compliance-automation.ts`
+- `packages/governance/src/metadata.ts`
+- `packages/governance/src/classification.ts`
+
+---
+
+## [ ] TASK-22: Artifact Lifecycle Management
+
+**Why:** No centralized artifact registry or automated promotion pipelines.
+
+**Definition of Done**
+- Centralized artifact registry (JFrog Artifactory/Nexus integration)
+- Automated version tagging and semantic versioning
+- Environment promotion pipelines (dev → staging → prod)
+- Automated auditing for artifact lifecycle
+- Policy-driven artifact management
+- Artifact integrity verification across environments
+
+**Target Files**
+- `scripts/artifacts/register-artifact.ts`
+- `scripts/artifacts/promote-artifact.ts`
+- `scripts/artifacts/cleanup-artifacts.ts`
+- `packages/artifacts/src/registry.ts`
+- `packages/artifacts/src/lifecycle.ts`
+- `packages/artifacts/src/promotion.ts`
+
+---
+
+## [ ] TASK-23: Large Monorepo Performance Optimization
+
+**Why:** Current monorepo lacks performance optimizations needed at scale.
+
+**Definition of Done**
+- Sparse checkout implementation for specific directories
+- Merge queue system for sequential validation
+- IDE performance optimization (custom IntelliJ/VSCode plugin)
+- Flaky test identification and quarantining
+- Git performance tuning and optimization
+- Automated repository maintenance (garbage collection, cleanup)
+
+**Target Files**
+- `scripts/performance/ide-optimization.ts`
+- `scripts/performance/merge-queue.ts`
+- `scripts/performance/flaky-test-detector.ts`
+- `scripts/maintenance/cleanup-branches.ts`
+- `scripts/maintenance/git-performance.ts`
+- `.gitattributes` (sparse checkout config)
+- `docs/DEVELOPER_EXPERIENCE.md`
+
+---
+
+## [ ] TASK-24: Integrated Knowledge Management
+
+**Why:** Knowledge is siloed in documentation; not embedded in daily workflows.
+
+**Definition of Done**
+- Automated knowledge capture from development activities
+- Workflow-integrated knowledge systems
+- AI-powered search across code, docs, and conversations
+- Expertise mapping and knowledge graphs
+- Systematic knowledge audits and updates
+- Knowledge-driven development assistance
+
+**Target Files**
+- `scripts/knowledge/capture.ts`
+- `scripts/knowledge/expertise-map.ts`
+- `scripts/knowledge/search.ts`
+- `packages/knowledge/src/graph.ts`
+- `packages/knowledge/src/search.ts`
+- `packages/knowledge/src/automation.ts`
+
+---
+
+## [ ] TASK-25: Cost Management & Resource Optimization
+
+**Why:** No monitoring of storage costs, CI/CD resource usage, or optimization budgeting.
+
+**Definition of Done**
+- Storage optimization monitoring and alerts
+- CI/CD resource usage tracking and optimization
+- Telemetry budgeting and cost allocation
+- Automated cost recommendations and optimization
+- Resource usage dashboards and reporting
+- Cost-aware development workflows
+
+**Target Files**
+- `scripts/cost/cost-monitor.ts`
+- `scripts/cost/resource-optimizer.ts`
+- `scripts/cost/budget-manager.ts`
+- `packages/cost/src/monitoring.ts`
+- `packages/cost/src/optimization.ts`
+- `apps/agency-admin/src/app/(dashboard)/costs/*`
+
+---
+
+## [ ] TASK-26: Disaster Recovery & Business Continuity
+
+**Why:** Relies only on GitHub; no documented recovery procedures or geographic distribution.
+
+**Definition of Done**
+- Automated repository backup procedures
+- Geographic distribution strategy
+- Recovery testing and validation procedures
+- Incident response plans and communication protocols
+- Business continuity documentation and runbooks
+- Regular recovery drills and validation
+
+**Target Files**
+- `scripts/backup/backup-repository.ts`
+- `scripts/incident/response-automation.ts`
+- `scripts/incident/communication-protocols.ts`
+- `docs/DISASTER_RECOVERY.md`
+- `docs/BUSINESS_CONTINUITY.md`
+- `docs/INCIDENT_RESPONSE.md`
+
+---
+
+## [ ] TASK-27: Advanced AI Agent Operations
+
+**Why:** Basic Copilot integration exists; no advanced AI-driven repository automation.
+
+**Definition of Done**
+- AI-driven repository automation and assistance
+- Autonomous CI/CD agents for self-healing pipelines
+- Multimodal code analysis (text, image, sound processing)
+- AI-assisted code review and quality checks
+- Predictive maintenance and issue detection
+- Agent orchestration and governance integration
+
+**Target Files**
+- `scripts/ai/repository-automation.ts`
+- `scripts/ai/autonomous-cicd.ts`
+- `scripts/ai/code-review-assistant.ts`
+- `scripts/ai/predictive-maintenance.ts`
+- `packages/ai/src/automation.ts`
+- `packages/ai/src/orchestration.ts`
+- `docs/AI_OPERATIONS.md`
+
+---
+
 ## 5) Task Dependencies (Critical Path)
 
 1. `TASK-01` -> `TASK-02` -> `TASK-06` -> `TASK-07` -> `TASK-08`
 2. `TASK-03` + `TASK-04` + `TASK-05` should complete before broad new feature rollout.
-3. `TASK-11` starts during P1 and continues through all later tasks.
+3. `TASK-11` (Comprehensive Testing) starts during P1 and continues through all later tasks with 5 implementation phases.
 4. `TASK-14` + `TASK-15` + `TASK-16` are mandatory before production launch claims.
 5. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-10C` -> `TASK-10D` -> `TASK-10E` -> `TASK-10F` -> `TASK-10G` -> `TASK-10H` -> `TASK-10I` -> `TASK-11` for security/data/ops correctness before broader confidence claims.
+6. **P4 Advanced Tasks**: `TASK-19` through `TASK-27` can run in parallel after P1 completion, with these dependencies:
+   - `TASK-20` (Supply Chain Security) depends on `TASK-19` (DORA Metrics) for pipeline integration
+   - `TASK-21` (Metadata Governance) depends on `TASK-20` for policy enforcement
+   - `TASK-22` (Artifact Management) depends on `TASK-20` and `TASK-21` for security and governance
+   - `TASK-23` (Performance Optimization) can run independently but benefits from `TASK-19` metrics
+   - `TASK-24` (Knowledge Management) depends on `TASK-21` for metadata integration
+   - `TASK-25` (Cost Management) depends on `TASK-19` and `TASK-23` for metrics and performance data
+   - `TASK-26` (Disaster Recovery) depends on `TASK-22` for artifact backup procedures
+   - `TASK-27` (AI Operations) depends on `TASK-19`, `TASK-21`, and `TASK-24` for metrics, governance, and knowledge
 
 ---
 
-## 6) Deferred / Non-Goals For This Cycle
+## 6) Repository Maturity Assessment & Implementation Strategy
+
+### Current Repository Maturity: **Advanced (75/100)**
+
+**Updated Score**: 75/100 (downgraded from 80/100 based on testing quality analysis)
+**Why the Decrease**: Comprehensive testing analysis revealed critical gaps in test coverage (<5%), quality assurance practices, and testing infrastructure that represent significant quality risks for production deployment.
+
+### Implementation Phases
+
+#### Phase 1: Foundation (P0-P1) - **MOSTLY COMPLETED** ✅
+- Security headers, metadata, sitemap, robots
+- Type safety ratchet and lint enforcement  
+- Package build/export integrity fixes
+- Server-side form hardening and analytics
+- Root loading/error/not-found consistency
+- **Security hardening (TASK-10 series)** - IN PROGRESS
+- **Testing foundation (TASK-11 Phase 1)** - PENDING START
+
+#### Phase 2: Enterprise Readiness (P2-P3) - **PLANNED**
+- CMS and content-ops decision gate
+- Accessibility program baseline (WCAG 2.2 AA)
+- Consent and privacy architecture hardening
+- Core Web Vitals field observability
+- Experimentation framework bootstrap
+- AI-assisted content ops pilot
+
+#### Phase 3: Advanced Repository Management (P4) - **NEW**
+- **TASK-19**: DORA Metrics Implementation & Automation
+- **TASK-20**: Advanced Supply Chain Security (SLSA & SBOM)
+- **TASK-21**: Repository Metadata & Classification System
+- **TASK-22**: Artifact Lifecycle Management
+- **TASK-23**: Large Monorepo Performance Optimization
+- **TASK-24**: Integrated Knowledge Management
+- **TASK-25**: Cost Management & Resource Optimization
+- **TASK-26**: Disaster Recovery & Business Continuity
+- **TASK-27**: Advanced AI Agent Operations
+
+### Industry Comparison Summary
+
+| Area | Industry Leader | Agency Platform | Gap |
+|------|----------------|------------------|-----|
+| **Testing** | 80%+ Coverage | <5% Coverage | ❌ Critical |
+| **Security** | SLSA Level 4 | Basic GitHub | ❌ Major |
+| **Governance** | Custom Properties | Manual | ❌ Major |
+| **Automation** | Full Lifecycle | CI/CD Only | ❌ Major |
+| **Performance** | Optimized at Scale | Basic | ⚠️ Medium |
+| **Knowledge** | Integrated Systems | Documentation | ⚠️ Medium |
+| **Metrics** | Comprehensive | Basic | ⚠️ Medium |
+
+### Strategic Priority Order
+
+1. **CRITICAL** (Production Readiness)
+   - TASK-11: Comprehensive Testing Strategy Implementation
+   - TASK-20: Advanced Supply Chain Security
+   - TASK-21: Repository Metadata & Classification
+   - TASK-22: Artifact Lifecycle Management
+
+2. **HIGH PRIORITY** (Scale Readiness)
+   - TASK-19: DORA Metrics Implementation
+   - TASK-23: Large Monorepo Performance Optimization
+   - TASK-24: Integrated Knowledge Management
+
+3. **MEDIUM PRIORITY** (Operational Excellence)
+   - TASK-25: Cost Management & Resource Optimization
+   - TASK-26: Disaster Recovery & Business Continuity
+   - TASK-27: Advanced AI Agent Operations
+
+---
+
+## 7) Deferred / Non-Goals For This Cycle
 
 - Full enterprise DXP migration in one iteration.
 - Multi-region data architecture redesign.
@@ -789,7 +1285,7 @@ This roadmap reflects:
 
 ---
 
-## 7) Source Anchors (Research Basis)
+## 8) Source Anchors (Research Basis)
 
 - [Next.js 16 upgrade and production guidance](https://nextjs.org/docs/app/guides/upgrading/version-16)
 - [Next.js metadata sitemap convention](https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap)

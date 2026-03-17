@@ -1,26 +1,48 @@
 # Dependencies
-node_modules/
 .pnpm-store/
 .pnp.*
 
+# All node_modules directories (root and nested)
+node_modules/
+**/node_modules/
+
 # Build outputs
 .next/
-dist/
 out/
 build/
+dist/
 .turbo/
 
+# Nested build artifacts
+**/.next/
+**/out/
+**/build/
+**/dist/
+**/.turbo/
+
 # Environment variables
+.env
 .env.local
-.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Generated build artifacts
-apps/clients/*/tokens/*.css
-apps/prospective-clients/*/tokens/*.css
+# Vercel
+.vercel
 
-# Supabase
-supabase/.branches/
-supabase/.temp/
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Logs
 *.log
@@ -46,14 +68,14 @@ coverage/
 # Dependency directories
 jspm_packages/
 
-# TypeScript cache
-*.tsbuildinfo
-
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
+
+# Optional stylelint cache
+.stylelintcache
 
 # Microbundle cache
 .rpt2_cache/
@@ -61,16 +83,13 @@ jspm_packages/
 .rts2_cache_es/
 .rts2_cache_umd/
 
-# Optional REPL history
-.node_repl_history
-
 # Output of 'npm pack'
 *.tgz
 
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache
+# parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
 
@@ -79,13 +98,56 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
+dist
 
 # Gatsby files
 .cache/
 public
 
-# Vuepress build output
-.vuepress/dist
+# Storybook build outputs
+storybook-static
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AGENTS.md local overrides
+AGENTS.local.md
+
+# Supabase
+.supabase/
+
+# Test results
+test-results/
+playwright-report/
+test-results.xml
+
+# Sentry
+.sentryclirc
+
+# Local development
+.local/
+local/
+
+# Database
+*.sqlite
+*.db
+
+# Design tokens build artifacts
+packages/design-tokens/src/build/
+
+# SvelteKit build / generate output
+.svelte-kit
 
 # Serverless directories
 .serverless/
@@ -107,10 +169,6 @@ public
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-
-# SvelteKit build / generate output
-.svelte-kit
-
 # OS generated files
 .DS_Store
 .DS_Store?

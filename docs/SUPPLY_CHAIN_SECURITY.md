@@ -30,6 +30,7 @@ packages/security/
 │   │   └── index.ts
 │   ├── monitoring/           # Supply chain monitoring
 │   │   └── index.ts
+│   ├── agent-auditing.ts     # AI agent security and auditing
 │   └── crypto.ts             # Cryptographic verification
 ├── package.json
 ├── tsconfig.json
@@ -43,7 +44,9 @@ scripts/security/
 ├── generate-sbom.ts          # SBOM generation script
 ├── verify-integrity.ts       # Integrity verification script
 ├── monitor-supply-chain.ts   # Supply chain monitoring script
-└── verify-signatures.ts      # Cryptographic verification script
+├── verify-signatures.ts      # Cryptographic verification script
+├── agent-security.ts         # AI agent security monitoring
+└── audit-supply-chain.ts     # Comprehensive supply chain audit
 ```
 
 ## Implementation Details
@@ -446,6 +449,34 @@ DEBUG=crypto:* pnpm run verify-signatures
 4. **Signature Verification**: Success rate of signature verification
 5. **Integrity Checks**: Results of integrity verification
 
+### 6. AI Agent Security
+
+**Purpose**: Extend supply chain security to AI agents with comprehensive auditing, monitoring, and compliance validation.
+
+**Implementation**:
+- **AgentAuditingSystem**: Comprehensive audit trails and compliance validation
+- **Behavior Monitoring**: Real-time anomaly detection and threat analysis
+- **Compliance Automation**: Framework-specific validation (HIPAA, GDPR, SOC2)
+- **Session Management**: Secure agent sessions with timeout and access controls
+
+**Key Features**:
+- **Agent Registration**: Centralized agent registration with governance and security monitoring
+- **Risk Assessment**: Agent-specific risk factors including autonomy, decision impact, and bias risk
+- **Real-time Monitoring**: Continuous behavior monitoring with anomaly detection
+- **Compliance Validation**: Automated checking against major compliance frameworks
+
+**Usage**:
+```bash
+# Register agent for security monitoring
+pnpm agent-security register --agent-id <agent-id>
+
+# Start continuous monitoring
+pnpm agent-security monitor --agent-id <agent-id>
+
+# Generate security analysis report
+pnpm agent-security analyze
+```
+
 ### Alert Configuration
 
 ```yaml
@@ -461,6 +492,12 @@ alerts:
     threshold: 1
     severity: critical
   signature_failures:
+    threshold: 1
+    severity: critical
+  agent_anomalies:
+    threshold: 1
+    severity: high
+  compliance_violations:
     threshold: 1
     severity: critical
 ```

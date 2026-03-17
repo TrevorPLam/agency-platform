@@ -165,6 +165,12 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 
 ### 📋 Governance
 - **[docs/governance/](docs/governance/)** — Design system governance and contribution workflows
+- **[AGENTS.md](AGENTS.md)** — AI agent research, implementation guide, and governance framework
+
+### 🤖 AI Agent Governance
+- **[docs/AI_DEVELOPMENT_GUIDE.md](docs/AI_DEVELOPMENT_GUIDE.md)** — AI development guide with agent governance
+- **[packages/governance/](packages/governance/)** — Agent classification, risk assessment, and authorization
+- **[packages/security/](packages/security/)** — Agent auditing, monitoring, and compliance validation
 
 ## 🤝 Contributing
 

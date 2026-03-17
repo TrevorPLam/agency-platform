@@ -1,0 +1,45 @@
+# AGENTS.md Local Overrides Example
+
+# Copy this file to AGENTS.local.md and customize for your local development needs
+# This file is .gitignored and will not be committed to version control
+
+# User-specific preferences
+## Personal Development Commands
+```bash
+# Your preferred test runner
+npm run test:watch
+
+# Your preferred build command
+npm run build:fast
+
+# Your preferred database reset
+pnpm db:reset:local
+```
+
+## Custom Tool Preferences
+- **Preferred IDE**: VS Code with specific extensions
+- **Preferred Browser**: Chrome for development
+- **Preferred Terminal**: Windows Terminal with PowerShell
+
+## Project-Specific Settings
+- **Default Tenant**: tenant-1 for local development
+- **Test Data**: Use local test data fixtures
+- **Debug Mode**: Enable verbose logging
+
+## Custom Aliases
+```bash
+# Quick commands you use frequently
+alias dev="pnpm dev"
+alias build="pnpm build"
+alias test="pnpm test"
+```
+
+## Environment Overrides
+- **Skip certain checks**: Disable specific linting rules locally
+- **Enable hot reload**: Always use hot reload in development
+- **Mock external services**: Use local mocks for APIs
+
+## Notes
+- Add any personal preferences that help you work more efficiently
+- This file takes precedence over the root AGENTS.md
+- Keep it focused on your personal workflow optimizations
