@@ -8,6 +8,10 @@ import {
   applyRateLimit,
   RateLimitPresets,
   type RateLimitContext,
+  handleCorsPreflight,
+  setCorsHeaders,
+  logCorsViolation,
+  isOriginAllowed,
 } from '@agency/database'
 
 function ensureRequestId(request: NextRequest): string {
@@ -53,12 +57,20 @@ export async function middleware(request: NextRequest) {
   const requestId = ensureRequestId(request)
   const incomingTraceparent = request.headers.get('traceparent')
   const incomingSentryTrace = request.headers.get('sentry-trace')
+  const origin = request.headers.get('origin')
+
   requestHeaders.set('x-request-id', requestId)
   if (incomingTraceparent) {
     requestHeaders.set('traceparent', incomingTraceparent)
   }
   if (incomingSentryTrace) {
     requestHeaders.set('sentry-trace', incomingSentryTrace)
+  }
+
+  // Handle CORS preflight requests first
+  const preflightResponse = handleCorsPreflight(request, origin, requestId)
+  if (preflightResponse) {
+    return preflightResponse
   }
 
   const response = NextResponse.next({
@@ -71,6 +83,9 @@ export async function middleware(request: NextRequest) {
   if (incomingSentryTrace) {
     response.headers.set('sentry-trace', incomingSentryTrace)
   }
+
+  // Set CORS headers for all responses
+  setCorsHeaders(response, origin, requestId)
 
   const cookieStore = {
     getAll: () => request.cookies.getAll().map((c) => ({ name: c.name, value: c.value })),

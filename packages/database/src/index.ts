@@ -108,5 +108,39 @@ export {
   type CreateUserResult,
 } from './auth'
 
+// Rate limiting utilities
+export {
+  RateLimiter,
+  RateLimitPresets,
+  getClientIP,
+  addRateLimitHeaders,
+  applyRateLimit,
+  type RateLimitConfig,
+  type RateLimitResult,
+  type RateLimitContext,
+} from './rate-limiter'
+
+// CORS utilities
+export {
+  parseCorsOrigins,
+  parseCorsMethods,
+  parseCorsHeaders,
+  corsCredentialsAllowed,
+  corsMaxAge,
+  isOriginAllowed,
+  logCorsViolation,
+  setCorsHeaders,
+  handleCorsPreflight,
+} from './cors'
+
+// Security monitoring integration
+export {
+  SecurityMonitoringIntegration,
+  defaultSecurityMonitoring,
+  applySecurityMonitoring,
+  type SecurityMonitoringConfig,
+  type SecurityMonitoringContext,
+} from './security-monitoring-integration'
+
 // Note: admin.ts is intentionally NOT exported from the barrel
 // It requires explicit import: import { getAdminClient } from '@agency/database/admin'
