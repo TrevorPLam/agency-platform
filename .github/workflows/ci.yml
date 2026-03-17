@@ -29,9 +29,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies
@@ -136,9 +136,9 @@ jobs:
         with:
           version: latest
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
 
       - name: Start Supabase
         run: supabase start

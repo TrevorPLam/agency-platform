@@ -48,9 +48,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies
@@ -90,7 +90,7 @@ jobs:
           | tee artifact-registration.log
           
           # Extract artifact ID from output
-          ARTIFACT_ID=$(grep "📦 ID:" artifact-registration.log | sed 's/📦 ID: //')
+          ARTIFACT_ID=$(grep " ID:" artifact-registration.log | sed 's/ ID: //')
           echo "artifact-id=${{ github.event.inputs.artifact_id || '$ARTIFACT_ID' }}" >> $GITHUB_OUTPUT
 
   # Promotion to staging
@@ -111,9 +111,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies
@@ -137,7 +137,7 @@ jobs:
           | tee promotion-staging.log
           
           # Extract promotion ID from output
-          PROMOTION_ID=$(grep "📋 ID:" promotion-staging.log | sed 's/📋 ID: //')
+          PROMOTION_ID=$(grep " ID:" promotion-staging.log | sed 's/ ID: //')
           echo "promotion-id=$PROMOTION_ID" >> $GITHUB_OUTPUT
           echo "promotion-url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
 
@@ -171,9 +171,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies
@@ -197,29 +197,29 @@ jobs:
           | tee promotion-production.log
           
           # Extract promotion ID from output
-          PROMOTION_ID=$(grep "📋 ID:" promotion-production.log | sed 's/📋 ID: //')
+          PROMOTION_ID=$(grep " ID:" promotion-production.log | sed 's/ ID: //')
           echo "promotion-id=$PROMOTION_ID" >> $GITHUB_OUTPUT
           echo "promotion-url=https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Wait for manual approvals
         run: |
-          echo "⏳ Waiting for manual approvals..."
-          echo "📋 Promotion ID: ${{ steps.promotion.outputs.promotion-id }}"
-          echo "🔗 Promotion URL: ${{ steps.promotion.outputs.promotion-url }}"
+          echo " Waiting for manual approvals..."
+          echo " Promotion ID: ${{ steps.promotion.outputs.promotion-id }}"
+          echo " Promotion URL: ${{ steps.promotion.outputs.promotion-url }}"
           echo ""
-          echo "💡 To approve this promotion:"
+          echo " To approve this promotion:"
           echo "   1. Review the artifact details"
           echo "   2. Add approval comment with: /approve"
           echo "   3. Or use the GitHub Actions UI"
           echo ""
-          echo "⚠️  This workflow will pause until approvals are received"
+          echo "  This workflow will pause until approvals are received"
 
       - name: Check promotion status
         run: |
           # This would typically check if approvals are sufficient
           # For now, we'll just show the current status
-          echo "📊 Checking promotion status for ${{ steps.promotion.outputs.promotion-id }}"
-          echo "💡 Manual approval required for production deployments"
+          echo " Checking promotion status for ${{ steps.promotion.outputs.promotion-id }}"
+          echo " Manual approval required for production deployments"
 
       - name: Stop Supabase
         if: always()
@@ -237,9 +237,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies
@@ -279,9 +279,9 @@ jobs:
         with:
           version: 10.12.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
           cache: "pnpm"
 
       - name: Install dependencies

@@ -39,21 +39,21 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Run tests with detailed output
         run: |
-          echo "🧪 Running tests with flaky test detection..."
+          echo " Running tests with flaky test detection..."
           
           # Run tests and capture output
           pnpm turbo run test --affected 2>&1 | tee test-results.log || {
-            echo "⚠️ Tests failed, analyzing for flaky behavior..."
+            echo " Tests failed, analyzing for flaky behavior..."
           }
 
       - name: Install flaky test detector
@@ -61,43 +61,43 @@ jobs:
 
       - name: Analyze test results for flakiness
         run: |
-          echo "📊 Analyzing test results for flaky behavior..."
+          echo " Analyzing test results for flaky behavior..."
           
           if [ -f "test-results.log" ]; then
             tsx scripts/performance/flaky-test-detector.ts analyze test-results.log
-            echo "✅ Test results analyzed for flakiness"
+            echo " Test results analyzed for flakiness"
           else
-            echo "⚠️ No test results found"
+            echo " No test results found"
           fi
 
       - name: Generate flaky test report
         run: |
-          echo "📋 Generating flaky test report..."
+          echo " Generating flaky test report..."
           
           tsx scripts/performance/flaky-test-detector.ts report > flaky-test-report.json
           tsx scripts/performance/flaky-test-detector.ts health > flaky-test-health.md
           
-          echo "✅ Reports generated"
+          echo " Reports generated"
 
       - name: Check for new quarantined tests
         run: |
-          echo "🚨 Checking for newly quarantined tests..."
+          echo " Checking for newly quarantined tests..."
           
           if [ -f "flaky-test-report.json" ]; then
             NEWLY_QUARANTINED=$(cat flaky-test-report.json | jq -r '.flakyTests[] | select(.quarantined == true) | .name' || echo "")
             
             if [ -n "$NEWLY_QUARANTINED" ]; then
-              echo "🚨 Newly quarantined tests detected:"
+              echo " Newly quarantined tests detected:"
               echo "$NEWLY_QUARANTINED"
               
               # Create issue for quarantined tests
-              echo "📝 Creating issue for quarantined test investigation..."
+              echo " Creating issue for quarantined test investigation..."
               # This would create a GitHub issue via API
               
               # Set output for downstream jobs
               echo "newly_quarantined=true" >> $GITHUB_OUTPUT
             else
-              echo "✅ No new quarantined tests"
+              echo " No new quarantined tests"
               echo "newly_quarantined=false" >> $GITHUB_OUTPUT
             fi
           fi
@@ -115,7 +115,7 @@ jobs:
       - name: Comment on PR with flaky test summary
         if: github.event_name == 'pull_request'
         run: |
-          echo "💬 Adding flaky test summary to PR..."
+          echo " Adding flaky test summary to PR..."
           
           if [ -f "flaky-test-health.md" ]; then
             # This would use GitHub API to comment on the PR
@@ -132,10 +132,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -145,17 +145,17 @@ jobs:
 
       - name: Generate comprehensive health report
         run: |
-          echo "📊 Generating comprehensive flaky test health report..."
+          echo " Generating comprehensive flaky test health report..."
           
           tsx scripts/performance/flaky-test-detector.ts health > daily-health-report.md
           tsx scripts/performance/flaky-test-detector.ts report > daily-flaky-report.json
           
-          echo "✅ Daily health report generated"
+          echo " Daily health report generated"
 
       - name: Analyze trends and patterns
         id: analyze_trends
         run: |
-          echo "📈 Analyzing flaky test trends and patterns..."
+          echo " Analyzing flaky test trends and patterns..."
           
           # Check for degrading tests
           DEGRADING_COUNT=$(cat daily-flaky-report.json | jq -r '.flakyTests[] | select(.trend == "degrading") | .name' | wc -l || echo "0")
@@ -177,9 +177,9 @@ jobs:
       - name: Create alert for concerning trends
         if: steps.analyze_trends.outputs.degrading_count > 0 || steps.analyze_trends.outputs.high_flaky_count > 5
         run: |
-          echo "🚨 Creating alert for concerning flaky test trends..."
+          echo " Creating alert for concerning flaky test trends..."
           
-          ALERT_MESSAGE="🚨 Flaky Test Alert\n\nDegrading tests: ${{ steps.analyze_trends.outputs.degrading_count }}\nHigh flakiness tests: ${{ steps.analyze_trends.outputs.high_flaky_count }}\nQuarantined tests: ${{ steps.analyze_trends.outputs.quarantined_count }}\n\nImmediate action required for test stability."
+          ALERT_MESSAGE=" Flaky Test Alert\n\nDegrading tests: ${{ steps.analyze_trends.outputs.degrading_count }}\nHigh flakiness tests: ${{ steps.analyze_trends.outputs.high_flaky_count }}\nQuarantined tests: ${{ steps.analyze_trends.outputs.quarantined_count }}\n\nImmediate action required for test stability."
 
           echo "$ALERT_MESSAGE"
           # This would send notifications via Slack, email, or create issues
@@ -195,14 +195,14 @@ jobs:
 
       - name: Update flaky test database
         run: |
-          echo "📊 Updating flaky test database..."
+          echo " Updating flaky test database..."
           
           # Backup current data
           if [ -f "scripts/performance/data/flaky-tests.json" ]; then
             cp scripts/performance/data/flaky-tests.json scripts/performance/data/flaky-tests-backup.json
           fi
           
-          echo "✅ Flaky test database updated"
+          echo " Flaky test database updated"
 
   quarantine-review:
     name: Quarantine Review
@@ -214,10 +214,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -227,34 +227,34 @@ jobs:
 
       - name: Generate quarantine review report
         run: |
-          echo "🔍 Generating quarantine review report..."
+          echo " Generating quarantine review report..."
           
           tsx scripts/performance/flaky-test-detector.ts report > quarantine-review.json
           
-          echo "📋 Quarantined Tests:"
+          echo " Quarantined Tests:"
           cat quarantine-review.json | jq -r '.flakyTests[] | select(.quarantined == true) | "- \(.testName): \(.quarantineReason // "No reason") (Flakiness: \(.flakinessScore))"'
           
-          echo "✅ Quarantine review report generated"
+          echo " Quarantine review report generated"
 
       - name: Check for tests ready to recover
         run: |
-          echo "🔄 Checking for tests ready to recover..."
+          echo " Checking for tests ready to recover..."
           
           RECOVERABLE=$(cat quarantine-review.json | jq -r '.flakyTests[] | select(.quarantined == true and .failureRate < 0.05) | .name' || echo "")
           
           if [ -n "$RECOVERABLE" ]; then
-            echo "🎉 Tests ready for recovery:"
+            echo " Tests ready for recovery:"
             echo "$RECOVERABLE"
             
             # This would automatically unquarantine tests or create a PR
-            echo "📝 Creating PR to recover stable tests..."
+            echo " Creating PR to recover stable tests..."
           else
-            echo "ℹ️ No tests ready for recovery"
+            echo " No tests ready for recovery"
           fi
 
       - name: Create quarantine management issue
         run: |
-          echo "📝 Creating quarantine management issue..."
+          echo " Creating quarantine management issue..."
           
           ISSUE_BODY=$(cat << 'EOF'
           # Flaky Test Quarantine Review
@@ -289,10 +289,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version-file: '.nvmrc'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

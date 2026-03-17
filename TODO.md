@@ -165,7 +165,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-03: Node and environment baseline lock
+## [x] TASK-03: Node and environment baseline lock
 
 **Why:** Toolchain drift causes CI/local mismatch risk.
 
@@ -174,10 +174,25 @@ This roadmap reflects:
 - Node version documented in contributor docs.
 - Optional CI move to `node-version-file` complete or explicitly deferred.
 
-**Target Files**
-- `.nvmrc`
-- `CONTRIBUTING.md` (or `README.md`)
-- `.github/workflows/ci.yml` (optional alignment)
+**Implementation Notes:**
+- ✅ `.nvmrc` already existed with Node 22 (aligned with CI)
+- ✅ Node version already documented in CONTRIBUTING.md and TOOLCHAIN.md
+- ✅ **COMPLETED**: Updated all 18+ GitHub Actions workflows to use `node-version-file: '.nvmrc'` instead of hardcoded `node-version: "22"`
+- ✅ **COMPLETED**: Upgraded all workflows from `actions/setup-node@v4` to `actions/setup-node@v6`
+- ✅ **COMPLETED**: Added CI/CD Node version management documentation to TOOLCHAIN.md
+- ✅ **VERIFIED**: `.nvmrc` contains "22" and will be automatically read by all workflows
+
+**Benefits Achieved:**
+- Single source of truth for Node.js version across all environments
+- Automatic version synchronization when `.nvmrc` is updated
+- Simplified maintenance - no need to update multiple workflow files for Node version changes
+- Latest setup-node action with improved features and security
+
+**Target Files** - COMPLETED
+- `.nvmrc` ✅ (already existed)
+- `CONTRIBUTING.md` ✅ (already documented)  
+- `TOOLCHAIN.md` ✅ (updated with CI/CD documentation)
+- `.github/workflows/*.yml` ✅ (all 18+ workflows updated)
 
 ---
 

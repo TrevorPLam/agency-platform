@@ -73,6 +73,16 @@ git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
 ```
 
+## CI/CD Node Version Management
+
+All GitHub Actions workflows use `node-version-file: '.nvmrc'` to automatically read the Node.js version from the `.nvmrc` file. This ensures:
+
+- **Single source of truth** for Node version across all environments
+- **Automatic version synchronization** when `.nvmrc` is updated
+- **Simplified maintenance** - no need to update multiple workflow files
+
+The workflows use `actions/setup-node@v6` which supports reading from `.nvmrc`, `.node-version`, `.tool-versions`, or `package.json` engines fields.
+
 ## Verification Checklist (run on each dev machine)
 
 - [ ] `node --version` returns 22.x or newer

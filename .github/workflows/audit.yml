@@ -34,9 +34,9 @@ jobs:
           fetch-depth: 0  # Full history required for comprehensive audit
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version-file: '.nvmrc'
 
       - name: Install dependencies
         run: |
