@@ -105,7 +105,7 @@ This roadmap reflects:
 
 ## P0 - Foundation (Launch Blocking)
 
-## [ ] TASK-01: Security headers baseline on all apps
+## [x] TASK-01: Security headers baseline on all apps
 
 **Why:** Current headers are inconsistent and incomplete.
 
@@ -116,11 +116,19 @@ This roadmap reflects:
   - `Permissions-Policy` with `interest-cohort=()`,
   - existing header behavior preserved.
 
-**Target Files**
-- `apps/firm/next.config.ts`
-- `apps/agency-admin/next.config.ts`
-- `apps/prospective-clients/riley-day-care/next.config.ts`
-- `apps/prospective-clients/the-barber-cave/next.config.ts`
+**Implementation Notes:**
+- Added complete security headers to `firm` app (was missing entirely)
+- Added `interest-cohort=()` to Permissions-Policy on all apps for privacy/FLoC opt-out
+- Added production-safe HSTS using environment detection (`NODE_ENV === 'production'`)
+- Used OWASP-recommended `max-age=63072000; includeSubDomains` for production
+- Preserved all existing CSP and other security headers
+- HSTS only applies in production to avoid localhost development issues
+
+**Target Files** - COMPLETED
+- `apps/firm/next.config.ts` ✅
+- `apps/agency-admin/next.config.ts` ✅
+- `apps/prospective-clients/riley-day-care/next.config.ts` ✅
+- `apps/prospective-clients/the-barber-cave/next.config.ts` ✅
 
 ---
 
