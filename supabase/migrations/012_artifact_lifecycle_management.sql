@@ -29,13 +29,13 @@ CREATE TABLE IF NOT EXISTS public.artifacts (
 );
 
 -- Create indexes for performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_tenant_id ON public.artifacts(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_tenant_created_at ON public.artifacts(tenant_id, created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_name ON public.artifacts(name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_type ON public.artifacts(type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_status ON public.artifacts(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_environment ON public.artifacts(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_artifacts_name_version_tenant ON public.artifacts(name, version, tenant_id);
+CREATE INDEX IF NOT EXISTS idx_artifacts_tenant_id ON public.artifacts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_artifacts_tenant_created_at ON public.artifacts(tenant_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_artifacts_name ON public.artifacts(name);
+CREATE INDEX IF NOT EXISTS idx_artifacts_type ON public.artifacts(type);
+CREATE INDEX IF NOT EXISTS idx_artifacts_status ON public.artifacts(status);
+CREATE INDEX IF NOT EXISTS idx_artifacts_environment ON public.artifacts(environment);
+CREATE INDEX IF NOT EXISTS idx_artifacts_name_version_tenant ON public.artifacts(name, version, tenant_id);
 
 -- Promotion steps table
 CREATE TABLE IF NOT EXISTS public.promotion_steps (
@@ -58,10 +58,10 @@ CREATE TABLE IF NOT EXISTS public.promotion_steps (
 );
 
 -- Create indexes for promotion steps
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_steps_tenant_id ON public.promotion_steps(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_steps_status ON public.promotion_steps(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_steps_to_environment ON public.promotion_steps(to_environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_steps_created_at ON public.promotion_steps(created_at);
+CREATE INDEX IF NOT EXISTS idx_promotion_steps_tenant_id ON public.promotion_steps(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_steps_status ON public.promotion_steps(status);
+CREATE INDEX IF NOT EXISTS idx_promotion_steps_to_environment ON public.promotion_steps(to_environment);
+CREATE INDEX IF NOT EXISTS idx_promotion_steps_created_at ON public.promotion_steps(created_at);
 
 -- Promotion approvals table
 CREATE TABLE IF NOT EXISTS public.promotion_approvals (
@@ -78,8 +78,8 @@ CREATE TABLE IF NOT EXISTS public.promotion_approvals (
 );
 
 -- Create indexes for promotion approvals
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_approvals_tenant_id ON public.promotion_approvals(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_approvals_promotion_id ON public.promotion_approvals(promotion_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_approvals_tenant_id ON public.promotion_approvals(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_approvals_promotion_id ON public.promotion_approvals(promotion_id);
 
 -- Promotion rejections table
 CREATE TABLE IF NOT EXISTS public.promotion_rejections (
@@ -94,8 +94,8 @@ CREATE TABLE IF NOT EXISTS public.promotion_rejections (
 );
 
 -- Create indexes for promotion rejections
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_rejections_tenant_id ON public.promotion_rejections(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_rejections_promotion_id ON public.promotion_rejections(promotion_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_rejections_tenant_id ON public.promotion_rejections(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_rejections_promotion_id ON public.promotion_rejections(promotion_id);
 
 -- Policy rules table
 CREATE TABLE IF NOT EXISTS public.policy_rules (
@@ -117,10 +117,10 @@ CREATE TABLE IF NOT EXISTS public.policy_rules (
 );
 
 -- Create indexes for policy rules
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_policy_rules_tenant_id ON public.policy_rules(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_policy_rules_type ON public.policy_rules(type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_policy_rules_enabled ON public.policy_rules(enabled);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_policy_rules_name ON public.policy_rules(name);
+CREATE INDEX IF NOT EXISTS idx_policy_rules_tenant_id ON public.policy_rules(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_policy_rules_type ON public.policy_rules(type);
+CREATE INDEX IF NOT EXISTS idx_policy_rules_enabled ON public.policy_rules(enabled);
+CREATE INDEX IF NOT EXISTS idx_policy_rules_name ON public.policy_rules(name);
 
 -- Retention policies table
 CREATE TABLE IF NOT EXISTS public.retention_policies (
@@ -146,9 +146,9 @@ CREATE TABLE IF NOT EXISTS public.retention_policies (
 );
 
 -- Create indexes for retention policies
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_retention_policies_tenant_id ON public.retention_policies(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_retention_policies_environment ON public.retention_policies(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_retention_policies_name ON public.retention_policies(name);
+CREATE INDEX IF NOT EXISTS idx_retention_policies_tenant_id ON public.retention_policies(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_retention_policies_environment ON public.retention_policies(environment);
+CREATE INDEX IF NOT EXISTS idx_retention_policies_name ON public.retention_policies(name);
 
 -- Promotion checks table
 CREATE TABLE IF NOT EXISTS public.promotion_checks (
@@ -170,9 +170,9 @@ CREATE TABLE IF NOT EXISTS public.promotion_checks (
 );
 
 -- Create indexes for promotion checks
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_checks_tenant_id ON public.promotion_checks(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_checks_promotion_step_id ON public.promotion_checks(promotion_step_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_promotion_checks_status ON public.promotion_checks(status);
+CREATE INDEX IF NOT EXISTS idx_promotion_checks_tenant_id ON public.promotion_checks(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_checks_promotion_step_id ON public.promotion_checks(promotion_step_id);
+CREATE INDEX IF NOT EXISTS idx_promotion_checks_status ON public.promotion_checks(status);
 
 -- Enable Row Level Security on all tables
 ALTER TABLE public.artifacts ENABLE ROW LEVEL SECURITY;

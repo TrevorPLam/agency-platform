@@ -48,3 +48,51 @@ In GitHub Actions, use `supabase db start` (Postgres only) instead of `supabase 
 - **pgTAP:** Enabled via SQL in test setup (`supabase/tests/database/000-setup-test-hooks.sql`), not in `config.toml`.
 - **Auth:** `email_confirm_if_verified` is not in the CLI config schema; configure in Supabase Dashboard for production if needed.
 - **Seed:** `supabase/seed.sql` runs after migrations on `supabase db reset`.
+
+## Migration Safety & Index Strategy
+
+### Critical: No CREATE INDEX CONCURRENTLY in Transactional Migrations
+
+**Problem**: `CREATE INDEX CONCURRENTLY` cannot run inside transactions and will fail with Supabase CLI.
+
+**Solution**: Use regular `CREATE INDEX` in main migrations, create separate index-only migrations if needed for production.
+
+### Safe Migration Patterns
+
+1. **Regular Index Creation** (safe in transactions):
+   ```sql
+   CREATE INDEX idx_table_column ON public.table(column);
+   ```
+
+2. **With IF NOT EXISTS** (prevents conflicts):
+   ```sql
+   CREATE INDEX IF NOT EXISTS idx_table_column ON public.table(column);
+   ```
+
+3. **Lock Timeout Safeguards** (for large tables):
+   ```sql
+   SET lock_timeout TO '5s';
+   SET statement_timeout TO '5s';
+   CREATE INDEX idx_table_column ON public.table(column);
+   ```
+
+### Online Index Strategy (Production)
+
+For production environments where index creation might block writes:
+
+1. **Create separate index migrations** with clear naming: `XXX_table_indexes.sql`
+2. **Schedule during maintenance windows** for large tables
+3. **Monitor with**: `SELECT * FROM pg_stat_progress_create_index;`
+4. **Failure recovery**: `DROP INDEX CONCURRENTLY IF EXISTS idx_failed;`
+
+### Migration Ordering
+
+- Use deterministic sequential naming: `010_`, `011_`, `012_`, etc.
+- Index-only migrations: `010_bookings_indexes.sql`, `011_cost_monitoring_indexes.sql`
+- Document dependencies in migration comments
+
+### Troubleshooting
+
+- **Failed concurrent index**: Check `pg_index` for `NOT indisvalid` entries
+- **Recovery**: `DROP INDEX CONCURRENTLY` + rebuild or `REINDEX CONCURRENTLY` (PG 12+)
+- **Lock issues**: Reduce timeout values or schedule during low traffic

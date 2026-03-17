@@ -7,8 +7,9 @@ CREATE TABLE public.bookings (
 
 ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 
-CREATE INDEX CONCURRENTLY idx_bookings_tenant_id ON public.bookings (tenant_id);
-CREATE INDEX CONCURRENTLY idx_bookings_tenant_created ON public.bookings (tenant_id, created_at DESC);
+-- Create indexes for performance
+CREATE INDEX idx_bookings_tenant_id ON public.bookings (tenant_id);
+CREATE INDEX idx_bookings_tenant_created ON public.bookings (tenant_id, created_at DESC);
 
 CREATE POLICY "Tenants select own bookings"
   ON public.bookings FOR SELECT

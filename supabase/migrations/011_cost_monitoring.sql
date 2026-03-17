@@ -65,21 +65,21 @@ CREATE TABLE IF NOT EXISTS public.optimization_recommendations (
 );
 
 -- Create indexes for performance optimization
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cost_metrics_tenant_id ON public.cost_metrics(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cost_metrics_tenant_timestamp ON public.cost_metrics(tenant_id, timestamp DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cost_metrics_period ON public.cost_metrics(period);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cost_metrics_timestamp ON public.cost_metrics(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_cost_metrics_tenant_id ON public.cost_metrics(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_cost_metrics_tenant_timestamp ON public.cost_metrics(tenant_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_cost_metrics_period ON public.cost_metrics(period);
+CREATE INDEX IF NOT EXISTS idx_cost_metrics_timestamp ON public.cost_metrics(timestamp DESC);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_budget_alerts_tenant_id ON public.budget_alerts(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_budget_alerts_active ON public.budget_alerts(active);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_budget_alerts_category ON public.budget_alerts(category);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_budget_alerts_severity ON public.budget_alerts(severity);
+CREATE INDEX IF NOT EXISTS idx_budget_alerts_tenant_id ON public.budget_alerts(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_budget_alerts_active ON public.budget_alerts(active);
+CREATE INDEX IF NOT EXISTS idx_budget_alerts_category ON public.budget_alerts(category);
+CREATE INDEX IF NOT EXISTS idx_budget_alerts_severity ON public.budget_alerts(severity);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_optimization_recommendations_tenant_id ON public.optimization_recommendations(tenant_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_optimization_recommendations_status ON public.optimization_recommendations(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_optimization_recommendations_priority ON public.optimization_recommendations(priority);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_optimization_recommendations_category ON public.optimization_recommendations(category);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_optimization_recommendations_created_at ON public.optimization_recommendations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_tenant_id ON public.optimization_recommendations(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_status ON public.optimization_recommendations(status);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_priority ON public.optimization_recommendations(priority);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_category ON public.optimization_recommendations(category);
+CREATE INDEX IF NOT EXISTS idx_optimization_recommendations_created_at ON public.optimization_recommendations(created_at DESC);
 
 -- Row Level Security Policies
 

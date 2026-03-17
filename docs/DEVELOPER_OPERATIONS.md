@@ -191,6 +191,66 @@ If the bug occurs and your workspace becomes broken:
 
 ---
 
+## Database Migration Safety
+
+### Critical Migration Rules
+
+1. **NEVER use CREATE INDEX CONCURRENTLY in transactional migrations**
+   - PostgreSQL prohibits this and Supabase CLI will fail
+   - Use regular `CREATE INDEX` or separate index-only migrations
+
+2. **Deterministic Migration Ordering**
+   - Use sequential naming: `010_`, `011_`, `012_`, etc.
+   - Index-only migrations: `010_table_indexes.sql`
+   - Document dependencies in migration comments
+
+3. **Lock Timeout Safeguards**
+   ```sql
+   SET lock_timeout TO '5s';
+   SET statement_timeout TO '5s';
+   CREATE INDEX idx_table_column ON public.table(column);
+   ```
+
+### Migration Workflow
+
+```bash
+# Create new migration
+npx supabase migration new create_feature_table
+
+# Apply locally
+npx supabase db push
+
+# Test in CI
+npx supabase db start  # Postgres only for CI
+npx supabase test db  # Run pgTAP tests
+
+# Deploy to production
+npx supabase db push  # Applies pending migrations
+```
+
+### Production Index Strategy
+
+For large tables where index creation might block writes:
+
+1. **Schedule during maintenance windows**
+2. **Monitor progress**: `SELECT * FROM pg_stat_progress_create_index;`
+3. **Failure recovery**: 
+   ```sql
+   DROP INDEX CONCURRENTLY IF EXISTS idx_failed;
+   CREATE INDEX CONCURRENTLY idx_table_column ON public.table(column);
+   ```
+
+### Troubleshooting Migrations
+
+| Issue | Solution |
+|-------|----------|
+| Migration fails with CONCURRENTLY error | Remove CONCURRENTLY, use regular CREATE INDEX |
+| Lock timeout during index creation | Reduce timeout values or schedule during low traffic |
+| Invalid index after failed CONCURRENTLY | `DROP INDEX CONCURRENTLY` + rebuild or `REINDEX CONCURRENTLY` |
+| Migration ordering conflicts | Use sequential naming, check dependencies |
+
+---
+
 ## Developer Experience Monitoring
 
 - **Health check:** `./scripts/performance/dx-monitor.ts health` 
