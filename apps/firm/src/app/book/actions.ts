@@ -1,6 +1,8 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { getAdminClient } from '@agency/database/admin'
+import { captureServerEvent } from '@agency/analytics/server'
 import { z } from 'zod'
 
 // Zod schema for booking form validation
@@ -49,14 +51,40 @@ export async function submitBooking(
     return { success: false, message: 'Agency tenant not found.' }
   }
 
-  const { error } = await admin.from('bookings').insert({
+  // Insert booking record
+  const { error, data: bookingData } = await admin.from('bookings').insert({
     tenant_id: tenant.id,
     name: name || null,
     email,
     message: message || null,
     requested_at: new Date().toISOString(),
-  })
+  }).select().single()
 
-  if (error) return { success: false, message: 'Something went wrong. Please try again.' }
-  return { success: true, message: "Thanks! We'll be in touch to schedule a call." }
+  if (error) {
+    return { success: false, message: 'Something went wrong. Please try again.' }
+  }
+
+  // Capture server-side analytics event
+  try {
+    captureServerEvent(
+      email, // Use email as distinctId for user identification
+      'booking_submitted',
+      {
+        tenant: AGENCY_TENANT_SLUG,
+        booking_id: bookingData.id,
+        has_name: !!name,
+        has_message: !!message,
+        submission_source: 'firm_booking_form',
+      }
+    )
+
+    // Flush events to ensure they're sent before redirect
+    await import('@agency/analytics/server').then(({ flushServerEvents }) => flushServerEvents())
+  } catch (analyticsError) {
+    // Log analytics error but don't fail the booking
+    console.error('Failed to capture booking analytics:', analyticsError)
+  }
+
+  // Redirect to success page
+  redirect('/booking/success')
 }

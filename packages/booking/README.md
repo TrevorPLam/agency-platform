@@ -4,13 +4,13 @@
 
 **Embeddable booking widget and configuration for client sites**
 
-[![npm version](https://img.shields.io/npm/v/@agency/booking)](https://www.npmjs.com/package/@agency/booking)
+[![npm version](https://img.shields.io/npm/v/@agency/booking)](https://www.npmjs.org/package/@agency/booking)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18+-blue)](https://reactjs.org/)
 
 </div>
 
-Provides types, Zod schema, and a React widget component for booking functionality. No app currently consumes this package; it is ready for integration when you add booking flows to client apps.
+Provides types, Zod schema, and a React widget component for booking functionality. **Currently implemented and in use** in the agency's firm booking flow with server-side analytics integration.
 
 ## 🚀 Features
 
@@ -19,12 +19,15 @@ Provides types, Zod schema, and a React widget component for booking functionali
 - **Type Safety** - Full TypeScript support with Zod validation
 - **Tenant Isolation** - Multi-tenant data isolation via Supabase RLS
 - **Configurable** - Flexible configuration options for different booking types
+- **Server Actions** - Next.js 16 Server Actions with redirect patterns
+- **Analytics Integration** - Server-side PostHog event tracking
 
 ### 🏗️ Architecture Benefits
 - **Zero Dependencies** - Lightweight implementation
 - **Framework Agnostic** - Works with any React app
 - **Accessible** - WCAG 2.1 AA compliant components
 - **Performance Optimized** - Minimal bundle size impact
+- **Conversion Focused** - Success page optimization and analytics
 
 ## 📦 Installation
 
@@ -34,31 +37,58 @@ pnpm add @agency/booking
 
 ## 🔧 Integration
 
-### 📍 Where to Use
-**Client apps only** (e.g. `apps/prospective-clients/<slug>` or `apps/clients/<slug>`). Import the widget in a booking page or layout, or embed in a section of a client site.
+### 📍 Current Implementation (Agency Firm)
+
+The booking system is **actively implemented** in `apps/firm/src/app/book/` with:
+
+- **Booking Page**: `/book` with form validation and honeypot protection
+- **Success Page**: `/booking/success` with conversion-optimized UX
+- **Server Actions**: Form submission with analytics and redirect
+- **Analytics Events**: `booking_submitted` events with tenant context
 
 ### 🔒 Tenant Scoping
+
 All booking data is tenant-scoped in Supabase (`bookings` table with `tenant_id`). Pass the current tenant id (e.g. from `NEXT_PUBLIC_TENANT_SLUG` or from middleware/context) into `BookingConfig.tenantId` so the widget and any API calls are scoped to that client.
 
-### 💡 Quick Example
+### 💡 Real Usage Example (Agency Firm)
 
 ```tsx
-'use client'
-
+// apps/firm/src/app/book/page.tsx
 import { BookingWidget } from '@agency/booking'
+import { submitBooking } from './actions'
 
-export default function BookingPage() {
-  const tenantId = process.env.NEXT_PUBLIC_TENANT_SLUG ?? ''
+export default async function BookPage() {
+  const tenantId = await getAgencyTenantId()
+  
   return (
-    <BookingWidget
-      config={{
-        tenantId,
-        serviceSlug: 'haircut',
-        locale: 'en-US',
-      }}
-      className="max-w-md mx-auto"
-    />
+    <main>
+      <BookingWidget 
+        config={{ tenantId }} 
+        submitAction={submitBooking}
+      />
+    </main>
   )
+}
+```
+
+```tsx
+// apps/firm/src/app/book/actions.ts
+'use server'
+import { redirect } from 'next/navigation'
+import { captureServerEvent } from '@agency/analytics/server'
+
+export async function submitBooking(formData: FormData) {
+  // 1. Validate form data with Zod
+  // 2. Insert booking into database
+  // 3. Capture analytics event
+  captureServerEvent(email, 'booking_submitted', {
+    tenant: 'agency',
+    booking_id: bookingData.id,
+    submission_source: 'firm_booking_form',
+  })
+  
+  // 4. Redirect to success page
+  redirect('/booking/success')
 }
 ```
 
@@ -80,8 +110,7 @@ The main React component for rendering the booking interface.
 |------|------|----------|-------------|
 | `config` | `BookingConfig` | ✅ | Booking configuration object |
 | `className` | `string` | ❌ | Additional CSS classes |
-| `onBookingComplete` | `(booking: Booking) => void` | ❌ | Callback for successful bookings |
-| `onError` | `(error: Error) => void` | ❌ | Error handler |
+| `submitAction` | `BookingSubmitAction` | ❌ | Server action for form submission |
 
 ### BookingConfig
 
@@ -92,7 +121,7 @@ Configuration object for the booking widget.
 | Property | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `tenantId` | `string` | ✅ | Tenant identifier for data isolation |
-| `serviceSlug` | `string` | ✅ | Service type identifier |
+| `serviceSlug` | `string` | ❌ | Service type identifier |
 | `locale` | `string` | ❌ | Localization (default: 'en-US') |
 | `minAdvanceHours` | `number` | ❌ | Minimum booking advance time |
 | `maxDaysAhead` | `number` | ❌ | Maximum booking window |
@@ -114,25 +143,57 @@ interface Booking {
 
 interface BookingConfig {
   tenantId: string
-  serviceSlug: string
+  serviceSlug?: string
   locale?: string
   minAdvanceHours?: number
   maxDaysAhead?: number
   timeSlotInterval?: number
 }
+
+type BookingSubmitAction = (
+  prev: { success: boolean; message?: string },
+  formData: FormData
+) => Promise<{ success: boolean; message?: string } | void>
 ```
 
 ## 🗄️ Database Schema
 
 The booking system uses the following database tables:
 
-- `bookings` - Main booking records
-- `services` - Available services and configurations
-- `time_slots` - Available time slots for booking
+- `bookings` - Main booking records (✅ **IMPLEMENTED**)
+- `services` - Available services and configurations (📋 **PLANNED**)
+- `time_slots` - Available time slots for booking (📋 **PLANNED**)
 
 All tables include Row-Level Security (RLS) for tenant isolation.
 
-## 🔒 Security Considerations
+## � Analytics Integration
+
+### Server-Side Events
+
+The booking system automatically captures analytics events:
+
+```typescript
+// Event: booking_submitted
+captureServerEvent(email, 'booking_submitted', {
+  tenant: 'agency',
+  booking_id: bookingData.id,
+  has_name: !!name,
+  has_message: !!message,
+  submission_source: 'firm_booking_form',
+})
+```
+
+### Event Schema
+
+- **Event Name**: `booking_submitted` (follows `[object] [verb]` convention)
+- **Properties**:
+  - `tenant`: Tenant slug for multi-tenant analytics
+  - `booking_id`: Database record ID for attribution
+  - `has_name`: Whether user provided their name
+  - `has_message`: Whether user included a message
+  - `submission_source`: Which form/widget submitted the booking
+
+## �🔒 Security Considerations
 
 ### Row-Level Security (RLS)
 
@@ -146,10 +207,16 @@ CREATE POLICY "Users can view bookings in their tenant" ON public.bookings
 
 ### Data Validation
 
-- All configuration validated via Zod schemas
-- Input sanitization for booking data
-- Rate limiting for booking submissions
-- Audit logging for all booking operations
+- **Zod Validation**: All form inputs validated with strict schemas
+- **Honeypot Protection**: Bot detection via hidden form fields
+- **Rate Limiting**: Booking submissions rate limited
+- **Audit Logging**: All booking operations logged
+
+### Server Actions Security
+
+- **No Client Secrets**: Server actions handle sensitive operations
+- **Tenant Scoping**: All database operations tenant-scoped
+- **Input Sanitization**: Comprehensive input validation
 
 ## 🎨 Styling & Theming
 
@@ -193,6 +260,22 @@ pnpm build
 # Lint code
 pnpm lint
 ```
+
+## 🚀 Current Status
+
+### ✅ Implemented
+- **Basic Booking Flow**: Form validation, database storage, success page
+- **Server Actions**: Next.js 16 Server Actions with proper redirects
+- **Analytics Integration**: Server-side PostHog event tracking
+- **Security**: Zod validation, honeypot protection, tenant isolation
+- **UI/UX**: Conversion-optimized success page and form experience
+
+### 📋 Planned Enhancements
+- **Time Slot Selection**: Calendar integration for specific booking times
+- **Service Configuration**: Multiple service types and pricing
+- **Email Notifications**: Automated confirmation and reminder emails
+- **Admin Dashboard**: Booking management interface
+- **Client Widget**: Embeddable widget for client sites
 
 ## 🤝 Contributing
 
