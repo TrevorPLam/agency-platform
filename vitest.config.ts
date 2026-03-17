@@ -37,6 +37,7 @@ export default defineConfig({
       '@agency/database': resolve(__dirname, 'packages/database/src'),
       '@agency/ui': resolve(__dirname, 'packages/ui/src'),
       '@agency/analytics': resolve(__dirname, 'packages/analytics/src'),
+      '@agency/analytics/server': resolve(__dirname, 'packages/analytics/src/server.ts'),
       '@agency/booking': resolve(__dirname, 'packages/booking/src'),
       '@agency/email': resolve(__dirname, 'packages/email/src'),
       '@agency/design-tokens': resolve(__dirname, 'packages/design-tokens/src'),

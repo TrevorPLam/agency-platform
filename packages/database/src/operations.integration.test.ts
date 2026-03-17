@@ -1,11 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { getAdminClient } from '@agency/database/admin'
 import { createSupabaseServerClient } from '@agency/database/client'
-import { captureServerEvent } from '@agency/analytics/server'
+
+// Mock the analytics server import
+const captureServerEvent = vi.fn()
 
 // Mock all external dependencies
 vi.mock('@agency/database/admin')
-vi.mock('@agency/analytics/server')
+vi.mock('@agency/analytics/server', () => ({
+  captureServerEvent
+}))
 
 const mockGetAdminClient = vi.mocked(getAdminClient)
 const mockCaptureServerEvent = vi.mocked(captureServerEvent)

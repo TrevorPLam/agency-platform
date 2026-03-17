@@ -20,7 +20,7 @@ export interface RateLimitResult {
   /** When the window resets (Unix timestamp in seconds) */
   resetTime: number
   /** Time in seconds until the request can be retried */
-  retryAfter?: number
+  retryAfter: number | undefined
 }
 
 export interface RateLimitContext {
@@ -36,12 +36,12 @@ export interface RateLimitContext {
 
 /**
  * Sliding window rate limiter using Redis
- * 
+ *
  * This implementation uses the sliding window counter algorithm which provides:
  * - Better accuracy than fixed window (no boundary bursts)
  * - Better memory efficiency than sliding window log
  * - Single Redis round trip per request
- * 
+ *
  * Based on Redis best practices: https://redis.io/learn/howtos/ratelimiting
  */
 export class RateLimiter {
@@ -52,11 +52,10 @@ export class RateLimiter {
   constructor(config: RateLimitConfig, redisUrl?: string) {
     this.config = config
     this.keyPrefix = config.keyPrefix || 'rate-limit'
-    
+
     // Initialize Redis if URL provided, otherwise use in-memory fallback
     if (redisUrl && redisUrl !== 'memory') {
       this.redis = new Redis(redisUrl, {
-        retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
         lazyConnect: true,
       })
@@ -74,6 +73,7 @@ export class RateLimiter {
         limit: Infinity,
         remaining: Infinity,
         resetTime: Math.floor(Date.now() / 1000) + this.config.window,
+        retryAfter: undefined,
       }
     }
 
@@ -93,22 +93,22 @@ export class RateLimiter {
    */
   private getKey(context: RateLimitContext): string {
     const parts = [this.keyPrefix]
-    
+
     // Add tenant context for multi-tenant isolation
     if (context.tenantId) {
       parts.push(`tenant:${context.tenantId}`)
     }
-    
+
     // Add IP address for client identification
     parts.push(`ip:${context.ip}`)
-    
+
     // Add authentication context for different limits
     if (context.authenticated) {
       parts.push('auth')
     } else {
       parts.push('anon')
     }
-    
+
     return parts.join(':')
   }
 
@@ -129,13 +129,13 @@ export class RateLimiter {
         local current_time = tonumber(ARGV[2])
         local window_size = tonumber(ARGV[3])
         local limit = tonumber(ARGV[4])
-        
+
         -- Remove expired entries from the current window
         redis.call('ZREMRANGEBYSCORE', key, 0, window_start)
-        
+
         -- Count requests in current window
         local current = redis.call('ZCARD', key)
-        
+
         -- Check if limit exceeded
         if current >= limit then
           -- Get oldest request timestamp for retry-after calculation
@@ -147,21 +147,21 @@ export class RateLimiter {
               retry_after = 0
             end
           end
-          
+
           return {0, limit, 0, current_time, retry_after}
         end
-        
+
         -- Add current request to window
         local unique_id = current_time .. ':' .. math.random()
         redis.call('ZADD', key, current_time, unique_id)
         redis.call('EXPIRE', key, window_size)
-        
+
         local remaining = limit - current - 1
-        
+
         return {1, limit, remaining, current_time, 0}
       `
 
-      const result = await this.redis.eval(
+      const result = await this.redis?.eval(
         luaScript,
         1,
         key,
@@ -190,6 +190,7 @@ export class RateLimiter {
         limit: this.config.limit,
         remaining: this.config.limit,
         resetTime: now + this.config.window,
+        retryAfter: undefined,
       }
     }
   }
@@ -210,13 +211,13 @@ export class RateLimiter {
 
     // Get existing requests for this key
     let requests = store.get(key) || []
-    
+
     // Remove expired requests
     requests = requests.filter(timestamp => timestamp > windowStart)
-    
+
     // Check limit
     const success = requests.length < this.config.limit
-    
+
     if (success) {
       // Add current request
       requests.push(now)
@@ -228,7 +229,7 @@ export class RateLimiter {
       limit: this.config.limit,
       remaining: Math.max(0, this.config.limit - requests.length),
       resetTime: now + this.config.window,
-      retryAfter: success ? undefined : Math.max(0, requests[0] - windowStart),
+      retryAfter: success ? undefined : Math.max(0, (requests as number[])[0] || windowStart - windowStart),
     }
   }
 
@@ -252,21 +253,21 @@ export const RateLimitPresets = {
     limit: 100,
     window: 3600, // 1 hour
     keyPrefix: 'api-general',
-  }, process.env.REDIS_URL || 'memory'),
+  }, process.env['REDIS_URL'] || 'memory'),
 
   /** Authenticated API rate limit (1000 requests/hour) */
   authenticated: new RateLimiter({
     limit: 1000,
     window: 3600, // 1 hour
     keyPrefix: 'api-auth',
-  }, process.env.REDIS_URL || 'memory'),
+  }, process.env['REDIS_URL'] || 'memory'),
 
   /** Strict rate limit for sensitive endpoints (10 requests/minute) */
   strict: new RateLimiter({
     limit: 10,
     window: 60, // 1 minute
     keyPrefix: 'api-strict',
-  }, process.env.REDIS_URL || 'memory'),
+  }, process.env['REDIS_URL'] || 'memory'),
 }
 
 /**
@@ -277,22 +278,22 @@ export function getClientIP(request: NextRequest): string {
   const forwardedFor = request.headers.get('x-forwarded-for')
   const realIP = request.headers.get('x-real-ip')
   const cfConnectingIP = request.headers.get('cf-connecting-ip') // Cloudflare
-  
+
   if (forwardedFor) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwardedFor.split(',')[0].trim()
+    return (forwardedFor?.split(',')[0]?.trim() || '')
   }
-  
+
   if (realIP) {
     return realIP.trim()
   }
-  
+
   if (cfConnectingIP) {
     return cfConnectingIP.trim()
   }
-  
+
   // Fallback to request IP
-  return request.ip || '127.0.0.1'
+  return (request as any).ip || '127.0.0.1'
 }
 
 /**
@@ -305,7 +306,7 @@ export function addRateLimitHeaders(
   response.headers.set('X-RateLimit-Limit', result.limit.toString())
   response.headers.set('X-RateLimit-Remaining', result.remaining.toString())
   response.headers.set('X-RateLimit-Reset', result.resetTime.toString())
-  
+
   if (result.retryAfter) {
     response.headers.set('Retry-After', result.retryAfter.toString())
   }
@@ -315,12 +316,12 @@ export function addRateLimitHeaders(
  * Middleware helper function for rate limiting
  */
 export async function applyRateLimit(
-  request: NextRequest,
+  _request: NextRequest,
   context: RateLimitContext,
   limiter: RateLimiter = RateLimitPresets.general
 ): Promise<{ allowed: boolean; result: RateLimitResult }> {
   const result = await limiter.check(context)
-  
+
   return {
     allowed: result.success,
     result,

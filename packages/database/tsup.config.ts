@@ -8,7 +8,7 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   dts: false,
   clean: true,
-  external: ['@supabase/supabase-js', '@supabase/ssr'],
+  external: ['@supabase/supabase-js', '@supabase/ssr', '@agency/analytics'],
   splitting: false,
   sourcemap: true,
   minify: false,
