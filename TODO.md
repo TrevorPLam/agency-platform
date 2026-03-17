@@ -109,7 +109,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10: API authorization and tenant isolation hardening (agency-admin costs)
+## [x] TASK-10: API authorization and tenant isolation hardening (agency-admin costs)
 
 **Why:** Current cost routes trust client-provided `tenant_id` and are vulnerable to cross-tenant access/mutation.
 
@@ -131,7 +131,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10A: Cost dashboard and API contract alignment
+## [x] TASK-10A: Cost dashboard and API contract alignment
 
 **Why:** Dashboard calls and route contracts are currently inconsistent, creating guaranteed runtime errors.
 
@@ -151,7 +151,7 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10B: Database type generation and drift gate recovery
+## [x] TASK-10B: Database type generation and drift gate recovery
 
 **Why:** Empty/stale generated DB types can block build/type-check/test and reduce confidence in schema safety.
 
@@ -170,23 +170,59 @@ This roadmap reflects:
 
 ---
 
+## [x] TASK-11: Comprehensive Testing Strategy Implementation
+
+**Why:** Test coverage was <5% across entire codebase with no integration testing framework, representing critical quality risk for production deployment.
+
+**Definition of Done**
+
+- Unit test coverage >80% across all packages with Vitest setup
+- Integration testing framework for API endpoints, database operations, and middleware
+- Test data factories and utilities for deterministic test generation
+- Coverage reporting and quality gates established in CI/CD
+- E2E testing framework for critical user journeys
+
+**Target Files**
+
+- `vitest.config.ts`, `vitest.workspace.ts` - Test configuration
+- `test/utils/factory.ts` - Test data factory system
+- `test/factories/*.ts` - Domain-specific test factories
+- `packages/*/src/*.test.ts` - Unit tests across packages
+- `apps/*/src/app/api/**/*.test.ts` - API integration tests
+
+---
+
 ## P2 - Production Readiness
 
-## [ ] TASK-14: Accessibility program baseline (WCAG 2.2 AA target)
+## [x] TASK-14: Accessibility program baseline (WCAG 2.2 AA target)
 
 **Why:** Accessibility quality is not yet a programmatic release gate.
 
 **Definition of Done**
 
-- Accessibility acceptance checklist added for public apps.
-- Automated checks integrated into CI/lint/test flow (initial baseline).
-- Focus visibility, form semantics, keyboard support, and target size checks covered in test strategy.
+- ✅ Accessibility acceptance checklist added for public apps.
+- ✅ Automated checks integrated into CI/lint/test flow (initial baseline).
+- ✅ Focus visibility, form semantics, keyboard support, and target size checks covered in test strategy.
+
+**Implementation Summary**
+
+- Created comprehensive WCAG 2.2 AA compliance checklist (`docs/ACCESSIBILITY_CHECKLIST.md`)
+- Added axe-core dependencies to catalog for automated accessibility testing
+- Implemented accessibility test utilities (`test/utils/accessibility.ts`) with WCAG 2.2 specific rules
+- Added accessibility tests to Button component as example pattern
+- Created E2E accessibility tests for firm application with keyboard navigation, focus appearance, target size
+- Integrated accessibility testing into CI pipeline (`pnpm test:a11y`)
+- Updated documentation with accessibility testing patterns and commands
 
 **Target Files**
 
-- `.github/workflows/ci.yml`
-- `docs/DEVELOPER_OPERATIONS.md` (or testing docs)
-- `apps/firm/*`, `apps/prospective-clients/*` (as needed for fixes)
+- ✅ `.github/workflows/ci.yml` - Added accessibility test step
+- ✅ `docs/ACCESSIBILITY_CHECKLIST.md` - Complete WCAG 2.2 AA checklist
+- ✅ `test/utils/accessibility.ts` - Accessibility testing utilities
+- ✅ `packages/ui/src/components/atoms/button.test.tsx` - Component accessibility tests
+- ✅ `apps/firm/e2e/accessibility.spec.ts` - E2E accessibility tests
+- ✅ `docs/DEVELOPER_OPERATIONS.md` - Added accessibility testing section
+- ✅ `.agents/testing.md` - Updated with accessibility testing patterns
 
 ---
 
@@ -487,7 +523,7 @@ This roadmap reflects:
 
 ## 5) Task Dependencies (Critical Path)
 
-1. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-11` for API correctness before broader confidence claims.
+1. ✅ `TASK-10` -> `TASK-10A` -> `TASK-10B` -> ✅ `TASK-11` for API correctness before broader confidence claims.
 2. `TASK-14` -> `TASK-15` -> `TASK-16` for production readiness baseline.
 3. `TASK-19` -> `TASK-20` -> `TASK-21` for advanced repository management foundation.
 4. `TASK-22` -> `TASK-23` -> `TASK-24` for scale optimization workflow.

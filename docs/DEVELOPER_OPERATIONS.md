@@ -260,6 +260,51 @@ Use to track performance trends and catch regressions.
 
 ---
 
+## Accessibility Testing
+
+### Automated Accessibility Testing
+
+```bash
+# Run accessibility tests for all packages
+pnpm test:a11y
+
+# Run accessibility tests for specific package
+pnpm turbo run test:a11y --filter=@agency/ui
+
+# Run accessibility tests for affected packages only
+pnpm turbo run test:a11y --affected
+
+# Run accessibility tests with coverage
+pnpm turbo run test:a11y --filter=@agency/ui --coverage
+```
+
+### Accessibility Testing Tools
+
+- **axe-core**: Automated WCAG 2.2 compliance checking
+- **@axe-core/playwright**: E2E accessibility testing
+- **jest-axe**: Unit test accessibility assertions
+- **WCAG 2.2**: Latest accessibility standards compliance
+
+### Accessibility Checklist
+
+All new components and features must pass:
+
+1. **Automated Testing**: All accessibility tests pass
+2. **Keyboard Navigation**: Full keyboard access to all interactive elements
+3. **Screen Reader Support**: Proper ARIA labels and announcements
+4. **Focus Management**: Visible focus indicators and logical tab order
+5. **Target Size**: Minimum 24×24px touch targets (WCAG 2.2 2.5.8)
+6. **Color Contrast**: 4.5:1 for normal text, 3:1 for large text
+
+### Accessibility Documentation
+
+- **Complete Guide**: `docs/ACCESSIBILITY_CHECKLIST.md`
+- **WCAG 2.2 Standards**: Latest accessibility requirements
+- **Testing Patterns**: `test/utils/accessibility.ts`
+- **Component Examples**: `packages/ui/src/components/**/*.test.tsx`
+
+---
+
 ## References
 
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) — First-run setup and detailed workflow rules

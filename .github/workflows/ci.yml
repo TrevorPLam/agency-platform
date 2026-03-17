@@ -99,6 +99,9 @@ jobs:
       - name: Coverage gate (affected packages)
         run: pnpm turbo run test:coverage --affected
 
+      - name: Accessibility tests (affected packages)
+        run: pnpm turbo run test:a11y --affected
+
       - name: Upload coverage artifacts
         if: always()
         uses: actions/upload-artifact@v4
