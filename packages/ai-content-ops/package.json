@@ -1,0 +1,52 @@
+{
+  "name": "@agency/ai-content-ops",
+  "version": "0.1.0",
+  "description": "AI-assisted content operations with brand voice training and approval workflows",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agency/database": "workspace:*",
+    "@agency/analytics": "workspace:*",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "openai": "^4.28.0",
+    "anthropic": "^0.25.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
