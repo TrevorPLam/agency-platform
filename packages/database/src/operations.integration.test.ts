@@ -89,18 +89,17 @@ describe('Database Operations Integration Tests', () => {
         updated_at: '2026-03-16T12:00:00Z',
       }
 
-      const mockAdminClient = {
-        from: vi.fn(() => ({
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: newTenant,
-                error: null,
-              })),
+      // Configure the global mock to return the expected data
+      mockAdminClient.from.mockReturnValueOnce({
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => ({
+              data: newTenant,
+              error: null,
             })),
           })),
         })),
-      }
+      })
 
       mockGetAdminClient.mockReturnValue(mockAdminClient as any)
 
@@ -127,22 +126,21 @@ describe('Database Operations Integration Tests', () => {
 
     it('should handle tenant creation conflicts', async () => {
       // Arrange
-      const mockAdminClient = {
-        from: vi.fn(() => ({
-          insert: vi.fn(() => ({
-            select: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: null,
-                error: {
-                  code: '23505',
-                  message: 'duplicate key value violates unique constraint',
-                  details: { constraint: 'tenants_slug_key' },
-                },
-              })),
+      // Configure the global mock to return conflict error
+      mockAdminClient.from.mockReturnValueOnce({
+        insert: vi.fn(() => ({
+          select: vi.fn(() => ({
+            single: vi.fn(() => ({
+              data: null,
+              error: {
+                code: '23505',
+                message: 'duplicate key value violates unique constraint',
+                details: { constraint: 'tenants_slug_key' },
+              },
             })),
           })),
         })),
-      }
+      })
 
       mockGetAdminClient.mockReturnValue(mockAdminClient as any)
 
@@ -174,10 +172,19 @@ describe('Database Operations Integration Tests', () => {
         created_at: '2026-03-16T12:00:00Z',
       }
 
-      mockAdminClient.from().select().eq().single.mockResolvedValue({
-        data: existingTenant,
-        error: null,
+      // Configure the global mock chain properly
+      mockAdminClient.from.mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: existingTenant,
+              error: null,
+            })),
+          })),
+        })),
       })
+
+      mockGetAdminClient.mockReturnValue(mockAdminClient as any)
 
       // Act
       const admin = getAdminClient()
@@ -196,21 +203,20 @@ describe('Database Operations Integration Tests', () => {
 
     it('should handle tenant not found', async () => {
       // Arrange
-      const mockAdminClient = {
-        from: vi.fn(() => ({
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn(() => ({
-                data: null,
-                error: {
-                  code: 'PGRST116',
-                  message: 'No rows returned',
-                },
-              })),
+      // Configure the global mock to return not found error
+      mockAdminClient.from.mockReturnValueOnce({
+        select: vi.fn(() => ({
+          eq: vi.fn(() => ({
+            single: vi.fn(() => Promise.resolve({
+              data: null,
+              error: {
+                code: 'PGRST116',
+                message: 'No rows returned',
+              },
             })),
           })),
         })),
-      }
+      })
 
       mockGetAdminClient.mockReturnValue(mockAdminClient as any)
 
