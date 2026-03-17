@@ -277,13 +277,323 @@ pnpm lint
 - **Admin Dashboard**: Booking management interface
 - **Client Widget**: Embeddable widget for client sites
 
-## 🤝 Contributing
+## 🆘 **Troubleshooting & Support**
 
-1. Follow the existing code patterns and TypeScript strict mode
-2. Add comprehensive tests for new features
-3. Update documentation for API changes
-4. Ensure accessibility compliance (WCAG 2.1 AA)
-5. Test with different client configurations
+### **🔧 Common Issues & Solutions**
+
+#### **1. Booking Widget Not Rendering**
+
+**Symptoms**: Widget doesn't appear, blank space, React errors
+
+**Solutions**:
+- ✅ Check import path: `import { BookingWidget } from '@agency/booking'`
+- ✅ Verify React and React-DOM are dependencies
+- ✅ Ensure proper tenantId configuration
+- ✅ Check for TypeScript errors in console
+
+```tsx
+// Debug booking widget
+import { BookingWidget } from '@agency/booking'
+
+export default function DebugBookingPage() {
+  const config = { tenantId: 'test-tenant' }
+  console.log('Booking config:', config)
+  
+  return (
+    <div>
+      <h1>Debug Booking</h1>
+      <BookingWidget config={config} />
+    </div>
+  )
+}
+```
+
+#### **2. Form Submission Failures**
+
+**Symptoms**: Submit button not working, server action errors
+
+**Solutions**:
+- ✅ Verify server action is properly exported
+- ✅ Check form validation with Zod schemas
+- ✅ Ensure proper FormData handling
+- ✅ Review tenant scoping in database operations
+
+```tsx
+// Debug form submission
+export async function debugSubmitBooking(formData: FormData) {
+  try {
+    console.log('Form data received:', Object.fromEntries(formData))
+    
+    // Validate with Zod
+    const validated = bookingFormSchema.parse(formData)
+    console.log('Validated data:', validated)
+    
+    // Test database connection
+    const result = await supabase.from('bookings').insert(validated)
+    console.log('Database result:', result)
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Submission error:', error)
+    return { success: false, message: error.message }
+  }
+}
+```
+
+#### **3. Tenant Isolation Issues**
+
+**Symptoms**: Data from wrong tenant, RLS policy errors
+
+**Solutions**:
+- ✅ Verify tenantId is properly passed to config
+- ✅ Check RLS policies on bookings table
+- ✅ Ensure middleware sets tenant context
+- ✅ Test with different tenant values
+
+```typescript
+// Debug tenant isolation
+export async function debugTenantIsolation(tenantId: string) {
+  try {
+    // Test tenant context
+    const currentTenant = await getCurrentTenantId()
+    console.log('Current tenant:', currentTenant)
+    console.log('Expected tenant:', tenantId)
+    
+    // Test RLS policy
+    const bookings = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('tenant_id', tenantId)
+    
+    console.log(`Found ${bookings.data?.length || 0} bookings for tenant ${tenantId}`)
+    
+    // Verify all bookings belong to correct tenant
+    const hasWrongTenant = bookings.data?.some(b => b.tenant_id !== tenantId)
+    if (hasWrongTenant) {
+      console.error('RLS policy violation detected!')
+    }
+    
+  } catch (error) {
+    console.error('Tenant isolation error:', error.message)
+  }
+}
+```
+
+#### **4. Analytics Events Not Tracking**
+
+**Symptoms**: No booking events in PostHog, missing analytics
+
+**Solutions**:
+- ✅ Verify PostHog configuration and API keys
+- ✅ Check server-side analytics import
+- ✅ Ensure proper event naming conventions
+- ✅ Test analytics event structure
+
+```typescript
+// Debug analytics tracking
+export async function debugAnalyticsTracking(email: string, bookingId: string) {
+  try {
+    console.log('Testing analytics tracking...')
+    
+    // Test basic event
+    await captureServerEvent(email, 'test_event', {
+      tenant: 'test-tenant',
+      booking_id: bookingId,
+      test: true
+    })
+    
+    console.log('Analytics test event sent successfully')
+    
+    // Test booking event structure
+    const bookingEvent = {
+      tenant: 'test-tenant',
+      booking_id: bookingId,
+      has_name: true,
+      has_message: true,
+      submission_source: 'debug_form'
+    }
+    
+    console.log('Booking event structure:', bookingEvent)
+    
+  } catch (error) {
+    console.error('Analytics error:', error.message)
+  }
+}
+```
+
+#### **5. Styling and Theming Issues**
+
+**Symptoms**: Widget not styled, CSS variables not working
+
+**Solutions**:
+- ✅ Ensure design tokens are imported
+- ✅ Check CSS variable definitions
+- ✅ Verify Tailwind CSS configuration
+- ✅ Test custom theme overrides
+
+```css
+/* Debug booking widget styling */
+.booking-widget {
+  /* Debug borders */
+  border: 2px solid red;
+  
+  /* Debug colors */
+  background-color: var(--booking-background-color, yellow);
+  color: var(--booking-text-color, black);
+  
+  /* Debug spacing */
+  padding: 1rem;
+  margin: 1rem;
+}
+
+/* Debug CSS variables */
+:root {
+  --debug-booking-primary: var(--booking-primary-color, red);
+}
+```
+
+### **🔍 Advanced Debugging Tools**
+
+#### **Booking Form Validator**
+```typescript
+// Comprehensive form validation
+export function validateBookingForm(formData: FormData) {
+  const errors: Record<string, string> = {}
+  
+  // Email validation
+  const email = formData.get('email') as string
+  if (!email || !email.includes('@')) {
+    errors.email = 'Valid email required'
+  }
+  
+  // Required fields
+  const requiredFields = ['name', 'email', 'service']
+  requiredFields.forEach(field => {
+    const value = formData.get(field) as string
+    if (!value || value.trim() === '') {
+      errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`
+    }
+  })
+  
+  // Honeypot check (bot protection)
+  const honeypot = formData.get('website') as string
+  if (honeypot && honeypot.trim() !== '') {
+    errors.bot = 'Bot detected'
+  }
+  
+  console.log('Form validation results:', errors)
+  return { isValid: Object.keys(errors).length === 0, errors }
+}
+```
+
+#### **Database Connection Monitor**
+```typescript
+// Monitor database health
+export async function monitorDatabaseHealth() {
+  try {
+    // Test basic connection
+    const ping = await supabase.from('bookings').select('count').single()
+    console.log('Database connection OK')
+    
+    // Test RLS policies
+    const tenantTest = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('tenant_id', 'test-tenant')
+      .limit(1)
+    
+    console.log('RLS policies working:', tenantTest.error === null)
+    
+    // Test write permissions
+    const writeTest = await supabase
+      .from('bookings')
+      .insert({
+        tenant_id: 'test-tenant',
+        customer_email: 'test@example.com',
+        service_slug: 'test-service',
+        status: 'test'
+      })
+      .select()
+    
+    console.log('Write permissions OK:', writeTest.error === null)
+    
+    // Cleanup test data
+    if (writeTest.data?.[0]?.id) {
+      await supabase.from('bookings').delete().eq('id', writeTest.data[0].id)
+    }
+    
+    return { healthy: true, message: 'All database checks passed' }
+    
+  } catch (error) {
+    console.error('Database health check failed:', error.message)
+    return { healthy: false, message: error.message }
+  }
+}
+```
+
+#### **Performance Monitor**
+```typescript
+// Monitor booking performance
+export function useBookingPerformance() {
+  const startTime = useRef(Date.now())
+  const [metrics, setMetrics] = useState({
+    renderTime: 0,
+    validationTime: 0,
+    submissionTime: 0
+  })
+  
+  const measureRender = () => {
+    const renderTime = Date.now() - startTime.current
+    setMetrics(prev => ({ ...prev, renderTime }))
+    console.log(`Booking widget rendered in ${renderTime}ms`)
+  }
+  
+  const measureValidation = (validationTime: number) => {
+    setMetrics(prev => ({ ...prev, validationTime }))
+    console.log(`Form validation completed in ${validationTime}ms`)
+  }
+  
+  const measureSubmission = (submissionTime: number) => {
+    setMetrics(prev => ({ ...prev, submissionTime }))
+    console.log(`Form submission completed in ${submissionTime}ms`)
+  }
+  
+  return { metrics, measureRender, measureValidation, measureSubmission }
+}
+```
+
+### **📞 Getting Help**
+
+**Self-Service Debugging**:
+1. Check browser console for React errors
+2. Verify booking widget imports and exports
+3. Test form validation with sample data
+4. Check database connection and RLS policies
+5. Verify analytics event tracking
+
+**Community Support**:
+- **GitHub Issues**: [Agency Platform Issues](https://github.com/agency/platform/issues)
+- **Discord Community**: [Join our Discord](https://discord.gg/agency)
+- **Documentation**: [Complete booking guide](../../docs/booking/)
+- **Email Support**: booking@agency.com
+
+**Common Debug Commands**:
+```bash
+# Test booking widget
+pnpm run booking:test-widget
+
+# Validate booking schema
+pnpm run booking:validate-schema
+
+# Check database connection
+pnpm run booking:test-db
+
+# Test analytics tracking
+pnpm run booking:test-analytics
+
+# Run booking health check
+pnpm run booking:health-check
+```
 
 ## 📄 License
 

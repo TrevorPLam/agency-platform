@@ -104,7 +104,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 3. **Component Tokens** - Per-component specific tokens
 4. **Client Tokens** - Per-client brand customizations
 
-> 📖 **See:** [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [docs/](docs/) for complete details.
+> 📖 **See:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [docs/](docs/) for complete details.
 
 ## 🛠️ Technology Stack
 
@@ -140,7 +140,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 - ✅ Comprehensive audit trails
 - ✅ HIPAA-ready architecture for healthcare clients
 
-> 📖 **See:** [docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md)
+> 📖 **See:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md)
 
 ## 🔒 Security
 
@@ -163,7 +163,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 - pgTAP database isolation tests
 - GitHub security vulnerability scanning
 
-> 📖 **See:** [SECURITY.md](SECURITY.md) and [docs/security/SUPPLY_CHAIN_SECURITY.md](docs/security/SUPPLY_CHAIN_SECURITY.md)
+> 📖 **See:** [SECURITY.md](SECURITY.md) and [docs/SUPPLY_CHAIN_SECURITY.md](docs/SUPPLY_CHAIN_SECURITY.md)
 
 ## 📚 Documentation
 
@@ -172,19 +172,21 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 - **[docs/README.md](docs/README.md)** — Complete platform documentation and guides
 
 ### 🏗️ Architecture & Design
-- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Monorepo structure, isolation layers, and scaling phases
-- **[docs/architecture/ATOMIC_DESIGN.md](docs/architecture/ATOMIC_DESIGN.md)** — Component hierarchy and design system
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Monorepo structure, isolation layers, and scaling phases
+- **[docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md)** — Frontend architecture patterns and component hierarchy
 
 ### 🔒 Security & Compliance
 - **[SECURITY.md](SECURITY.md)** — Security model, threat vectors, and compliance frameworks
-- **[docs/security/](docs/security/)** — Multi-tenant security, supply chain, incident response
+- **[docs/security/MULTI_TENANT_BEST_PRACTICES_RESEARCH.md](docs/security/MULTI_TENANT_BEST_PRACTICES_RESEARCH.md)** — Multi-tenant security research and implementation
+- **[docs/security/](docs/security/)** — Supply chain security and incident response
 
 ### ⚙️ Operations & Tooling
 - **[TOOLCHAIN.md](TOOLCHAIN.md)** — Tool versions and setup requirements
-- **[docs/operations/](docs/operations/)** — Deployment, monitoring, and operational procedures
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Deployment strategies and operational procedures
+- **[docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md)** — Monitoring, backups, and operational workflows
 
 ### 📋 Governance
-- **[docs/governance/](docs/governance/)** — Design system governance and contribution workflows
+- **[docs/GOVERNANCE.md](docs/GOVERNANCE.md)** — Design system governance and strategic direction
 - **[AGENTS.md](AGENTS.md)** — AI agent research, implementation guide, and governance framework
 
 ### 🤖 AI Agent Governance

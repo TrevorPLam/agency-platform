@@ -432,31 +432,248 @@ Configurable alerts for:
 - Security incidents
 - Performance degradation
 
-## Troubleshooting
+## 🆘 **Troubleshooting & Support**
 
-### Common Issues
+### **🔧 Common Issues & Solutions**
 
-1. **TypeScript Configuration Errors**
-   - Ensure `@agency/typescript-config` is installed
-   - Check workspace dependencies in `pnpm-workspace.yaml`
+#### **1. Artifact Registration Failures**
 
-2. **Database Connection Issues**
-   - Verify Supabase credentials
-   - Check database migration status
-   - Ensure RLS policies are correctly configured
+**Symptoms**: Artifact upload fails, integrity check errors
 
-3. **Permission Errors**
-   - Verify user has appropriate tenant access
-   - Check service role key permissions
-   - Review RLS policy definitions
-
-### Debug Mode
-
-Enable debug logging:
+**Solutions**:
+- ✅ Verify file integrity: `sha256sum your-file.tar.gz`
+- ✅ Check storage configuration and credentials
+- ✅ Ensure proper file permissions and size limits
+- ✅ Validate metadata schema compliance
 
 ```typescript
-// Set environment variable
-DEBUG=artifacts:* pnpm run dev
+// Debug artifact registration
+const debugRegistration = async (artifactData) => {
+  try {
+    console.log('Registering artifact:', artifactData.name)
+    const result = await artifactRegistry.registerArtifact(artifactData)
+    console.log('Registration successful:', result.id)
+  } catch (error) {
+    console.error('Registration failed:', error.message)
+    console.log('Debug info:', {
+      fileSize: artifactData.content.length,
+      checksum: artifactData.integrity,
+      metadata: artifactData.metadata
+    })
+  }
+}
+```
+
+#### **2. Promotion Workflow Issues**
+
+**Symptoms**: Promotion requests stuck, approval failures
+
+**Solutions**:
+- ✅ Check user permissions for promotion approval
+- ✅ Verify promotion policies and requirements
+- ✅ Ensure artifact passes all validation checks
+- ✅ Review GitHub Actions workflow status
+
+```typescript
+// Debug promotion workflow
+const debugPromotion = async (promotionId) => {
+  const promotion = await artifactPromotion.getPromotionStep(promotionId)
+  console.log('Promotion status:', promotion.status)
+  console.log('Required approvals:', promotion.requiredApprovals)
+  console.log('Current approvals:', promotion.approvals.length)
+  
+  // Check validation results
+  const checks = await artifactPromotion.getPromotionChecks(promotionId)
+  console.log('Validation checks:', checks)
+}
+```
+
+#### **3. Retention Policy Problems**
+
+**Symptoms**: Cleanup not running, artifacts not being archived
+
+**Solutions**:
+- ✅ Verify retention policy configuration
+- ✅ Check scheduled job execution status
+- ✅ Ensure proper tenant scoping for cleanup
+- ✅ Review storage quota and limits
+
+```typescript
+// Debug retention policies
+const debugRetention = async () => {
+  const policies = await retentionManager.listRetentionPolicies()
+  console.log('Active policies:', policies)
+  
+  const stats = await retentionManager.getRetentionStatistics()
+  console.log('Retention stats:', stats)
+  
+  // Dry run to see what would be cleaned up
+  const dryRun = await retentionManager.applyRetentionPolicies({ dryRun: true })
+  console.log('Dry run results:', dryRun)
+}
+```
+
+#### **4. Database Connection Issues**
+
+**Symptoms**: Connection timeouts, RLS policy errors
+
+**Solutions**:
+- ✅ Verify Supabase credentials and connection pool
+- ✅ Check RLS policy definitions and tenant context
+- ✅ Ensure database migrations are applied
+- ✅ Monitor connection pool utilization
+
+```typescript
+// Debug database connection
+const debugDatabase = async () => {
+  try {
+    // Test basic connection
+    const result = await supabase.from('artifacts').select('count').single()
+    console.log('Database connection OK:', result)
+    
+    // Test RLS policy
+    const tenantArtifacts = await supabase
+      .from('artifacts')
+      .select('*')
+      .eq('tenant_id', getCurrentTenantId())
+    console.log('RLS policy test:', tenantArtifacts.data?.length || 0, 'artifacts')
+  } catch (error) {
+    console.error('Database error:', error.message)
+  }
+}
+```
+
+#### **5. Performance Issues**
+
+**Symptoms**: Slow uploads, high memory usage, timeout errors
+
+**Solutions**:
+- ✅ Implement chunked uploads for large files
+- ✅ Optimize database queries with proper indexing
+- ✅ Monitor memory usage and implement streaming
+- ✅ Use CDN for artifact distribution
+
+```typescript
+// Debug performance
+const debugPerformance = async (artifactFile) => {
+  const startTime = Date.now()
+  
+  // Monitor upload progress
+  const uploadProgress = (progress) => {
+    console.log(`Upload progress: ${progress.percent}%`)
+  }
+  
+  try {
+    await artifactRegistry.registerArtifact(artifactFile, { onProgress: uploadProgress })
+    const duration = Date.now() - startTime
+    console.log(`Upload completed in ${duration}ms`)
+  } catch (error) {
+    console.error('Performance error:', error.message)
+  }
+}
+```
+
+### **🔍 Advanced Debugging Tools**
+
+#### **Artifact Integrity Verification**
+```typescript
+// Comprehensive integrity check
+export function verifyArtifactIntegrity(artifact) {
+  const checks = {
+    size: artifact.content.length === artifact.metadata.size,
+    checksum: artifact.integrity === calculateSHA256(artifact.content),
+    format: isValidArtifactFormat(artifact.type),
+    metadata: validateMetadataSchema(artifact.metadata)
+  }
+  
+  const allValid = Object.values(checks).every(Boolean)
+  console.log('Integrity check results:', checks)
+  return allValid
+}
+```
+
+#### **Policy Evaluation Debugger**
+```typescript
+// Debug policy evaluation
+export function debugPolicyEvaluation(artifact, policies) {
+  const results = policies.map(policy => {
+    const evaluation = policy.evaluate(artifact)
+    return {
+      policyId: policy.id,
+      policyType: policy.type,
+      result: evaluation.passed ? 'PASS' : 'FAIL',
+      reasons: evaluation.reasons || [],
+      actions: evaluation.actions || []
+    }
+  })
+  
+  console.table(results)
+  return results
+}
+```
+
+#### **Promotion Workflow Monitor**
+```typescript
+// Monitor promotion workflow health
+export async function monitorPromotionHealth() {
+  const metrics = {
+    pendingPromotions: await artifactPromotion.listPendingPromotions(),
+    averageApprovalTime: await calculateAverageApprovalTime(),
+    failureRate: await calculatePromotionFailureRate(),
+    bottlenecks: await identifyWorkflowBottlenecks()
+  }
+  
+  console.log('Promotion Health Metrics:', metrics)
+  
+  // Alert on issues
+  if (metrics.failureRate > 0.1) {
+    console.warn('High promotion failure rate detected')
+  }
+  
+  if (metrics.averageApprovalTime > 24 * 60 * 60 * 1000) {
+    console.warn('Slow approval times detected')
+  }
+  
+  return metrics
+}
+```
+
+### **📞 Getting Help**
+
+**Self-Service Debugging**:
+1. Check artifact integrity and metadata
+2. Verify database connections and RLS policies
+3. Review promotion workflow status
+4. Monitor system performance metrics
+5. Validate configuration and credentials
+
+**Community Support**:
+- **GitHub Issues**: [Agency Platform Issues](https://github.com/agency/platform/issues)
+- **Discord Community**: [Join our Discord](https://discord.gg/agency)
+- **Documentation**: [Complete artifact management guide](../../docs/artifacts/)
+- **Email Support**: artifacts@agency.com
+
+**Emergency Support**:
+- **Production Issues**: artifacts-emergency@agency.com (response within 1 hour)
+- **Security Incidents**: security@agency.com (immediate response)
+- **Performance Issues**: performance@agency.com (response within 4 hours)
+
+**Common Debug Commands**:
+```bash
+# Check artifact registry health
+pnpm run artifacts:health-check
+
+# Validate all artifacts
+pnpm run artifacts:validate-all
+
+# Test promotion workflow
+pnpm run artifacts:test-promotion
+
+# Cleanup debug artifacts
+pnpm run artifacts:cleanup-debug
+
+# Monitor system performance
+pnpm run artifacts:monitor
 ```
 
 ## Contributing

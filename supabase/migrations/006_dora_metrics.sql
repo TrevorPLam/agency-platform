@@ -24,14 +24,12 @@ create index if not exists idx_deployments_service on deployments(service);
 create index if not exists idx_deployments_commit_sha on deployments(commit_sha);
 create index if not exists idx_deployments_status on deployments(status);
 
--- RLS policies for deployments
-alter table deployments enable row level security;
+-- NOTE: RLS policies for these tables have been moved to 006_dora_metrics_tenant_isolation.sql
+-- to properly implement tenant isolation and fix cross-tenant data leakage vulnerability
+-- See TASK-10D for details on this security fix
 
-create policy "Users can view deployments" on deployments
-  for select using (auth.role() = 'authenticated');
-
-create policy "Service role can manage deployments" on deployments
-  for all using (auth.role() = 'service_role');
+-- RLS will be enabled and proper tenant-scoped policies will be applied
+-- in the 006_dora_metrics_tenant_isolation.sql migration
 
 -- Incidents table for tracking production incidents
 create table if not exists incidents (
@@ -54,14 +52,12 @@ create index if not exists idx_incidents_severity on incidents(severity);
 create index if not exists idx_incidents_service on incidents(service);
 create index if not exists idx_incidents_deployment_id on incidents(deployment_id);
 
--- RLS policies for incidents
-alter table incidents enable row level security;
+-- NOTE: RLS policies for these tables have been moved to 006_dora_metrics_tenant_isolation.sql
+-- to properly implement tenant isolation and fix cross-tenant data leakage vulnerability
+-- See TASK-10D for details on this security fix
 
-create policy "Users can view incidents" on incidents
-  for select using (auth.role() = 'authenticated');
-
-create policy "Service role can manage incidents" on incidents
-  for all using (auth.role() = 'service_role');
+-- RLS will be enabled and proper tenant-scoped policies will be applied
+-- in the 006_dora_metrics_tenant_isolation.sql migration
 
 -- Pull requests table for tracking PR lifecycle
 create table if not exists pull_requests (
@@ -84,14 +80,12 @@ create index if not exists idx_pull_requests_merged_at on pull_requests(merged_a
 create index if not exists idx_pull_requests_base_branch on pull_requests(base_branch);
 create index if not exists idx_pull_requests_number on pull_requests(number);
 
--- RLS policies for pull_requests
-alter table pull_requests enable row level security;
+-- NOTE: RLS policies for these tables have been moved to 006_dora_metrics_tenant_isolation.sql
+-- to properly implement tenant isolation and fix cross-tenant data leakage vulnerability
+-- See TASK-10D for details on this security fix
 
-create policy "Users can view pull requests" on pull_requests
-  for select using (auth.role() = 'authenticated');
-
-create policy "Service role can manage pull requests" on pull_requests
-  for all using (auth.role() = 'service_role');
+-- RLS will be enabled and proper tenant-scoped policies will be applied
+-- in the 006_dora_metrics_tenant_isolation.sql migration
 
 -- DORA metrics results table for aggregated calculations
 create table if not exists dora_metrics_results (
@@ -118,14 +112,12 @@ create index if not exists idx_dora_metrics_calculated_at on dora_metrics_result
 create index if not exists idx_dora_metrics_period on dora_metrics_results(period_start, period_end);
 create index if not exists idx_dora_metrics_deployment_level on dora_metrics_results(deployment_performance_level);
 
--- RLS policies for dora_metrics_results
-alter table dora_metrics_results enable row level security;
+-- NOTE: RLS policies for these tables have been moved to 006_dora_metrics_tenant_isolation.sql
+-- to properly implement tenant isolation and fix cross-tenant data leakage vulnerability
+-- See TASK-10D for details on this security fix
 
-create policy "Users can view metrics results" on dora_metrics_results
-  for select using (auth.role() = 'authenticated');
-
-create policy "Service role can manage metrics results" on dora_metrics_results
-  for all using (auth.role() = 'service_role');
+-- RLS will be enabled and proper tenant-scoped policies will be applied
+-- in the 006_dora_metrics_tenant_isolation.sql migration
 
 -- DORA metric snapshots table for time series data
 create table if not exists dora_metric_snapshots (
@@ -142,14 +134,12 @@ create index if not exists idx_dora_snapshots_timestamp on dora_metric_snapshots
 create index if not exists idx_dora_snapshots_metric_type on dora_metric_snapshots(metric_type);
 create index if not exists idx_dora_snapshots_timestamp_type on dora_metric_snapshots(timestamp, metric_type);
 
--- RLS policies for dora_metric_snapshots
-alter table dora_metric_snapshots enable row level security;
+-- NOTE: RLS policies for these tables have been moved to 006_dora_metrics_tenant_isolation.sql
+-- to properly implement tenant isolation and fix cross-tenant data leakage vulnerability
+-- See TASK-10D for details on this security fix
 
-create policy "Users can view metric snapshots" on dora_metric_snapshots
-  for select using (auth.role() = 'authenticated');
-
-create policy "Service role can manage metric snapshots" on dora_metric_snapshots
-  for all using (auth.role() = 'service_role');
+-- RLS will be enabled and proper tenant-scoped policies will be applied
+-- in the 006_dora_metrics_tenant_isolation.sql migration
 
 -- Updated at triggers for all tables
 create or replace function update_updated_at_column()

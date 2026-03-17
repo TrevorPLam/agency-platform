@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { createSupabaseServerClient } from '@agency/database'
+import { validateRedirectUrl } from '@agency/security'
 
 export interface LoginResult {
   error?: string
@@ -14,7 +15,10 @@ export async function loginAction(
 ): Promise<LoginResult> {
   const email = (formData.get('email') as string)?.trim()
   const password = formData.get('password') as string
-  const redirectTo = (formData.get('redirect') as string) || '/'
+  const rawRedirectTo = (formData.get('redirect') as string) || '/'
+  
+  // Validate redirect URL to prevent open-redirect attacks
+  const redirectTo = validateRedirectUrl(rawRedirectTo, '/')
 
   if (!email || !password) {
     return { error: 'Email and password are required' }

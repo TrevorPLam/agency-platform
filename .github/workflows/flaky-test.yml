@@ -52,7 +52,7 @@ jobs:
           echo " Running tests with flaky test detection..."
           
           # Run tests and capture output
-          pnpm turbo run test --affected 2>&1 | tee test-results.log || {
+          pnpm turbo run test:ci --affected 2>&1 | tee test-results.log || {
             echo " Tests failed, analyzing for flaky behavior..."
           }
 

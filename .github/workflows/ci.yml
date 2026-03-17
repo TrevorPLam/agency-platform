@@ -94,7 +94,18 @@ jobs:
         run: pnpm turbo run type-check --affected
 
       - name: Test affected packages
-        run: pnpm turbo run test --affected
+        run: pnpm turbo run test:ci --affected
+
+      - name: Coverage gate (affected packages)
+        run: pnpm turbo run test:coverage --affected
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: "**/coverage/**"
+          retention-days: 14
 
   rls-tests:
     name: RLS Isolation Tests (pgTAP)

@@ -1,23 +1,8 @@
-/**
- * Test file to verify cost API contract alignment
- * This file can be used to validate that the dashboard and API routes work together correctly.
- */
+import { describe, expect, it } from 'vitest'
+import type { BudgetAlert, CostMetrics, CostSummary, OptimizationRecommendation } from '../types/cost-api'
+import { AuthenticationError, AuthorizationError, HTTP_STATUS, NetworkError } from '../types/cost-api'
 
-import type {
-  CostSummary,
-  CostMetrics,
-  BudgetAlert,
-  OptimizationRecommendation,
-  HTTP_STATUS,
-} from '../types/cost-api'
-import {
-  AuthenticationError,
-  AuthorizationError,
-  NetworkError,
-} from '../types/cost-api'
-
-// Test data validation functions
-export function validateCostSummary(data: unknown): data is CostSummary {
+function validateCostSummary(data: unknown): data is CostSummary {
   if (typeof data !== 'object' || data === null) return false
   
   const summary = data as Record<string, unknown>
@@ -32,7 +17,7 @@ export function validateCostSummary(data: unknown): data is CostSummary {
   )
 }
 
-export function validateCostMetrics(data: unknown): data is CostMetrics[] {
+function validateCostMetrics(data: unknown): data is CostMetrics[] {
   if (!Array.isArray(data)) return false
   
   return data.every(item => {
@@ -53,7 +38,7 @@ export function validateCostMetrics(data: unknown): data is CostMetrics[] {
   })
 }
 
-export function validateBudgetAlert(data: unknown): data is BudgetAlert[] {
+function validateBudgetAlert(data: unknown): data is BudgetAlert[] {
   if (!Array.isArray(data)) return false
   
   return data.every(item => {
@@ -78,7 +63,7 @@ export function validateBudgetAlert(data: unknown): data is BudgetAlert[] {
   })
 }
 
-export function validateOptimizationRecommendation(data: unknown): data is OptimizationRecommendation[] {
+function validateOptimizationRecommendation(data: unknown): data is OptimizationRecommendation[] {
   if (!Array.isArray(data)) return false
   
   return data.every(item => {
@@ -101,21 +86,19 @@ export function validateOptimizationRecommendation(data: unknown): data is Optim
   })
 }
 
-// Error handling test utilities
-export function createTestAuthenticationError(): AuthenticationError {
+function createTestAuthenticationError(): AuthenticationError {
   return new AuthenticationError('Test authentication error')
 }
 
-export function createTestAuthorizationError(): AuthorizationError {
+function createTestAuthorizationError(): AuthorizationError {
   return new AuthorizationError('Test authorization error')
 }
 
-export function createTestNetworkError(): NetworkError {
+function createTestNetworkError(): NetworkError {
   return new NetworkError('Test network error')
 }
 
-// Mock API response generators for testing
-export function createMockCostSummary(): CostSummary {
+function createMockCostSummary(): CostSummary {
   return {
     totalCost: 150.75,
     storageCost: 45.20,
@@ -127,7 +110,7 @@ export function createMockCostSummary(): CostSummary {
   }
 }
 
-export function createMockCostMetrics(): CostMetrics[] {
+function createMockCostMetrics(): CostMetrics[] {
   return [
     {
       id: 'metric-1',
@@ -143,7 +126,7 @@ export function createMockCostMetrics(): CostMetrics[] {
   ]
 }
 
-export function createMockBudgetAlerts(): BudgetAlert[] {
+function createMockBudgetAlerts(): BudgetAlert[] {
   return [
     {
       id: 'alert-1',
@@ -163,7 +146,7 @@ export function createMockBudgetAlerts(): BudgetAlert[] {
   ]
 }
 
-export function createMockOptimizationRecommendations(): OptimizationRecommendation[] {
+function createMockOptimizationRecommendations(): OptimizationRecommendation[] {
   return [
     {
       id: 'rec-1',
@@ -181,53 +164,24 @@ export function createMockOptimizationRecommendations(): OptimizationRecommendat
   ]
 }
 
-// Test runner function
-export function runContractTests(): boolean {
-  try {
-    // Test validation functions
-    const validSummary = createMockCostSummary()
-    const validMetrics = createMockCostMetrics()
-    const validAlerts = createMockBudgetAlerts()
-    const validRecommendations = createMockOptimizationRecommendations()
+describe('cost API contract', () => {
+  it('validates representative payloads', () => {
+    expect(validateCostSummary(createMockCostSummary())).toBe(true)
+    expect(validateCostMetrics(createMockCostMetrics())).toBe(true)
+    expect(validateBudgetAlert(createMockBudgetAlerts())).toBe(true)
+    expect(validateOptimizationRecommendation(createMockOptimizationRecommendations())).toBe(true)
+  })
 
-    const summaryValid = validateCostSummary(validSummary)
-    const metricsValid = validateCostMetrics(validMetrics)
-    const alertsValid = validateBudgetAlert(validAlerts)
-    const recommendationsValid = validateOptimizationRecommendation(validRecommendations)
+  it('creates typed API errors', () => {
+    expect(createTestAuthenticationError()).toBeInstanceOf(AuthenticationError)
+    expect(createTestAuthorizationError()).toBeInstanceOf(AuthorizationError)
+    expect(createTestNetworkError()).toBeInstanceOf(NetworkError)
+  })
 
-    // Test error creation
-    const authnError = createTestAuthenticationError()
-    const authzError = createTestAuthorizationError()
-    const networkError = createTestNetworkError()
-
-    const errorsValid = 
-      authnError instanceof AuthenticationError &&
-      authzError instanceof AuthorizationError &&
-      networkError instanceof NetworkError
-
-    // Test HTTP status constants
-    const statusValid = 
-      HTTP_STATUS.OK === 200 &&
-      HTTP_STATUS.UNAUTHORIZED === 401 &&
-      HTTP_STATUS.FORBIDDEN === 403 &&
-      HTTP_STATUS.INTERNAL_SERVER_ERROR === 500
-
-    return summaryValid && metricsValid && alertsValid && recommendationsValid && errorsValid && statusValid
-  } catch (error) {
-    console.error('Contract test failed:', error)
-    return false
-  }
-}
-
-// Export test utilities for external testing
-export const ContractTests = {
-  validateCostSummary,
-  validateCostMetrics,
-  validateBudgetAlert,
-  validateOptimizationRecommendation,
-  createMockCostSummary,
-  createMockCostMetrics,
-  createMockBudgetAlerts,
-  createMockOptimizationRecommendations,
-  runContractTests,
-}
+  it('maintains expected HTTP status constants', () => {
+    expect(HTTP_STATUS.OK).toBe(200)
+    expect(HTTP_STATUS.UNAUTHORIZED).toBe(401)
+    expect(HTTP_STATUS.FORBIDDEN).toBe(403)
+    expect(HTTP_STATUS.INTERNAL_SERVER_ERROR).toBe(500)
+  })
+})

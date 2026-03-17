@@ -37,7 +37,9 @@
     "dev": "tsup --watch",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
-    "test": "vitest",
+    "test": "pnpm exec vitest run",
+    "test:ci": "pnpm exec vitest run --reporter=dot",
+    "test:coverage": "pnpm exec vitest run --coverage",
     "register-artifact": "tsx scripts/register-artifact.ts",
     "promote-artifact": "tsx scripts/promote-artifact.ts",
     "cleanup-artifacts": "tsx scripts/cleanup-artifacts.ts"

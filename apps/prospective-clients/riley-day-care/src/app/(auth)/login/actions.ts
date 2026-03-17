@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { getAdminClient } from '@agency/database/admin'
 import { createSupabaseServerClient } from '@agency/database'
+import { validateRedirectUrl } from '@agency/security'
 
 const INVALID_CREDENTIALS = 'Invalid email or password.'
 
@@ -22,7 +23,10 @@ export async function loginAction(
 ): Promise<LoginResult> {
   const realEmail = (formData.get('email') as string)?.trim()
   const password = formData.get('password') as string
-  const redirectTo = (formData.get('redirect') as string) || '/dashboard'
+  const rawRedirectTo = (formData.get('redirect') as string) || '/dashboard'
+  
+  // Validate redirect URL to prevent open-redirect attacks
+  const redirectTo = validateRedirectUrl(rawRedirectTo, '/dashboard')
 
   if (!realEmail || !password) {
     return { error: INVALID_CREDENTIALS }

@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "pnpm exec vitest run",
+    "test:e2e": "playwright test",
+    "test:ci": "pnpm exec vitest run --reporter=dot && playwright test --reporter=line",
+    "test:coverage": "pnpm exec vitest run --coverage"
   },
   "dependencies": {
     "@agency/ui": "workspace:*",
@@ -24,8 +28,10 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@playwright/test": "catalog:",
     "typescript": "catalog:",
     "eslint": "catalog:",
+    "vitest": "catalog:",
     "@typescript-eslint/eslint-plugin": "catalog:",
     "@typescript-eslint/parser": "catalog:",
     "@tailwindcss/postcss": "catalog:",

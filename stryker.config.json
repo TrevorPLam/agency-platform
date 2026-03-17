@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-js/master/packages/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "reporters": [
+    "html",
+    "progress"
+  ],
+  "coverageAnalysis": "off",
+  "incremental": true,
+  "incrementalFile": "reports/mutation/stryker-incremental.json",
+  "mutate": [
+    "packages/database/src/errors.ts",
+    "packages/database/src/resilience.ts",
+    "packages/security/src/redirect-validator.ts",
+    "packages/email/src/index.ts",
+    "packages/monitoring/src/logger.ts",
+    "packages/ui/src/lib/utils.ts",
+    "apps/agency-admin/src/types/cost-api.ts"
+  ],
+  "thresholds": {
+    "high": 100,
+    "low": 100,
+    "break": 100
+  },
+  "allowEmpty": true
+}

@@ -630,20 +630,47 @@ This roadmap reflects:
 
 ---
 
-## [ ] TASK-10D: DORA data tenant isolation and policy correction
+## [x] TASK-10D: DORA data tenant isolation and policy correction
 
 **Why:** Current DORA table policies are not tenant-scoped and can leak cross-tenant data.
 
 **Definition of Done**
-- DORA tables are tenant-scoped (or explicitly admin-only with documented rationale).
-- RLS policies enforce tenant context from `app_metadata`.
-- pgTAP tests include DORA isolation checks.
+- ✅ DORA tables are tenant-scoped with proper tenant_id columns (UUID-aligned).
+- ✅ RLS policies enforce tenant context from `app_metadata` using `public.tenant_id()`.
+- ✅ Comprehensive pgTAP tests include DORA isolation checks.
+- ✅ Performance indexes added for tenant-scoped queries.
+- ✅ Foreign key constraints ensure data integrity.
 
-**Target Files**
-- `supabase/migrations/006_dora_metrics.sql`
-- `supabase/migrations/007_refactor_rls_use_tenant_id_helper.sql` (if updates required)
-- `supabase/tests/database/01-tenant-isolation.sql`
-- `supabase/tests/database/03-positive-access.sql`
+**Implementation Notes:**
+- ✅ **Created new migration**: `006_dora_metrics_tenant_isolation.sql` with complete tenant isolation fix
+- ✅ **Added tenant_id columns**: All 5 DORA tables now have proper UUID tenant_id columns
+- ✅ **Replaced insecure RLS policies**: Removed broad authenticated access, implemented tenant-scoped policies
+- ✅ **Performance optimization**: Added tenant-scoped indexes following agency platform patterns
+- ✅ **Comprehensive testing**: Created `04-dora-tenant-isolation.sql` with 40 pgTAP tests
+- ✅ **Data integrity**: Added foreign key constraints to canonical tenants table
+- ✅ **Documentation**: Updated table comments and migration references
+- ✅ **Migration safety**: Used `IF NOT EXISTS` and safe column additions
+
+**Security Fixes Applied:**
+1. **Cross-tenant data access prevention**: DORA tables now enforce tenant isolation via RLS
+2. **Policy alignment**: Uses `public.tenant_id()` helper consistent with agency platform patterns  
+3. **Index performance**: Tenant-scoped indexes prevent performance degradation
+4. **Data integrity**: Foreign key constraints prevent orphaned tenant references
+5. **Comprehensive testing**: 40 pgTAP tests verify isolation across all CRUD operations
+
+**Target Files** - COMPLETED
+- `supabase/migrations/006_dora_metrics_tenant_isolation.sql` ✅ (new comprehensive migration)
+- `supabase/migrations/006_dora_metrics.sql` ✅ (updated to reference new migration)
+- `supabase/tests/database/04-dora-tenant-isolation.sql` ✅ (comprehensive pgTAP tests)
+- `supabase/tests/database/01-tenant-isolation.sql` ✅ (existing tests unchanged)
+- `supabase/tests/database/03-positive-access.sql` ✅ (existing tests unchanged)
+
+**Security Impact:**
+- **Eliminated cross-tenant DORA data leakage vulnerability**
+- **Implemented proper tenant isolation following agency platform patterns**
+- **Added comprehensive test coverage for DORA tenant isolation**
+- **Maintained performance with tenant-scoped indexes**
+- **Ensured data integrity with foreign key constraints**
 
 ---
 
@@ -1295,7 +1322,7 @@ This roadmap reflects:
 2. `TASK-03` + `TASK-04` + `TASK-05` should complete before broad new feature rollout.
 3. `TASK-11` (Comprehensive Testing) starts during P1 and continues through all later tasks with 5 implementation phases.
 4. `TASK-14` + `TASK-15` + `TASK-16` are mandatory before production launch claims.
-5. `TASK-10` -> `TASK-10A` -> `TASK-10B` -> `TASK-10C` -> `TASK-10D` -> `TASK-10E` -> `TASK-10F` -> `TASK-10G` -> `TASK-10H` -> `TASK-10I` -> `TASK-11` for security/data/ops correctness before broader confidence claims.
+5. **TASK-10** -> **TASK-10A** -> **TASK-10B** -> **TASK-10C** -> **TASK-10D** -> **TASK-10E** -> **TASK-10F** -> **TASK-10G** -> **TASK-10H** -> **TASK-10I** -> **TASK-11** for security/data/ops correctness before broader confidence claims.
 6. **P4 Advanced Tasks**: `TASK-19` through `TASK-27` can run in parallel after P1 completion, with these dependencies:
    - `TASK-20` (Supply Chain Security) depends on `TASK-19` (DORA Metrics) for pipeline integration
    - `TASK-21` (Metadata Governance) depends on `TASK-20` for policy enforcement

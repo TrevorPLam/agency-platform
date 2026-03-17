@@ -25,6 +25,15 @@ supabase test db --test-path tests/test_profiles.sql
 
 # Full test suite (only when needed)
 pnpm test
+
+# CI test profile (affected workspaces)
+pnpm test:ci
+
+# Coverage gate (strict thresholds)
+pnpm test:coverage
+
+# Mutation quality gate
+pnpm test:mutation
 ```
 
 ### Database Testing (pgTAP)
@@ -310,9 +319,10 @@ vi.mock('@agency/database', () => ({
 ### Coverage Requirements
 
 - **Database Tests**: 100% RLS policy coverage
-- **Unit Tests**: 80%+ code coverage for new code
+- **Unit Tests**: 100% line/function/branch/statements for included coverage scope
 - **Integration Tests**: All API endpoints covered
 - **E2E Tests**: Critical user paths covered
+- **Mutation Tests**: 100 mutation score target for mutation-scoped modules
 
 ## Progressive Documentation
 

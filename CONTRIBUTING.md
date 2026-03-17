@@ -59,6 +59,62 @@ pnpm tokens:build
 
 ---
 
+## Database Type Generation
+
+This project uses automatically generated TypeScript types from the database schema to ensure type safety across the codebase.
+
+### When to Regenerate Types
+
+You **must** regenerate database types after any of these changes:
+- Adding new tables or columns
+- Modifying existing column types or constraints
+- Adding new enums or views
+- Changing function signatures
+- Any migration that alters the database schema
+
+### Type Generation Commands
+
+```bash
+# Local development (requires Docker Desktop and supabase start)
+pnpm db:generate-types:local
+
+# Production (requires SUPABASE_ACCESS_TOKEN env var)
+pnpm db:generate-types --project-id=your-project-ref
+```
+
+### Type Generation Process
+
+1. **Ensure Supabase is running locally**: `supabase start` and `supabase db reset`
+2. **Generate types**: Run `pnpm db:generate-types:local` from the database package directory
+3. **Review changes**: Check the updated `packages/database/src/types.ts` file
+4. **Commit changes**: Include both migration files and updated types in the same commit
+
+### CI Type Drift Gate
+
+The CI pipeline includes a type drift check that:
+- Generates fresh types from the current database schema
+- Compares them with the committed `types.ts` file
+- Fails the build if types are out of sync
+- Provides clear error messages with diff output
+
+### Type Safety Benefits
+
+- **Compile-time validation**: Database queries are type-checked
+- **Autocomplete**: IDE provides accurate table and column suggestions
+- **Refactoring safety**: Column name changes break the build if not updated
+- **Documentation**: Types serve as living documentation of the schema
+
+### Troubleshooting
+
+If type generation fails:
+1. Verify Docker Desktop is running
+2. Ensure local Supabase is started: `supabase start`
+3. Reset database state: `supabase db reset`
+4. Check for syntax errors in recent migrations
+5. Verify migration files follow naming convention (XXX_description.sql)
+
+---
+
 ## Port assignments
 
 | Port  | Service                   |

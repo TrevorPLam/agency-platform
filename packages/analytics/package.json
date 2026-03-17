@@ -21,12 +21,16 @@
   "devDependencies": {
     "typescript": "catalog:",
     "tsup": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "pnpm exec vitest run",
+    "test:ci": "pnpm exec vitest run --reporter=dot",
+    "test:coverage": "pnpm exec vitest run --coverage"
   },
   "tsup": {
     "entry": {

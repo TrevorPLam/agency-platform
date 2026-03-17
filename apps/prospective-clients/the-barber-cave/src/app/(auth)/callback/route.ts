@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createSupabaseServerClient } from '@agency/database'
+import { validateRedirectUrl } from '@agency/security'
 
 /**
  * Auth callback: exchanges code for session (OAuth / email link).
@@ -9,7 +10,10 @@ import { createSupabaseServerClient } from '@agency/database'
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const rawNext = searchParams.get('next') ?? '/dashboard'
+  
+  // Validate redirect URL to prevent open-redirect attacks
+  const next = validateRedirectUrl(rawNext, '/dashboard')
 
   if (!code) {
     return NextResponse.redirect(new URL('/login', request.url))

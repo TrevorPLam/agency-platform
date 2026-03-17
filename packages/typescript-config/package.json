@@ -10,5 +10,10 @@
   "files": [
     "base.json",
     "nextjs.json"
-  ]
+  ],
+  "scripts": {
+    "test": "node -e \"process.exit(0)\"",
+    "test:ci": "node -e \"process.exit(0)\"",
+    "test:coverage": "node -e \"process.exit(0)\""
+  }
 }
