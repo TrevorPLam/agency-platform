@@ -1,40 +1,94 @@
 # @agency/artifacts
 
-Artifact lifecycle management and registry for Agency Platform. Provides centralized artifact tracking, automated promotion pipelines, policy-driven management, and retention policies.
+<div align="center">
 
-## Features
+**Enterprise-grade artifact lifecycle management and registry**
+
+[![npm version](https://img.shields.io/npm/v/@agency/artifacts)](https://www.npmjs.com/package/@agency/artifacts)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-ISC-blue)](LICENSE)
+
+</div>
+
+Provides centralized artifact tracking, automated promotion pipelines, policy-driven management, and retention policies for Agency Platform.
+
+## 🚀 Features
 
 ### 🏷️ Centralized Artifact Registry
-- Track all build artifacts with metadata and integrity verification
-- Support for multiple artifact types (packages, containers, binaries, documents)
-- Full audit trail and version history
-- Tenant isolation with Row-Level Security (RLS)
+- **Multi-Type Support** - Packages, containers, binaries, documents
+- **Metadata Tracking** - Complete artifact lifecycle information
+- **Integrity Verification** - Cryptographic SHA-256 verification
+- **Tenant Isolation** - Row-Level Security (RLS) for multi-tenant safety
+- **Audit Trail** - Complete version history and change tracking
 
 ### 🚀 Automated Promotion Pipelines
-- Environment-based promotion (development → staging → production)
-- Approval workflows with configurable requirements
-- Automated security, performance, and compliance checks
-- Integration with GitHub Actions
+- **Environment-Based Promotion** - development → staging → production
+- **Approval Workflows** - Configurable approval requirements
+- **Automated Checks** - Security, performance, and compliance validation
+- **GitHub Actions Integration** - Seamless CI/CD pipeline integration
+- **Rollback Support** - Quick rollback to previous stable versions
 
 ### 🏛️ Policy-Driven Management
-- Configurable policy rules for security, compliance, and retention
-- Automated policy evaluation and enforcement
-- Integration with existing governance framework
-- Real-time policy violation detection
+- **Configurable Policies** - Security, compliance, and retention rules
+- **Real-Time Evaluation** - Automated policy violation detection
+- **Governance Integration** - Existing framework compatibility
+- **Dynamic Policy Updates** - Runtime policy modification support
 
-### 🗄️ Retention Management
-- Automated cleanup based on configurable policies
-- Archive and delete old artifacts
-- Storage optimization and cost management
-- Exception handling for critical versions
+### 🗄️ Intelligent Retention Management
+- **Automated Cleanup** - Policy-based artifact removal
+- **Archive Management** - Smart archival with exception handling
+- **Storage Optimization** - Cost-effective storage utilization
+- **Compliance Support** - Regulatory retention requirements
 
-## Installation
+## 📦 Installation
 
 ```bash
 pnpm add @agency/artifacts
 ```
 
-## Quick Start
+## 🔧 Configuration
+
+### Environment Variables
+
+```bash
+# Supabase configuration
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Optional: GitHub token for integration
+GITHUB_TOKEN=your_github_token
+
+# Optional: Artifact storage configuration
+ARTIFACT_STORAGE_URL=your_storage_url
+ARTIFACT_STORAGE_KEY=your_storage_key
+```
+
+### Retention Policy Defaults
+
+```typescript
+const defaultRetentionPolicy = {
+  development: {
+    maxAge: 30,        // days
+    maxVersions: 3,    // versions per artifact
+    archiveOlderThan: 15, // days
+    deleteOlderThan: 30,  // days
+  },
+  staging: {
+    maxAge: 90,
+    maxVersions: 5,
+    archiveOlderThan: 45,
+    deleteOlderThan: 90,
+  },
+  production: {
+    maxAge: 365,
+    maxVersions: 10,
+    archiveOlderThan: 180,
+    deleteOlderThan: 365,
+  },
+};
+```
+
+## 🚀 Quick Start
 
 ### Register an Artifact
 
@@ -308,7 +362,7 @@ The system includes GitHub Actions workflows for:
       --approver "github-actions"
 ```
 
-## Security Considerations
+## 🔒 Security Considerations
 
 ### Row-Level Security (RLS)
 
@@ -331,30 +385,52 @@ const integrity = `sha256:${hash.digest('hex')}`;
 
 ### Access Controls
 
-- Service role keys are never exposed to client code
-- Tenant isolation enforced at database level
-- Approval workflows for production promotions
-- Policy-based access controls
+- **Service Role Keys** - Never exposed to client code
+- **Tenant Isolation** - Enforced at database level
+- **Approval Workflows** - Required for production promotions
+- **Policy-Based Access** - Role-based permissions
+- **Audit Logging** - Complete operation tracking
 
-## Monitoring and Observability
+### Compliance Frameworks
 
-### Metrics
+- **SOC 2** - Security and availability controls
+- **ISO 27001** - Information security management
+- **GDPR** - Data protection and privacy
+- **HIPAA** - Healthcare data protection
+
+## 📊 Monitoring and Observability
+
+### Metrics Dashboard
 
 The system provides comprehensive metrics:
 
-- Artifact counts by type, environment, and status
-- Promotion success/failure rates
-- Retention policy execution statistics
-- Storage usage and optimization metrics
+| Metric Category | Specific Metrics | Purpose |
+|----------------|------------------|---------|
+| **Artifact Metrics** | Counts by type, environment, status | Inventory tracking |
+| **Promotion Metrics** | Success/failure rates, approval times | Process efficiency |
+| **Retention Metrics** | Cleanup statistics, storage savings | Cost optimization |
+| **Security Metrics** | Access attempts, policy violations | Security monitoring |
+| **Performance Metrics** | Upload/download times, processing latency | System health |
 
-### Logging
+### Logging and Auditing
 
 All operations are logged with:
 
-- Timestamp and user context
-- Operation details and results
-- Error handling and troubleshooting
-- Audit trail for compliance
+- **Timestamp and User Context** - Who did what when
+- **Operation Details** - Complete request/response information
+- **Error Handling** - Comprehensive error tracking
+- **Audit Trail** - Compliance-ready logging
+- **Performance Data** - Latency and throughput metrics
+
+### Alerting
+
+Configurable alerts for:
+
+- Promotion failures
+- Policy violations
+- Storage threshold breaches
+- Security incidents
+- Performance degradation
 
 ## Troubleshooting
 
@@ -391,6 +467,16 @@ DEBUG=artifacts:* pnpm run dev
 4. Ensure RLS policies are updated for schema changes
 5. Test integration with existing CI/CD workflows
 
-## License
+## 📄 License
 
-ISC License - see LICENSE file for details.
+**ISC License** - see LICENSE file for details.
+
+---
+
+<div align="center">
+
+**Part of the @agency monorepo**
+
+[📖 Documentation](../../docs/) • [🔒 Security](../../SECURITY.md) • [🚀 CI/CD](../../.github/workflows/)
+
+</div>

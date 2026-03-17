@@ -2,23 +2,51 @@
 
 import { getAdminClient } from '@agency/database/admin'
 import { sendContactNotification } from '@agency/email'
+import { z } from 'zod'
+
+// Zod schema for contact form validation
+const contactFormSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  email: z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters'),
+  message: z.string().min(1, 'Message is required').max(2000, 'Message must be less than 2000 characters'),
+  // Honeypot field - should be empty for legitimate submissions
+  website: z.string().max(0, 'Invalid submission').optional(),
+})
 
 export type ContactFormState = {
   success: boolean
   message: string
+  errors?: Record<string, string>
 }
 
 export async function submitContactForm(
   _prev: ContactFormState,
   formData: FormData
 ): Promise<ContactFormState> {
-  const name = (formData.get('name') as string)?.trim()
-  const email = (formData.get('email') as string)?.trim()
-  const message = (formData.get('message') as string)?.trim()
-
-  if (!name || !email || !message) {
-    return { success: false, message: 'Please fill in all fields.' }
+  // Extract form data
+  const rawData = {
+    name: (formData.get('name') as string)?.trim() || '',
+    email: (formData.get('email') as string)?.trim() || '',
+    message: (formData.get('message') as string)?.trim() || '',
+    website: (formData.get('website') as string)?.trim() || '',
   }
+
+  // Validate with Zod
+  const validationResult = contactFormSchema.safeParse(rawData)
+  if (!validationResult.success) {
+    const errors = validationResult.error.flatten().fieldErrors
+    return {
+      success: false,
+      message: 'Please correct the errors below.',
+      errors: {
+        name: errors.name?.[0] || '',
+        email: errors.email?.[0] || '',
+        message: errors.message?.[0] || '',
+      }
+    }
+  }
+
+  const { name, email, message } = validationResult.data
 
   const admin = getAdminClient()
   const { error: insertError } = await admin.from('contact_submissions').insert({

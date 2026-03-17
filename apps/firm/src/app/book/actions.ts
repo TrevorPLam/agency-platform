@@ -1,20 +1,47 @@
 'use server'
 
 import { getAdminClient } from '@agency/database/admin'
+import { z } from 'zod'
+
+// Zod schema for booking form validation
+const bookingFormSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  email: z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters'),
+  message: z.string().max(1000, 'Message must be less than 1000 characters').optional(),
+  // Honeypot field - should be empty for legitimate submissions
+  phone: z.string().max(0, 'Invalid submission').optional(),
+})
 
 const AGENCY_TENANT_SLUG = 'agency'
 
 export async function submitBooking(
-  _prev: { success: boolean; message?: string },
+  _prev: { success: boolean; message?: string; errors?: Record<string, string> },
   formData: FormData
-): Promise<{ success: boolean; message?: string }> {
-  const name = (formData.get('name') as string)?.trim()
-  const email = (formData.get('email') as string)?.trim()
-  const message = (formData.get('message') as string)?.trim()
-
-  if (!email) {
-    return { success: false, message: 'Email is required.' }
+): Promise<{ success: boolean; message?: string; errors?: Record<string, string> }> {
+  // Extract form data
+  const rawData = {
+    name: (formData.get('name') as string)?.trim() || '',
+    email: (formData.get('email') as string)?.trim() || '',
+    message: (formData.get('message') as string)?.trim() || '',
+    phone: (formData.get('phone') as string)?.trim() || '',
   }
+
+  // Validate with Zod
+  const validationResult = bookingFormSchema.safeParse(rawData)
+  if (!validationResult.success) {
+    const errors = validationResult.error.flatten().fieldErrors
+    return {
+      success: false,
+      message: 'Please correct the errors below.',
+      errors: {
+        name: errors.name?.[0] || '',
+        email: errors.email?.[0] || '',
+        message: errors.message?.[0] || '',
+      }
+    }
+  }
+
+  const { name, email, message } = validationResult.data
 
   const admin = getAdminClient()
   const { data: tenant } = await admin.from('tenants').select('id').eq('slug', AGENCY_TENANT_SLUG).single()

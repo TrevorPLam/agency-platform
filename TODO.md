@@ -278,7 +278,7 @@ This roadmap reflects:
 
 ## P1 - Platform Reliability and Conversion Quality
 
-## [ ] TASK-06: Server-side form hardening (Zod + honeypot)
+## [x] TASK-06: Server-side form hardening (Zod + honeypot)
 
 **Why:** Current form handling is functional but not hardened.
 
@@ -287,14 +287,30 @@ This roadmap reflects:
 - Honeypot support added to public forms.
 - Error messages and success states remain user-friendly.
 
-**Target Files**
-- `apps/firm/src/app/contact/actions.ts`
-- `apps/firm/src/app/contact/contact-form.tsx`
-- `apps/firm/src/app/book/actions.ts`
-- `apps/prospective-clients/riley-day-care/src/app/contact/actions.ts`
-- `apps/prospective-clients/riley-day-care/src/app/contact/contact-form.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/contact/actions.ts`
-- `apps/prospective-clients/the-barber-cave/src/app/contact/contact-form.tsx`
+**Implementation Notes:**
+- ✅ **COMPLETED**: Added comprehensive Zod schema validation to all forms:
+  - Contact forms: name (1-100 chars), email (valid format, 255 chars), message (1-2000 chars)
+  - Booking form: name (optional, 1-100 chars), email (required, valid format), message (optional, 1000 chars)
+- ✅ **Honeypot Implementation**: Added hidden "website" and "phone" fields to detect bot submissions:
+  - Hidden with `display: none` and `aria-hidden="true"`
+  - Tab index -1 and autocomplete off to avoid user interaction
+  - Zod validation ensures honeypot field is empty (max 0 chars)
+- ✅ **Enhanced UX**: Added field-level error display with proper ARIA attributes:
+  - `aria-invalid` attributes for screen readers
+  - `role="alert"` for error messages, `role="status"` for form status
+  - Visual error states with red borders and text
+  - Button disabled state after successful submission
+- ✅ **Type Safety**: Updated ContactFormState type to include errors object
+- ✅ **Consistent Implementation**: Applied across all 4 forms (firm, booking, riley-day-care, the-barber-cave)
+
+**Target Files** - COMPLETED
+- `apps/firm/src/app/contact/actions.ts` ✅
+- `apps/firm/src/app/contact/contact-form.tsx` ✅
+- `apps/firm/src/app/book/actions.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/contact/actions.ts` ✅
+- `apps/prospective-clients/riley-day-care/src/app/contact/contact-form.tsx` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/contact/actions.ts` ✅
+- `apps/prospective-clients/the-barber-cave/src/app/contact/contact-form.tsx` ✅
 
 ---
 
