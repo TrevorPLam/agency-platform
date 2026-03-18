@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- DORA Metrics Implementation & Automation (TASK-017)
+  - Complete @agency/metrics package with TypeScript calculators
+  - Interactive dashboard in agency-admin with real-time metrics
+  - GitHub Actions workflow for automated collection and alerting
+  - GitHub webhook handlers for push, PR, and issues events
+  - Database schema with proper indexes and RLS policies
+  - Multiple output formats: CLI, HTML dashboard, JSON API
 - Documentation coverage assessment and improvements
 - LICENSE file for private repository
 - CHANGELOG.md for tracking changes

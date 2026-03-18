@@ -28,7 +28,12 @@
     "preinstall": "npx only-allow pnpm",
     "capture-knowledge": "tsx scripts/knowledge/capture.ts",
     "map-expertise": "tsx scripts/knowledge/expertise-map.ts",
-    "search-knowledge": "tsx scripts/knowledge/search.ts"
+    "search-knowledge": "tsx scripts/knowledge/search.ts",
+    "classification": "tsx scripts/governance/classification-cli.ts",
+    "manage-properties": "tsx scripts/governance/manage-properties.ts",
+    "metadata-workflows": "tsx scripts/governance/metadata-workflows.ts",
+    "risk-assessment": "tsx scripts/governance/risk-assessment.ts",
+    "compliance-automation": "tsx scripts/governance/compliance-automation.ts"
   },
   "keywords": [
     "monorepo",

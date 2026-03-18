@@ -2,6 +2,10 @@ export * from './properties'
 export * from './validation'
 export * from './risk'
 export * from './types'
+export * from './classification'
+export * from './dynamic-policies'
+export * from './rulesets-automation'
+export * from './auto-labeling'
 
 // Agent-specific exports
 export {

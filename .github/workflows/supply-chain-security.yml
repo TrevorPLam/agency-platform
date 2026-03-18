@@ -1,0 +1,476 @@
+name: Supply Chain Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - sbom
+          - attest
+          - integrity
+          - vulnerability
+  release:
+    types: [ published ]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.12.1'
+
+jobs:
+  sbom-generation:
+    name: Generate SBOM
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'sbom' || github.event.inputs.scan_type == ''
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build security package
+        run: pnpm turbo run build --filter=@agency/security
+        
+      - name: Install Syft for SBOM generation
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          
+      - name: Generate SBOM for entire repository
+        run: |
+          pnpm tsx scripts/security/generate-sbom.ts \
+            --path . \
+            --output ./sbom-artifacts \
+            --format cyclonedx \
+            --scan-vulns
+            
+      - name: Generate SBOM for packages
+        run: |
+          for package in packages/*/; do
+            if [ -d "$package" ] && [ -f "$package/package.json" ]; then
+              package_name=$(basename "$package")
+              echo "Generating SBOM for $package_name..."
+              pnpm tsx scripts/security/generate-sbom.ts \
+                --path "$package" \
+                --output "./sbom-artifacts/$package_name" \
+                --format cyclonedx \
+                --scan-vulns
+            fi
+          done
+          
+      - name: Generate SBOM for applications
+        run: |
+          for app in apps/*/; do
+            if [ -d "$app" ] && [ -f "$app/package.json" ]; then
+              app_name=$(basename "$app")
+              echo "Generating SBOM for $app_name..."
+              pnpm tsx scripts/security/generate-sbom.ts \
+                --path "$app" \
+                --output "./sbom-artifacts/$app_name" \
+                --format cyclonedx \
+                --scan-vulns
+            fi
+          done
+          
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: sbom-artifacts/
+          retention-days: 30
+          
+      - name: Upload SBOM to release (if on release)
+        if: github.event_name == 'release'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./sbom-artifacts/sbom.cyclonedx.json
+          asset_name: sbom.cyclonedx.json
+          asset_content_type: application/json
+
+  slsa-attestation:
+    name: Generate SLSA Attestations
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'attest' || github.event.inputs.scan_type == ''
+    needs: [sbom-generation]
+    
+    permissions:
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+          
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+            
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build all packages and applications
+        run: pnpm turbo run build
+        
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: sbom-artifacts/
+          
+      - name: Generate SLSA attestations for build artifacts
+        run: |
+          pnpm tsx scripts/security/generate-attestation.ts \
+            --artifacts-dir ./dist \
+            --output ./attestations \
+            --build-id "${{ github.run_id }}" \
+            --commit-sha "${{ github.sha }}" \
+            --branch "${{ github.ref_name }}" \
+            --workflow "${{ github.workflow }}" \
+            --run-id "${{ github.run_id }}" \
+            --repository "${{ github.repository }}"
+            
+      - name: Generate GitHub Actions attestations
+        uses: actions/attest@v4
+        with:
+          subject-path: 'dist/**'
+          sbom-path: 'sbom-artifacts/sbom.cyclonedx.json'
+          
+      - name: Upload attestation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: attestations-${{ github.sha }}
+          path: attestations/
+          retention-days: 30
+
+  integrity-verification:
+    name: Verify Artifact Integrity
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'integrity' || github.event.inputs.scan_type == ''
+    needs: [slsa-attestation]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build security package
+        run: pnpm turbo run build --filter=@agency/security
+        
+      - name: Download attestation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: attestations-${{ github.sha }}
+          path: attestations/
+          
+      - name: Verify artifact integrity
+        run: |
+          pnpm tsx scripts/security/verify-integrity.ts \
+            --artifacts-dir ./dist \
+            --attestations-dir ./attestations \
+            --report-path ./integrity-report.json
+            
+      - name: Upload integrity report
+        uses: actions/upload-artifact@v4
+        with:
+          name: integrity-report-${{ github.sha }}
+          path: integrity-report.json
+          retention-days: 30
+          
+      - name: Check integrity verification results
+        run: |
+          if [ -f "./integrity-report.json" ]; then
+            FAILED_COUNT=$(node -e "
+              const report = JSON.parse(require('fs').readFileSync('./integrity-report.json', 'utf8'));
+              console.log(report.failed || 0);
+            ")
+            
+            if [ "$FAILED_COUNT" -gt 0 ]; then
+              echo "❌ $FAILED_COUNT artifact(s) failed integrity verification"
+              exit 1
+            else
+              echo "✅ All artifacts passed integrity verification"
+            fi
+          else
+            echo "❌ Integrity report not found"
+            exit 1
+          fi
+
+  vulnerability-scanning:
+    name: Advanced Vulnerability Scanning
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'all' || github.event.inputs.scan_type == 'vulnerability' || github.event.inputs.scan_type == ''
+    needs: [sbom-generation]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Download SBOM artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: sbom-artifacts-${{ github.sha }}
+          path: sbom-artifacts/
+          
+      - name: Install Grype for vulnerability scanning
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+          
+      - name: Scan SBOM for vulnerabilities
+        run: |
+          grype sbom:./sbom-artifacts/sbom.cyclonedx.json \
+            --output json \
+            --file vulnerability-scan.json \
+            --only-fixed
+          
+      - name: Analyze vulnerability scan results
+        run: |
+          pnpm tsx scripts/security/analyze-vulnerabilities.ts \
+            --scan-results vulnerability-scan.json \
+            --output-path vulnerability-analysis.json \
+            --fail-threshold HIGH
+          
+      - name: Upload vulnerability scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulnerability-scan-${{ github.sha }}
+          path: |
+            vulnerability-scan.json
+            vulnerability-analysis.json
+          retention-days: 30
+          
+      - name: Create security issue for critical vulnerabilities
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const analysis = JSON.parse(fs.readFileSync('vulnerability-analysis.json', 'utf8'));
+              
+              if (analysis.criticalVulnerabilities > 0) {
+                const body = `## 🚨 Critical Vulnerabilities Detected
+                
+                **Scan Results:**
+                - Critical: ${analysis.criticalVulnerabilities}
+                - High: ${analysis.highVulnerabilities}
+                - Medium: ${analysis.mediumVulnerabilities}
+                - Low: ${analysis.lowVulnerabilities}
+                
+                **Workflow:** ${{ github.workflow }}
+                **Run ID:** ${{ github.run_id }}
+                **Commit:** ${{ github.sha }}
+                
+                Please address these critical vulnerabilities immediately.
+                
+                [View workflow run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+                
+                github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: '🚨 Critical Vulnerabilities Detected',
+                  body: body,
+                  labels: ['security', 'vulnerability', 'critical']
+                });
+              }
+            } catch (error) {
+              console.log('Could not analyze vulnerability results:', error.message);
+            }
+
+  supply-chain-summary:
+    name: Supply Chain Security Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [sbom-generation, slsa-attestation, integrity-verification, vulnerability-scanning]
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-${{ github.sha }}"
+          merge-multiple: true
+          path: all-artifacts/
+          
+      - name: Generate supply chain security report
+        run: |
+          cat > supply-chain-report.md << 'EOF'
+          # Supply Chain Security Report
+          
+          **Generated:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          **Repository:** ${{ github.repository }}
+          **Commit:** ${{ github.sha }}
+          **Workflow:** ${{ github.workflow }}
+          **Run ID:** ${{ github.run_id }}
+          
+          ## SBOM Generation
+          EOF
+          
+          if [ -d "all-artifacts/sbom-artifacts" ]; then
+            echo "✅ SBOM generation completed successfully" >> supply-chain-report.md
+            echo "- Total SBOM files: $(find all-artifacts/sbom-artifacts -name "*.json" | wc -l)" >> supply-chain-report.md
+          else
+            echo "❌ SBOM generation failed" >> supply-chain-report.md
+          fi
+          
+          echo "" >> supply-chain-report.md
+          echo "## SLSA Attestations" >> supply-chain-report.md
+          
+          if [ -d "all-artifacts/attestations" ]; then
+            echo "✅ SLSA attestations generated successfully" >> supply-chain-report.md
+            echo "- Total attestations: $(find all-artifacts/attestations -name "*.attestation" | wc -l)" >> supply-chain-report.md
+          else
+            echo "❌ SLSA attestation generation failed" >> supply-chain-report.md
+          fi
+          
+          echo "" >> supply-chain-report.md
+          echo "## Integrity Verification" >> supply-chain-report.md
+          
+          if [ -f "all-artifacts/integrity-report.json" ]; then
+            echo "✅ Integrity verification completed" >> supply-chain-report.md
+            PASSED=$(node -e "
+              const report = JSON.parse(require('fs').readFileSync('all-artifacts/integrity-report.json', 'utf8'));
+              console.log(report.passed || 0);
+            ")
+            echo "- Verified artifacts: $PASSED" >> supply-chain-report.md
+          else
+            echo "❌ Integrity verification failed" >> supply-chain-report.md
+          fi
+          
+          echo "" >> supply-chain-report.md
+          echo "## Vulnerability Scanning" >> supply-chain-report.md
+          
+          if [ -f "all-artifacts/vulnerability-analysis.json" ]; then
+            echo "✅ Vulnerability scanning completed" >> supply-chain-report.md
+            CRITICAL=$(node -e "
+              const analysis = JSON.parse(require('fs').readFileSync('all-artifacts/vulnerability-analysis.json', 'utf8'));
+              console.log(analysis.criticalVulnerabilities || 0);
+            ")
+            HIGH=$(node -e "
+              const analysis = JSON.parse(require('fs').readFileSync('all-artifacts/vulnerability-analysis.json', 'utf8'));
+              console.log(analysis.highVulnerabilities || 0);
+            ")
+            echo "- Critical vulnerabilities: $CRITICAL" >> supply-chain-report.md
+            echo "- High vulnerabilities: $HIGH" >> supply-chain-report.md
+          else
+            echo "❌ Vulnerability scanning failed" >> supply-chain-report.md
+          fi
+          
+          echo "" >> supply-chain-report.md
+          echo "## Artifacts" >> supply-chain-report.md
+          echo "- [SBOM Artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> supply-chain-report.md
+          echo "- [Attestations](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> supply-chain-report.md
+          echo "- [Integrity Reports](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> supply-chain-report.md
+          echo "- [Vulnerability Reports](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> supply-chain-report.md
+          
+      - name: Upload supply chain report
+        uses: actions/upload-artifact@v4
+        with:
+          name: supply-chain-report-${{ github.sha }}
+          path: supply-chain-report.md
+          retention-days: 30
+          
+      - name: Comment PR with supply chain results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            try {
+              const report = fs.readFileSync('supply-chain-report.md', 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            } catch (error) {
+              console.log('Could not read supply chain report for PR comment:', error.message);
+            }

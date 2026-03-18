@@ -8,11 +8,13 @@
     "sourceMap": true,
     "moduleResolution": "node",
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "ES2015", "ES2016", "ES2017", "ES2018", "ES2019", "ES2020", "ES2021"],
     "types": ["node"],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "composite": false
+    "composite": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*"

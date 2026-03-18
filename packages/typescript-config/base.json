@@ -14,7 +14,7 @@
     "noUnusedParameters": true,
     "moduleResolution": "bundler",
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "ES2015", "ES2016", "ES2017", "ES2018", "ES2019", "ES2020", "ES2021"],
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
