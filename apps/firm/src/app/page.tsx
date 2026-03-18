@@ -1,7 +1,22 @@
 import Link from 'next/link'
-import { Button } from '@agency/ui'
+import { Button, FeatureGrid } from '@agency/ui'
 
 export default function HomePage() {
+  const features = [
+    {
+      title: 'Strategy',
+      description: 'Audience research, positioning, and campaign planning so your marketing is built on evidence, not guesswork.',
+    },
+    {
+      title: 'Design',
+      description: 'Brand systems, web design, and creative that fits your voice and converts—without the generic look.',
+    },
+    {
+      title: 'Growth',
+      description: 'SEO, paid media, and analytics so you see what works and double down on it.',
+    },
+  ]
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-16">
@@ -23,28 +38,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Strategy</h3>
-            <p className="text-slate-600">
-              Audience research, positioning, and campaign planning so your marketing is built on
-              evidence, not guesswork.
-            </p>
-          </div>
-          <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Design</h3>
-            <p className="text-slate-600">
-              Brand systems, web design, and creative that fits your voice and converts—without the
-              generic look.
-            </p>
-          </div>
-          <div className="rounded-lg bg-white p-6 text-center shadow-sm">
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">Growth</h3>
-            <p className="text-slate-600">
-              SEO, paid media, and analytics so you see what works and double down on it.
-            </p>
-          </div>
-        </div>
+        <FeatureGrid features={features} className="mt-16" />
       </div>
     </main>
   )

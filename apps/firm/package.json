@@ -14,28 +14,30 @@
     "test:coverage": "node -e \"process.exit(0)\""
   },
   "dependencies": {
-    "@agency/ui": "workspace:*",
     "@agency/analytics": "workspace:*",
     "@agency/booking": "workspace:*",
     "@agency/database": "workspace:*",
     "@agency/email": "workspace:*",
+    "@agency/ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "schema-dts": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",
     "@agency/typescript-config": "workspace:*",
+    "@axe-core/playwright": "catalog:",
     "@playwright/test": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
-    "typescript": "catalog:",
-    "@tailwindcss/postcss": "catalog:",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",
-    "@axe-core/playwright": "catalog:"
+    "typescript": "catalog:"
   }
 }

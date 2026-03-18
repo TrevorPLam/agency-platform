@@ -22,7 +22,7 @@ catalog:
   '@octokit/rest': ^21.0.0
   jsonschema: ^1.4.1
   inngest: ^3.51.0
-  zod: ^3.25.0
+  zod: 3.25.76
   clsx: ^2.1.1
   tailwind-merge: ^3.0.0
   posthog-js: ^1.236.0
@@ -64,6 +64,7 @@ catalog:
   '@testing-library/react': ^16.0.0
   '@testing-library/user-event': ^14.5.0
   '@testing-library/jest-dom': ^6.5.0
+  schema-dts: ^1.1.5
 
 catalogMode: strict
 

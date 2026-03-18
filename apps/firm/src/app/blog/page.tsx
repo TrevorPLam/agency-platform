@@ -1,27 +1,30 @@
 import Link from 'next/link'
+import { cache } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
+import { getAllPosts, type BlogPost } from '@/content/blog'
 
 export const metadata = {
   title: 'Blog',
   description: 'Insights and updates from our agency on marketing, design, and growth.',
 }
 
-const posts = [
-  {
-    slug: 'getting-started',
-    title: 'Getting Started with Digital Marketing',
-    date: '2025-03-01',
-    excerpt: 'A practical guide for small businesses taking their first steps online.',
-  },
-  {
-    slug: 'design-tips',
-    title: 'Design Tips That Convert',
-    date: '2025-02-15',
-    excerpt: 'How to use design to build trust and drive action.',
-  },
-]
+// ISR revalidation - regenerate every hour
+export const revalidate = 3600
+
+// Cache content loading to avoid duplicate fetches in same render
+const getPosts = cache(() => getAllPosts())
+
+// Generate static params for individual blog posts
+export async function generateStaticParams() {
+  const posts = getPosts()
+  return posts.map((post) => ({
+    slug: post.slug,
+  }))
+}
 
 export default function BlogPage() {
+  const posts = getPosts()
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-12">
@@ -31,14 +34,33 @@ export default function BlogPage() {
         </header>
         <section className="mx-auto max-w-3xl space-y-6">
           {posts.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`}>
+            <Link key={post.id} href={`/blog/${post.slug}`}>
               <Card className="transition-colors hover:border-slate-400">
                 <CardHeader>
                   <CardTitle className="text-slate-900">{post.title}</CardTitle>
-                  <p className="text-sm text-slate-600">{post.date}</p>
+                  <p className="text-sm text-slate-600">
+                    {new Date(post.publishedAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                    {post.readingTime && ` • ${post.readingTime} min read`}
+                  </p>
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {post.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-block rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
-                  <p className="text-slate-600">{post.excerpt}</p>
+                  <p className="text-slate-600">{post.description}</p>
                 </CardContent>
               </Card>
             </Link>

@@ -71,3 +71,12 @@ export {
   AlertDescription,
   alertVariants,
 } from './components/molecules'
+
+// Organisms
+export {
+  PageSection,
+  HeroSection,
+  FeatureGrid,
+  FeatureItem,
+  CTASection,
+} from './components/organisms'
