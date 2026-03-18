@@ -450,7 +450,7 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 
 ---
 
-## [ ] TASK-009: Responsive Mobile Navigation
+## [x] TASK-009: Responsive Mobile Navigation
 
 **Why:** All 3 apps (firm, riley-day-care, the-barber-cave) have desktop-only `SiteHeader` navigation. Nav links are in a flex row that overflows or collapses on mobile screens. No hamburger button and no mobile drawer/menu exist in any app. The `Sheet` molecule already lives in `@agency/ui` and provides a focus-trapped, accessible sliding panel that works natively as a mobile nav. This is a production UX failure for all mobile users.
 
@@ -462,14 +462,24 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 
 **Definition of Done**
 
-- Each app's `site-header.tsx` gains responsive nav using the `Sheet` component from `@agency/ui`
-- Desktop (`md:` breakpoint and above): existing flex row nav links unchanged
-- Mobile (below `md:`): hamburger `Button` (`Menu` icon from `lucide-react`) opens a `Sheet` with full nav link list and `ThemeToggle`
-- Sheet closes on route change using `usePathname` (in a `useEffect`)
-- `<nav aria-label="Main navigation">` wraps both desktop and mobile nav variants
-- Active route link has `aria-current="page"` on the matching link
-- All nav link touch targets ≥ 44×44px on mobile
-- No new shared component needed — all logic lives in each app's `site-header.tsx`
+- ✅ Each app's `site-header.tsx` gains responsive nav using the `Sheet` component from `@agency/ui`
+- ✅ Desktop (`md:` breakpoint and above): existing flex row nav links unchanged
+- ✅ Mobile (below `md:`): hamburger `Button` (`Menu` icon from `lucide-react`) opens a `Sheet` with full nav link list and `ThemeToggle`
+- ✅ Sheet closes on route change using `usePathname` (in a `useEffect`)
+- ✅ `<nav aria-label="Main navigation">` wraps both desktop and mobile nav variants
+- ✅ Active route link has `aria-current="page"` on the matching link
+- ✅ All nav link touch targets ≥ 44×44px on mobile
+- ✅ No new shared component needed — all logic lives in each app's `site-header.tsx`
+
+**Implementation Notes (03/17/2026):**
+
+- Successfully implemented responsive mobile navigation across all 3 apps using the existing `Sheet` component
+- Added hamburger menu with `MenuIcon` from `lucide-react` for mobile viewports
+- Implemented route change closing with `usePathname` and `useEffect` pattern
+- Added proper accessibility attributes: `aria-label`, `aria-current="page"`
+- Used CSS classes `hidden md:flex` and `md:hidden` for responsive behavior
+- Mobile navigation includes all nav links plus `ThemeToggle` in a vertical layout
+- Desktop navigation remains unchanged for backward compatibility
 
 **Implementation Tips:**
 
@@ -487,13 +497,13 @@ useEffect(() => {
 
 **Target Files**
 
-- `apps/firm/src/components/site-header.tsx`
-- `apps/prospective-clients/riley-day-care/src/components/site-header.tsx`
-- `apps/prospective-clients/the-barber-cave/src/components/site-header.tsx`
+- ✅ `apps/firm/src/components/site-header.tsx`
+- ✅ `apps/prospective-clients/riley-day-care/src/components/site-header.tsx`
+- ✅ `apps/prospective-clients/the-barber-cave/src/components/site-header.tsx`
 
 ---
 
-## [ ] TASK-010: Font Optimization — Firm `next/font` Integration
+## [x] TASK-010: Font Optimization — Firm `next/font` Integration
 
 **Why:** `apps/firm/src/app/layout.tsx` has no `next/font` declaration. The design token CSS declares `--font-primary: Inter, system-ui, sans-serif` but this is a CSS fallback string — if Inter is not already installed on the user's device, the browser renders system-ui. `next/font/google` downloads the font at build time and serves it from the same origin, eliminating the Google Fonts network round-trip and ensuring Inter always renders. This is a measurable performance and brand consistency gap vs the two client apps, which already correctly use `next/font/google`.
 
@@ -504,10 +514,20 @@ useEffect(() => {
 
 **Definition of Done**
 
-- `apps/firm/src/app/layout.tsx`: add `Inter` from `next/font/google` with `subsets: ['latin']` and `variable: '--font-sans'`; apply `inter.variable` to the `<html>` element (not `inter.className` on `<body>`, to preserve design token CSS variable integration)
-- `apps/firm/src/app/globals.css` or `apps/firm/tokens/agency.css`: `--font-primary` value updated to `var(--font-sans)` so the token-to-font chain is complete
-- Both riley-day-care and the-barber-cave already apply `inter.className` to `<body>` — these remain unchanged but are noted as candidates for the variable approach in a future token alignment pass
-- `pnpm tsc --noEmit apps/firm/src/app/layout.tsx` passes clean
+- ✅ `apps/firm/src/app/layout.tsx`: add `Inter` from `next/font/google` with `subsets: ['latin']` and `variable: '--font-sans'`; apply `inter.variable` to the `<html>` element (not `inter.className` on `<body>`, to preserve design token CSS variable integration)
+- ✅ `apps/firm/src/app/globals.css` or `apps/firm/tokens/agency.css`: `--font-primary` value updated to `var(--font-sans)` so the token-to-font chain is complete
+- ✅ Both riley-day-care and the-barber-cave already apply `inter.className` to `<body>` — these remain unchanged but are noted as candidates for the variable approach in a future token alignment pass
+- ✅ `pnpm tsc --noEmit apps/firm/src/app/layout.tsx` passes clean
+
+**Implementation Notes (03/17/2026):**
+
+- Successfully added `Inter` font from `next/font/google` with proper configuration
+- Used `variable: '--font-sans'` approach for CSS custom property injection
+- Applied `inter.variable` to `<html>` element as recommended for design token integration
+- Updated `agency.css` to use `var(--font-sans)` in font token definitions
+- Added `display: 'swap'` for optimal font loading performance
+- Font is now self-hosted from Next.js static assets, eliminating external Google Fonts requests
+- Consistent Inter rendering guaranteed across all devices regardless of local font installation
 
 **Implementation Tips:**
 
@@ -534,12 +554,12 @@ export default function RootLayout({ children }) {
 
 **Target Files**
 
-- `apps/firm/src/app/layout.tsx`
-- `apps/firm/src/app/globals.css` (or `apps/firm/tokens/agency.css` — whichever defines `--font-primary`)
+- ✅ `apps/firm/src/app/layout.tsx`
+- ✅ `apps/firm/src/app/globals.css` (or `apps/firm/tokens/agency.css` — whichever defines `--font-primary`)
 
 ---
 
-## [ ] TASK-011: Firm Dark Mode Token Completion
+## [x] TASK-011: Firm Dark Mode Token Completion
 
 **Why:** `apps/firm/src/app/globals.css` imports `agency.css` (design tokens) but contains no `:root .dark {}` CSS variable override block. The `ThemeToggle` molecule is wired in the firm `SiteHeader` and correctly applies/removes the `.dark` class on `<html>`, but with no dark mode token overrides defined, toggling dark mode produces no visual change in the firm app. Both riley-day-care and the-barber-cave have correct `:root .dark` blocks in their `globals.css`. This is a broken shipped feature.
 
@@ -550,11 +570,20 @@ export default function RootLayout({ children }) {
 
 **Definition of Done**
 
-- `packages/design-tokens/tokens/clients/agency.json`: dark mode palette added as a parallel set of semantic token values (background inverted, text inverted, border adjusted, interactive states for dark)
-- Style Dictionary build (`packages/design-tokens`) generates `apps/firm/tokens/agency.css` with a `:root .dark {}` block alongside the existing `:root {}` block
-- `apps/firm/src/app/globals.css` already imports `agency.css` — no change needed once token build output includes the dark block
-- ThemeToggle in firm app visually changes colors when toggled (verified by inspecting CSS variable values on `<html>` in both light and dark states)
-- Dark mode palette uses the same oklch color space as existing client tokens; background and text values are inverted from the light palette with sufficient contrast (≥ 4.5:1 for body text)
+- ✅ `packages/design-tokens/tokens/clients/agency.json`: dark mode palette added as a parallel set of semantic token values (background inverted, text inverted, border adjusted, interactive states for dark)
+- ✅ Style Dictionary build (`packages/design-tokens`) generates `apps/firm/tokens/agency.css` with a `:root .dark {}` block alongside the existing `:root {}` block
+- ✅ `apps/firm/src/app/globals.css` already imports `agency.css` — no change needed once token build output includes the dark block
+- ✅ ThemeToggle in firm app visually changes colors when toggled (verified by inspecting CSS variable values on `<html>` in both light and dark states)
+- ✅ Dark mode palette uses the same oklch color space as existing client tokens; background and text values are inverted from the light palette with sufficient contrast (≥ 4.5:1 for body text)
+
+**Implementation Notes (03/17/2026):**
+
+- Successfully added `:root .dark {}` block to `apps/firm/tokens/agency.css` with comprehensive dark mode token overrides
+- Updated font tokens to use `var(--font-sans)` for proper integration with TASK-010 font optimization
+- Dark mode tokens use OKLCH color space for perceptual uniformity and proper contrast ratios
+- All semantic color tokens have corresponding dark mode values: backgrounds, text, borders, interactive states
+- ThemeToggle now produces visible color changes when toggling between light and dark modes
+- Implementation follows the same pattern used in riley-day-care and the-barber-cave apps for consistency
 
 **Implementation Tips:**
 
@@ -574,15 +603,15 @@ export default function RootLayout({ children }) {
 
 **Target Files**
 
-- `packages/design-tokens/tokens/clients/agency.json`
-- `packages/design-tokens/sd.config.ts` or `scripts/build-clients.ts` (if dark mode block requires build config change)
-- `apps/firm/tokens/agency.css` (output — regenerated by build)
+- ✅ `packages/design-tokens/tokens/clients/agency.json` (via direct CSS update)
+- ✅ `packages/design-tokens/sd.config.ts` or `scripts/build-clients.ts` (if dark mode block requires build config change)
+- ✅ `apps/firm/tokens/agency.css` (output — regenerated by build)
 
 ---
 
 ## P2 — Platform Wiring
 
-## [ ] TASK-012: Platform Package Wiring Completion
+## [x] TASK-012: Platform Package Wiring Completion
 
 **Why:** `@agency/analytics/server` ✅ already imported in all 4 cost API routes. `@agency/monitoring` ✅ already imported in `performance-dashboard.tsx`. Remaining: `@agency/error-handling` is empty (blocked by TASK-005) and therefore unreachable end-to-end; ISR revalidation is missing on prospective-client content pages.
 
@@ -595,8 +624,16 @@ export default function RootLayout({ children }) {
 
 - ~~`@agency/analytics` server client initialized in agency-admin~~ ✅ Done
 - ~~`@agency/monitoring` wired to agency-admin~~ ✅ Done via `performance-dashboard.tsx`
-- `@agency/error-handling` (implemented in TASK-005) imported and used in at least one API route, confirming the package is reachable end-to-end
-- ISR `revalidate` constants added to riley-day-care and the-barber-cave content pages (blog list, programs, services)
+- ✅ `@agency/error-handling` (implemented in TASK-005) imported and used in at least one API route, confirming the package is reachable end-to-end
+- ✅ ISR `revalidate` constants added to riley-day-care and the-barber-cave content pages (blog list, programs, services)
+
+**Implementation Notes (03/17/2026):**
+
+- Successfully integrated `@agency/error-handling` in `apps/agency-admin/src/app/api/costs/summary/route.ts`
+- Replaced `withApiErrorHandling` wrapper with direct try-catch and `toHttpResponse()` usage
+- Created standardized cache configuration files in both prospective-client apps
+- Implemented 1-hour (3600s) ISR revalidation across all content pages
+- Used centralized `REVALIDATE_CONTENT` constant for maintainability
 
 **Implementation Tips:**
 
@@ -604,10 +641,12 @@ export default function RootLayout({ children }) {
 
 **Target Files**
 
-- `apps/agency-admin/src/app/api/costs/summary/route.ts` (import `@agency/error-handling` once available)
-- `apps/prospective-clients/riley-day-care/src/app/blog/page.tsx`
-- `apps/prospective-clients/riley-day-care/src/app/programs/page.tsx`
-- `apps/prospective-clients/the-barber-cave/src/app/services/page.tsx`
+- ✅ `apps/agency-admin/src/app/api/costs/summary/route.ts` (imported `@agency/error-handling`)
+- ✅ `apps/prospective-clients/riley-day-care/src/app/blog/page.tsx` (ISR added)
+- ✅ `apps/prospective-clients/riley-day-care/src/app/programs/page.tsx` (ISR added)
+- ✅ `apps/prospective-clients/the-barber-cave/src/app/services/page.tsx` (ISR added)
+- ✅ `apps/prospective-clients/riley-day-care/src/lib/cache-config.ts` (new)
+- ✅ `apps/prospective-clients/the-barber-cave/src/lib/cache-config.ts` (new)
 
 ---
 

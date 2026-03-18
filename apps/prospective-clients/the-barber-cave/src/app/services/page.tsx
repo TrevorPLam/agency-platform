@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
+import { REVALIDATE_CONTENT } from '@/lib/cache-config'
 
 export const metadata = {
   title: 'Services',
   description: 'Cuts, fades, beard trims, and classic barber services at The Barber Cave in Dallas.',
 }
+
+export const revalidate = REVALIDATE_CONTENT
 
 const services = [
   {

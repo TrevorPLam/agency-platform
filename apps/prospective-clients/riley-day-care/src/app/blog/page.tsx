@@ -1,11 +1,14 @@
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
 import { cn } from '@agency/ui'
+import { REVALIDATE_CONTENT } from '@/lib/cache-config'
 
 export const metadata = {
   title: 'Blog',
   description: 'News and updates from Riley Day Care.',
 }
+
+export const revalidate = REVALIDATE_CONTENT
 
 const posts = [
   {

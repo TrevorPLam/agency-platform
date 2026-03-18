@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
+import { REVALIDATE_CONTENT } from '@/lib/cache-config'
 
 export const metadata = {
   title: 'Programs',
   description: 'Age-appropriate programs for infants through pre-K at Riley Day Care.',
 }
+
+export const revalidate = REVALIDATE_CONTENT
 
 export default function ProgramsPage() {
   const programs = [
