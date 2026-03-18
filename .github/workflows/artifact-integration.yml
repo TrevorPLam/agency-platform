@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - 'packages/artifacts/**'
-      - 'supabase/migrations/012a_artifact_lifecycle_management.sql'
+      - 'supabase/migrations/0121_artifact_lifecycle_management.sql'
   push:
     branches: [main]
     paths:
       - 'packages/artifacts/**'
-      - 'supabase/migrations/012a_artifact_lifecycle_management.sql'
+      - 'supabase/migrations/0121_artifact_lifecycle_management.sql'
 
 env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

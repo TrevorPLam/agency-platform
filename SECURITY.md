@@ -186,7 +186,7 @@ grep -A 10 -B 5 "SECURITY DEFINER" --include="*.sql" supabase/migrations/
 3. Raise 42501 (UNAUTHORIZED) for cross-tenant access attempts
 4. Document security model in function comments
 
-**Implementation:** See `supabase/migrations/011c_cost_monitoring_security_fix.sql` for the comprehensive fix of `get_tenant_cost_summary` function which includes:
+**Implementation:** See `supabase/migrations/0113_cost_monitoring_security_fix.sql` for the comprehensive fix of `get_tenant_cost_summary` function which includes:
 
 - JWT-based tenant validation using `current_setting('request.jwt.claims')`
 - Platform admin enforcement with email allowlist

@@ -100,7 +100,7 @@ This roadmap reflects:
 - ~~`apps/agency-admin/src/app/api/costs/*` trusts client-provided `tenant_id`~~ **RESOLVED** (TASK-001): All 4 cost routes now derive tenant context from `validateTenantAccess()` which reads from authenticated session `app_metadata`.
 - ~~`apps/agency-admin/src/components/costs/cost-management-dashboard.tsx` calls cost APIs without tenant_id`~~ **RESOLVED** (TASK-002): Dashboard uses typed error classes; no tenant_id in URL params.
 - ~~`packages/database/src/types.ts` is empty`~~ **PARTIALLY RESOLVED** (TASK-003): File is now non-empty but is hand-written, not auto-generated. CI drift gate (`diff` against `supabase gen types typescript --local`) will fail on any fresh Supabase instance until generated output is committed.
-- `supabase/migrations/012a_artifact_lifecycle_management.sql` still begins with TEXT tenant identifiers for artifact-domain tables, but the deprecated columns are now documented and guarded so the schema can migrate forward to `013a_artifact_tenant_schema_normalization.sql`.
+- `supabase/migrations/0121_artifact_lifecycle_management.sql` still begins with TEXT tenant identifiers for artifact-domain tables, but the deprecated columns are now documented and guarded so the schema can migrate forward to `0131_artifact_tenant_schema_normalization.sql`.
 - `supabase/migrations/014_experiments_framework.sql` and `020_web_vitals_metrics.sql` were repaired to remove transaction-invalid `CREATE INDEX CONCURRENTLY` usage and other source-visible SQL blockers, but a clean `supabase db reset` still needs local Docker verification.
 - Duplicate migration prefixes across the `006`, `011`, `012`, and `013` ranges were renamed to deterministic lexicographic sequences to remove ambiguous execution order.
 - `.github/workflows/recovery-test.yml` references 4 shell scripts that do not exist: `scripts/test/cross-region-consistency.sh`, `scripts/test/generate-test-report.sh`, `scripts/communication/send-slack-notification.sh`, `scripts/monitoring/update-metrics.sh` → workflow fails on every scheduled and manual run.
@@ -226,7 +226,7 @@ if (tenantContext.type === 'platform_admin' && !tenantContext.isPlatformAdmin) {
 - Root and package scripts normalized around deterministic `:local` and `:linked` generation commands.
 - CI drift check aligned to `--schema public` so local and CI output targets match.
 - Contributor docs updated to reflect the real command surface and the requirement that `supabase db reset` must succeed before generated types can be trusted.
-- Remaining blocker: the committed `packages/database/src/types.ts` is still hand-written because local regeneration is currently blocked by missing Docker Desktop in this environment, and known migration integrity defects in TASK-015 still need to be resolved for a clean reset/generation cycle.
+- Source-level migration blockers from TASK-015 were repaired, but local regeneration is still blocked because the Docker Desktop Linux engine is unavailable in this environment, so `supabase db start` and `supabase db reset` cannot run yet.
 
 ---
 
@@ -716,7 +716,7 @@ export const posts: BlogPost[] = [
 - Cost/performance migrations no longer grant usage on non-existent UUID sequences
 - Artifact lifecycle migrations document deprecated TEXT tenant identifiers and include the missing `promotion_steps.artifact_id` column expected by the normalization path
 - `supabase db reset` completes without errors on a clean local environment
-- `supabase/migrations/012a_artifact_lifecycle_management.sql` `tenant_id TEXT` column documented as deprecated; migration `013a_artifact_tenant_schema_normalization.sql` reviewed for completeness
+- `supabase/migrations/0121_artifact_lifecycle_management.sql` `tenant_id TEXT` column documented as deprecated; migration `0131_artifact_tenant_schema_normalization.sql` reviewed for completeness
 
 **Implementation Tips:**
 
@@ -725,16 +725,16 @@ export const posts: BlogPost[] = [
 
 **Target Files**
 
-- `supabase/migrations/006a_customer_auth_mappings.sql`
-- `supabase/migrations/006b_dora_metrics.sql`
-- `supabase/migrations/006c_dora_metrics_tenant_isolation.sql`
-- `supabase/migrations/011a_contact_submissions.sql`
-- `supabase/migrations/011b_cost_monitoring.sql`
-- `supabase/migrations/011c_cost_monitoring_security_fix.sql`
-- `supabase/migrations/012a_artifact_lifecycle_management.sql`
-- `supabase/migrations/012b_bookings_extend.sql`
-- `supabase/migrations/013a_artifact_tenant_schema_normalization.sql`
-- `supabase/migrations/013b_storage_security.sql`
+- `supabase/migrations/0061_customer_auth_mappings.sql`
+- `supabase/migrations/0062_dora_metrics.sql`
+- `supabase/migrations/0063_dora_metrics_tenant_isolation.sql`
+- `supabase/migrations/0111_contact_submissions.sql`
+- `supabase/migrations/0112_cost_monitoring.sql`
+- `supabase/migrations/0113_cost_monitoring_security_fix.sql`
+- `supabase/migrations/0121_artifact_lifecycle_management.sql`
+- `supabase/migrations/0122_bookings_extend.sql`
+- `supabase/migrations/0131_artifact_tenant_schema_normalization.sql`
+- `supabase/migrations/0132_storage_security.sql`
 - `supabase/migrations/014_experiments_framework.sql`
 - `supabase/migrations/020_web_vitals_metrics.sql`
 
@@ -742,7 +742,8 @@ export const posts: BlogPost[] = [
 
 - Source-visible reset blockers in the migration files were repaired: duplicate prefixes renamed, transaction-invalid concurrent indexes removed, non-existent UUID sequence grants removed, invalid SQL constraints corrected, and artifact normalization aligned with the actual table shape.
 - Workflow and documentation references were updated to the renamed artifact and cost-monitoring migration files.
-- Remaining blocker: `supabase db reset` has not been re-run in this environment because Docker Desktop is still unavailable, so TASK-015 remains partial until runtime verification succeeds.
+- Targeted blocker patterns (`CREATE INDEX CONCURRENTLY`, `ALTER DATABASE SET row_security`, `public.profiles`) were rechecked in `supabase/migrations/*.sql` and are no longer present.
+- Remaining blocker: `supabase db reset` has not been re-run in this environment because the Docker Desktop Linux engine is unavailable, so TASK-015 remains partial until runtime verification succeeds.
 
 - `supabase/migrations/014_experiments_framework.sql`
 - `supabase/migrations/020_web_vitals_metrics.sql`

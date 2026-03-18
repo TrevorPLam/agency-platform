@@ -32,7 +32,7 @@ BEGIN
         INTO STRICT caller_tenant_id;
     EXCEPTION WHEN OTHERS THEN
         -- If we can't extract tenant_id from JWT, deny access
-        RAISE EXCEPTION 'Unauthorized: Valid tenant context required', SQLSTATE '42501';
+        RAISE EXCEPTION 'Unauthorized: Valid tenant context required' USING ERRCODE = '42501';
     END;
 
     -- Convert to UUID for comparison
@@ -45,7 +45,7 @@ BEGIN
         WHERE raw_user_meta_data->>'is_platform_admin' = 'true'
         UNION SELECT 'admin@agency.com' -- hardcoded platform admin
     ) AND caller_tenant_id IS DISTINCT FROM p_tenant_id THEN
-        RAISE EXCEPTION 'Access denied: Cannot access other tenant data', SQLSTATE '42501';
+        RAISE EXCEPTION 'Access denied: Cannot access other tenant data' USING ERRCODE = '42501';
     END IF;
 
     -- Get recent period total for the requested tenant

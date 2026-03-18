@@ -63,7 +63,7 @@ Single reference for backup, cost, communication, DORA metrics, geographic distr
 
 ## Artifact management
 
-**Purpose:** Centralized artifact registry, promotion pipelines, policy-driven retention. When implemented: @agency/artifacts (registry, promotion, policies, retention); Supabase with RLS; migrations (e.g. 012a_artifact_lifecycle_management.sql).
+**Purpose:** Centralized artifact registry, promotion pipelines, policy-driven retention. When implemented: @agency/artifacts (registry, promotion, policies, retention); Supabase with RLS; migrations (e.g. 0121_artifact_lifecycle_management.sql).
 
 - **Use:** Register artifacts, run promotion workflows, enforce retention policies. CLI/scripts and dashboard per package documentation. See [packages/artifacts/README.md](../../packages/artifacts/README.md) for package-level details.
 
