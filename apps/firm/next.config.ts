@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   transpilePackages: [
     '@agency/ui',
+    '@agency/content',
     '@agency/database',
     '@agency/analytics',
     '@agency/marketing',

@@ -567,9 +567,12 @@ There is also a critical consistency problem: the firm app (the agency's own sit
 - Introduced shared `SiteShell`, `SiteHeader`, `SiteFooter`, `SiteProviders`, and typed `SiteConfig` in `packages/marketing`, then rewired `apps/firm`, `apps/prospective-clients/riley-day-care`, `apps/prospective-clients/the-barber-cave`, and `apps/__template__` layouts to use them.
 - Added per-app `src/config/site.ts` files and standardized public app layouts on `inter.variable` + `data-theme={siteConfig.slug}`.
 - Enabled `cacheComponents: true` in `apps/firm` and converted the firm content access layer (`src/content/services.ts`, `src/content/blog.ts`) to async `"use cache"` functions using `cacheLife` and `cacheTag`.
+- Added route-level `"use cache"` + `cacheLife`/`cacheTag` to the firm marketing layout and public pages so Cache Components now has an explicit page-output caching strategy instead of relying on removed route-segment `revalidate` exports.
 - Renamed the public-site request interception files from `middleware.ts` to `proxy.ts` in `apps/firm`, `apps/prospective-clients/riley-day-care`, `apps/prospective-clients/the-barber-cave`, and `apps/__template__`.
-- Added `server-only` guards to `packages/database/src/admin.ts` and `packages/analytics/src/server.ts`, plus `client-only` to `packages/marketing/src/providers/site-providers.tsx`.
-- Remaining work in this task: remove or repurpose now-unused app-local shell/provider components, finish the UI boundary cleanup beyond the new barrels, decide the final cache strategy for route-level pages under `cacheComponents`, and roll the rendering changes into the remaining content/routes.
+- Added `server-only` guards to `packages/database/src/admin.ts`, `packages/analytics/src/server.ts`, and the firm server content modules, plus `client-only` to `packages/marketing/src/providers/site-providers.tsx`.
+- Replaced stale public-app shell/provider compatibility files with thin adapters over `@agency/marketing` and normalized client-safe analytics/monitoring imports so legacy files no longer drag incorrect boundaries into builds.
+- Completed a production-like `pnpm --filter @agency/firm build` validation pass, including workspace package export cleanup (`@agency/content`, `@agency/database`, `@agency/monitoring/client`), strict-type fixes in shared packages, and graceful prerender fallback for `/book` when admin credentials are absent at build time.
+- Remaining work in this task: finish the UI boundary cleanup beyond the new barrels, decide whether to delete the now-redundant public-app compatibility components, regenerate real Supabase database types to replace the permissive recovery stub in `packages/database/src/types.ts`, and roll the rendering changes into the remaining public apps/content routes.
 
 ### Definition of Done
 
@@ -772,7 +775,7 @@ const nextConfig: NextConfig = {
 6. Wrap dynamic sections (booking availability, user session) in `<Suspense>` boundaries so they stream in while the static shell loads instantly from the CDN.
 7. Roll out to demo apps and template only after firm is stable.
 
-**Current status note**: The first slice is implemented only in `apps/firm` for `cacheComponents` and the shared content helpers now use async `"use cache"` + `cacheLife`/`cacheTag`. Because current Next.js 16 cache-components behavior disables route segment `revalidate`, the prior firm route-level ISR exports were removed during this migration. Final route-level caching strategy still needs to be settled before this subtask can be considered complete.
+**Current status note**: The first slice is implemented and production-build validated in `apps/firm`. `cacheComponents` is enabled, the shared content helpers use async `"use cache"` + `cacheLife`/`cacheTag`, the firm marketing layout/public pages now opt into explicit route-level output caching with `"use cache"`, and the shared/public compatibility layer was tightened so stale app-local shell files no longer pull incorrect package boundaries into the build. Remaining rollout work is applying the same pattern to the remaining public apps and completing the final cleanup of compatibility files.
 
 #### [~] AP-001-5: Add `server-only` / `client-only` Guards
 

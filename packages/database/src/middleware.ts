@@ -20,6 +20,22 @@ export interface TenantResolution {
   source: 'development' | 'hostname' | 'subdomain' | 'header'
 }
 
+function toTenantRecord(value: unknown): { id: string; slug: string; domain: string } | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const id = 'id' in value ? value['id'] : undefined
+  const slug = 'slug' in value ? value['slug'] : undefined
+  const domain = 'domain' in value ? value['domain'] : undefined
+
+  if (typeof id !== 'string' || typeof slug !== 'string' || typeof domain !== 'string') {
+    return null
+  }
+
+  return { id, slug, domain }
+}
+
 /**
  * AUTHENTICATION AND AUTHORIZATION PATTERNS
  * 
@@ -153,7 +169,7 @@ async function resolveTenantBySlug(slug: string): Promise<{
         ),
       isSupabaseTransientError
     )
-    return data
+    return toTenantRecord(data)
   } catch {
     return null
   }
@@ -204,8 +220,9 @@ async function resolveTenantFromHostname(hostname: string): Promise<{
       isSupabaseTransientError
     )
 
-    if (exactMatch) {
-      return exactMatch
+    const exactTenant = toTenantRecord(exactMatch)
+    if (exactTenant) {
+      return exactTenant
     }
 
     // Look for subdomain pattern (e.g., riley-day-care.localhost -> riley-day-care)
@@ -217,8 +234,9 @@ async function resolveTenantFromHostname(hostname: string): Promise<{
         .eq('slug', subdomain)
         .single()
 
-      if (subdomainMatch) {
-        return subdomainMatch
+      const subdomainTenant = toTenantRecord(subdomainMatch)
+      if (subdomainTenant) {
+        return subdomainTenant
       }
     }
 

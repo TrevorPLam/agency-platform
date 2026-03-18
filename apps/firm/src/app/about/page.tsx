@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
 
 export const metadata = {
@@ -5,7 +6,12 @@ export const metadata = {
   description: 'Learn about our agency and our approach to digital marketing.',
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  'use cache'
+
+  cacheLife('days')
+  cacheTag('page:about', 'page:marketing', 'site:firm')
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="container mx-auto px-4 py-12">

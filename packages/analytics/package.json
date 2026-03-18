@@ -10,24 +10,24 @@
       "types": "./dist/index.d.mts"
     },
     "./client": {
-      "import": "./dist/client.mjs",
-      "types": "./dist/client.d.mts"
+      "import": "./src/client.ts",
+      "types": "./src/client.ts"
     },
     "./server": {
-      "import": "./dist/server.mjs",
-      "types": "./dist/server.d.mts"
+      "import": "./src/server.ts",
+      "types": "./src/server.ts"
     },
     "./consent": {
-      "import": "./dist/consent.mjs",
-      "types": "./dist/consent.d.mts"
+      "import": "./src/consent.ts",
+      "types": "./src/consent.ts"
     },
     "./consent-context": {
-      "import": "./dist/consent-context.mjs",
-      "types": "./dist/consent-context.d.mts"
+      "import": "./src/consent-context.tsx",
+      "types": "./src/consent-context.tsx"
     },
     "./consent-banner": {
-      "import": "./dist/consent-banner.mjs",
-      "types": "./dist/consent-banner.d.mts"
+      "import": "./src/consent-banner.tsx",
+      "types": "./src/consent-banner.tsx"
     }
   },
   "dependencies": {

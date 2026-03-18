@@ -4,10 +4,22 @@ import { useActionState } from 'react'
 import type { BookingConfig } from '../types/config'
 import { Button, Input, Label, cn } from '@agency/ui'
 
+type BookingFormErrors = {
+  name?: string
+  email?: string
+  message?: string
+}
+
+type BookingFormState = {
+  success: boolean
+  message?: string
+  errors?: BookingFormErrors
+}
+
 export type BookingSubmitAction = (
-  _prev: { success: boolean; message?: string; errors?: Record<string, string> },
+  _prev: BookingFormState,
   formData: FormData
-) => Promise<{ success: boolean; message?: string; errors?: Record<string, string> }>
+) => Promise<BookingFormState>
 
 export interface BookingWidgetProps {
   config: BookingConfig
@@ -15,7 +27,7 @@ export interface BookingWidgetProps {
   className?: string
 }
 
-const initialState = { success: false, message: '', errors: {} as Record<string, string> }
+const initialState: BookingFormState = { success: false, message: '', errors: {} }
 
 export function BookingWidget({ config, submitAction, className }: BookingWidgetProps) {
   const [state, formAction] = useActionState(

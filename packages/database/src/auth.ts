@@ -312,12 +312,34 @@ export async function getUserTenants(userId: UserId): Promise<
       return []
     }
 
-    type Row = { tenant_id: string; role: string; tenants: { name: string } | null }
-    return ((data || []) as Row[]).map((item) => ({
-      tenantId: item.tenant_id,
-      role: item.role,
-      ...(item.tenants?.name && { tenantName: item.tenants.name }),
-    }))
+    const rows = Array.isArray(data) ? data : []
+
+    return rows.reduce<Array<{ tenantId: TenantId; role: string; tenantName?: string }>>(
+      (result, item) => {
+        if (!item || typeof item !== 'object') {
+          return result
+        }
+
+        const tenantId = 'tenant_id' in item ? item['tenant_id'] : undefined
+        const role = 'role' in item ? item['role'] : undefined
+        const tenants = 'tenants' in item ? item['tenants'] : undefined
+        const tenantName =
+          tenants && typeof tenants === 'object' && 'name' in tenants ? tenants['name'] : undefined
+
+        if (typeof tenantId !== 'string' || typeof role !== 'string') {
+          return result
+        }
+
+        result.push({
+          tenantId,
+          role,
+          ...(typeof tenantName === 'string' ? { tenantName } : {}),
+        })
+
+        return result
+      },
+      []
+    )
   } catch (error) {
     console.error('Error in getUserTenants:', error)
     return []

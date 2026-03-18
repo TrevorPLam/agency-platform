@@ -1,13 +1,13 @@
 /**
  * Security Alerts API Route
- * 
+ *
  * Manages security alerts including creation, retrieval, and status updates
  * following 2026 security alerting best practices.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { validateTenantAccess } from '@agency/database/auth'
-import { 
+import {
   SecurityAlert,
   SecurityAlertType,
   SecuritySeverity,
@@ -18,7 +18,7 @@ import {
 
 /**
  * GET /api/security/alerts
- * 
+ *
  * Retrieve security alerts with filtering and pagination
  */
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const auth = await validateTenantAccess(request)
     if (!auth) {
       return NextResponse.json(
-        { 
+        {
           code: 'UNAUTHORIZED',
           status: 401,
           title: 'Unauthorized',
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    
+
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -67,25 +67,25 @@ export async function GET(request: NextRequest) {
 
     // Apply additional filters
     if (severity) {
-      alerts = alerts.filter(alert => alert.severity === severity)
+      alerts = alerts.filter((alert) => alert.severity === severity)
     }
 
     if (type) {
-      alerts = alerts.filter(alert => alert.type === type)
+      alerts = alerts.filter((alert) => alert.type === type)
     }
 
     if (startDate) {
       const start = new Date(startDate)
-      alerts = alerts.filter(alert => new Date(alert.timestamp) >= start)
+      alerts = alerts.filter((alert) => new Date(alert.timestamp) >= start)
     }
 
     if (endDate) {
       const end = new Date(endDate)
-      alerts = alerts.filter(alert => new Date(alert.timestamp) <= end)
+      alerts = alerts.filter((alert) => new Date(alert.timestamp) <= end)
     }
 
     if (assignedTo) {
-      alerts = alerts.filter(alert => alert.assignedTo === assignedTo)
+      alerts = alerts.filter((alert) => alert.assignedTo === assignedTo)
     }
 
     // Sort alerts by timestamp (newest first) and then by severity
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     alerts.sort((a, b) => {
       const severityDiff = severityOrder[b.severity] - severityOrder[a.severity]
       if (severityDiff !== 0) return severityDiff
-      
+
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     })
 
@@ -106,22 +106,25 @@ export async function GET(request: NextRequest) {
     const summary = {
       total: alerts.length,
       byStatus: {
-        active: alerts.filter(a => a.status === 'active').length,
-        acknowledged: alerts.filter(a => a.status === 'acknowledged').length,
-        investigating: alerts.filter(a => a.status === 'investigating').length,
-        resolved: alerts.filter(a => a.status === 'resolved').length,
-        false_positive: alerts.filter(a => a.status === 'false_positive').length,
+        active: alerts.filter((a) => a.status === 'active').length,
+        acknowledged: alerts.filter((a) => a.status === 'acknowledged').length,
+        investigating: alerts.filter((a) => a.status === 'investigating').length,
+        resolved: alerts.filter((a) => a.status === 'resolved').length,
+        false_positive: alerts.filter((a) => a.status === 'false_positive').length,
       },
       bySeverity: {
-        critical: alerts.filter(a => a.severity === 'critical').length,
-        high: alerts.filter(a => a.severity === 'high').length,
-        medium: alerts.filter(a => a.severity === 'medium').length,
-        low: alerts.filter(a => a.severity === 'low').length,
+        critical: alerts.filter((a) => a.severity === 'critical').length,
+        high: alerts.filter((a) => a.severity === 'high').length,
+        medium: alerts.filter((a) => a.severity === 'medium').length,
+        low: alerts.filter((a) => a.severity === 'low').length,
       },
-      byType: alerts.reduce((counts, alert) => {
-        counts[alert.type] = (counts[alert.type] || 0) + 1
-        return counts
-      }, {} as Record<string, number>),
+      byType: alerts.reduce(
+        (counts, alert) => {
+          counts[alert.type] = (counts[alert.type] || 0) + 1
+          return counts
+        },
+        {} as Record<string, number>
+      ),
     }
 
     // Return paginated results
@@ -145,10 +148,9 @@ export async function GET(request: NextRequest) {
       },
       summary,
     })
-
   } catch (error) {
     console.error('Security alerts GET error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_ERROR',
@@ -163,7 +165,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/security/alerts
- * 
+ *
  * Create a new security alert (manual or system-generated)
  */
 export async function POST(request: NextRequest) {
@@ -186,8 +188,8 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const requiredFields = ['title', 'description', 'severity', 'type']
-    const missingFields = requiredFields.filter(field => !(field in body))
-    
+    const missingFields = requiredFields.filter((field) => !(field in body))
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
@@ -254,27 +256,29 @@ export async function POST(request: NextRequest) {
     SecurityEvents.suspiciousActivity({
       tenantId: auth.tenantId,
       userId: auth.userId,
-      ip: request.headers.get('x-forwarded-for') || request.ip || 'unknown',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
       pattern: 'manual_security_alert_creation',
       riskScore: alert.metadata.riskScore,
     })
 
-    return NextResponse.json({
-      id: alert.id,
-      timestamp: alert.timestamp,
-      status: 'created',
-      alert: {
+    return NextResponse.json(
+      {
         id: alert.id,
-        title: alert.title,
-        severity: alert.severity,
-        type: alert.type,
-        status: alert.status,
+        timestamp: alert.timestamp,
+        status: 'created',
+        alert: {
+          id: alert.id,
+          title: alert.title,
+          severity: alert.severity,
+          type: alert.type,
+          status: alert.status,
+        },
       },
-    }, { status: 201 })
-
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Security alerts POST error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_ERROR',
@@ -289,7 +293,7 @@ export async function POST(request: NextRequest) {
 
 /**
  * PATCH /api/security/alerts
- * 
+ *
  * Update security alert status or assignment
  */
 export async function PATCH(request: NextRequest) {
@@ -325,9 +329,9 @@ export async function PATCH(request: NextRequest) {
 
     // Validate allowed update fields
     const allowedFields = ['status', 'assignedTo']
-    const updateFields = Object.keys(body).filter(key => key !== 'id')
-    const invalidFields = updateFields.filter(field => !allowedFields.includes(field))
-    
+    const updateFields = Object.keys(body).filter((key) => key !== 'id')
+    const invalidFields = updateFields.filter((field) => !allowedFields.includes(field))
+
     if (invalidFields.length > 0) {
       return NextResponse.json(
         {
@@ -341,7 +345,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Validate status if provided
-    if (body.status && !['active', 'acknowledged', 'investigating', 'resolved', 'false_positive'].includes(body.status)) {
+    if (
+      body.status &&
+      !['active', 'acknowledged', 'investigating', 'resolved', 'false_positive'].includes(
+        body.status
+      )
+    ) {
       return NextResponse.json(
         {
           code: 'INVALID_STATUS',
@@ -355,7 +364,7 @@ export async function PATCH(request: NextRequest) {
 
     // Update alert
     const updated = securityMonitoringEngine.updateAlertStatus(body.id, body.status)
-    
+
     if (!updated) {
       return NextResponse.json(
         {
@@ -370,7 +379,7 @@ export async function PATCH(request: NextRequest) {
 
     // Get updated alert
     const alerts = getSecurityAlerts(auth.tenantId)
-    const updatedAlert = alerts.find(a => a.id === body.id)
+    const updatedAlert = alerts.find((a) => a.id === body.id)
 
     if (!updatedAlert) {
       return NextResponse.json(
@@ -394,7 +403,7 @@ export async function PATCH(request: NextRequest) {
     SecurityEvents.suspiciousActivity({
       tenantId: auth.tenantId,
       userId: auth.userId,
-      ip: request.headers.get('x-forwarded-for') || request.ip || 'unknown',
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
       pattern: 'security_alert_status_update',
       riskScore: 20, // Low risk for status updates
     })
@@ -411,10 +420,9 @@ export async function PATCH(request: NextRequest) {
         updatedAt: new Date().toISOString(),
       },
     })
-
   } catch (error) {
     console.error('Security alerts PATCH error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_ERROR',

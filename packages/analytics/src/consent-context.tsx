@@ -20,6 +20,7 @@ import {
 } from './consent'
 
 const ConsentContextProvider = createContext<ConsentContext | null>(null)
+const DEFAULT_CONSENT_LAST_UPDATED = new Date(0)
 
 export interface ConsentProviderProps {
   children: ReactNode
@@ -33,7 +34,7 @@ export function ConsentProvider({ children }: ConsentProviderProps) {
     return {
       preferences: DEFAULT_CONSENT_PREFERENCES,
       hasMadeChoice: false,
-      lastUpdated: new Date(),
+      lastUpdated: DEFAULT_CONSENT_LAST_UPDATED,
     }
   })
 

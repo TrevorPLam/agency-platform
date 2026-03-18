@@ -5,6 +5,18 @@ import { getAdminClient } from '@agency/database/admin'
 import { captureServerEvent } from '@agency/analytics/server'
 import { z } from 'zod'
 
+type BookingFormErrors = {
+  name?: string
+  email?: string
+  message?: string
+}
+
+type BookingActionState = {
+  success: boolean
+  message?: string
+  errors?: BookingFormErrors
+}
+
 // Zod schema for booking form validation
 const bookingFormSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
@@ -17,9 +29,9 @@ const bookingFormSchema = z.object({
 const AGENCY_TENANT_SLUG = 'agency'
 
 export async function submitBooking(
-  _prev: { success: boolean; message?: string; errors?: Record<string, string> },
+  _prev: BookingActionState,
   formData: FormData
-): Promise<{ success: boolean; message?: string; errors?: Record<string, string> }> {
+): Promise<BookingActionState> {
   // Extract form data
   const rawData = {
     name: (formData.get('name') as string)?.trim() || '',
@@ -53,7 +65,7 @@ export async function submitBooking(
 
   // Insert booking record
   const { error, data: bookingData } = await admin.from('bookings').insert({
-    tenant_id: tenant.id,
+    tenant_id: tenant['id'],
     name: name || null,
     email,
     message: message || null,
@@ -64,6 +76,10 @@ export async function submitBooking(
     return { success: false, message: 'Something went wrong. Please try again.' }
   }
 
+  if (!bookingData) {
+    return { success: false, message: 'Booking could not be created.' }
+  }
+
   // Capture server-side analytics event
   try {
     captureServerEvent(
@@ -71,7 +87,7 @@ export async function submitBooking(
       'booking_submitted',
       {
         tenant: AGENCY_TENANT_SLUG,
-        booking_id: bookingData.id,
+        booking_id: bookingData['id'],
         has_name: !!name,
         has_message: !!message,
         submission_source: 'firm_booking_form',

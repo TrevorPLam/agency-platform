@@ -1,15 +1,15 @@
 /**
  * Security Events API Route
- * 
+ *
  * Handles logging and retrieval of security events
  * following OWASP logging standards and tenant isolation.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { validateTenantAccess } from '@agency/database/auth'
-import { 
-  SecurityEvent, 
-  SecurityEventType, 
+import {
+  SecurityEvent,
+  SecurityEventType,
   SecuritySeverity,
   createSecurityEvent,
   logSecurityEvent,
@@ -18,7 +18,7 @@ import {
 
 /**
  * GET /api/security/events
- * 
+ *
  * Retrieve security events with filtering and pagination
  */
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const auth = await validateTenantAccess(request)
     if (!auth) {
       return NextResponse.json(
-        { 
+        {
           code: 'UNAUTHORIZED',
           status: 401,
           title: 'Unauthorized',
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    
+
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
@@ -70,24 +70,24 @@ export async function GET(request: NextRequest) {
 
     // Get security metrics (includes filtered events)
     const metrics = securityMonitoringEngine.calculateMetrics(auth.tenantId, timeRange)
-    
+
     // Filter events based on query parameters
     let filteredEvents = metrics.events || []
 
     if (severity) {
-      filteredEvents = filteredEvents.filter(event => event.severity === severity)
+      filteredEvents = filteredEvents.filter((event) => event.severity === severity)
     }
 
     if (eventType) {
-      filteredEvents = filteredEvents.filter(event => event.eventType === eventType)
+      filteredEvents = filteredEvents.filter((event) => event.eventType === eventType)
     }
 
     if (userId) {
-      filteredEvents = filteredEvents.filter(event => event.actor.userId === userId)
+      filteredEvents = filteredEvents.filter((event) => event.actor.userId === userId)
     }
 
     if (sourceIp) {
-      filteredEvents = filteredEvents.filter(event => event.source.ip === sourceIp)
+      filteredEvents = filteredEvents.filter((event) => event.source.ip === sourceIp)
     }
 
     // Sort events by timestamp (newest first)
@@ -125,10 +125,9 @@ export async function GET(request: NextRequest) {
         lowEvents: metrics.lowEvents,
       },
     })
-
   } catch (error) {
     console.error('Security events GET error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_ERROR',
@@ -143,7 +142,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/security/events
- * 
+ *
  * Log a new security event
  */
 export async function POST(request: NextRequest) {
@@ -166,8 +165,8 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     const requiredFields = ['eventType', 'severity', 'description', 'outcome']
-    const missingFields = requiredFields.filter(field => !(field in body))
-    
+    const missingFields = requiredFields.filter((field) => !(field in body))
+
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
@@ -206,10 +205,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Extract request context
-    const sourceIp = request.headers.get('x-forwarded-for') || 
-                    request.headers.get('x-real-ip') || 
-                    request.ip || 
-                    'unknown'
+    const sourceIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      'unknown'
 
     const userAgent = request.headers.get('user-agent') || 'unknown'
 
@@ -267,17 +266,19 @@ export async function POST(request: NextRequest) {
     const { processSecurityAlerts } = await import('@agency/analytics')
     await processSecurityAlerts([securityEvent])
 
-    return NextResponse.json({
-      id: securityEvent.context.correlationId,
-      timestamp: securityEvent.timestamp,
-      eventType: securityEvent.eventType,
-      severity: securityEvent.severity,
-      status: 'logged',
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        id: securityEvent.context.correlationId,
+        timestamp: securityEvent.timestamp,
+        eventType: securityEvent.eventType,
+        severity: securityEvent.severity,
+        status: 'logged',
+      },
+      { status: 201 }
+    )
   } catch (error) {
     console.error('Security events POST error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_ERROR',

@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import { cacheLife, cacheTag } from 'next/cache'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
-import { getAllPosts } from '@/content/blog'
+import { getAllPosts } from '../../content/blog'
 
 export const metadata = {
   title: 'Blog',
@@ -16,6 +17,11 @@ export async function generateStaticParams() {
 }
 
 export default async function BlogPage() {
+  'use cache'
+
+  cacheLife('hours')
+  cacheTag('page:blog', 'page:marketing', 'blog', 'site:firm')
+
   const posts = await getAllPosts()
 
   return (

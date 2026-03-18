@@ -1,5 +1,6 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
-import { getAllServices } from '@/content/services'
+import { getAllServices } from '../../content/services'
 
 export const metadata = {
   title: 'Services',
@@ -7,6 +8,11 @@ export const metadata = {
 }
 
 export default async function ServicesPage() {
+  'use cache'
+
+  cacheLife('hours')
+  cacheTag('page:services', 'page:marketing', 'services', 'site:firm')
+
   const services = await getAllServices()
 
   return (

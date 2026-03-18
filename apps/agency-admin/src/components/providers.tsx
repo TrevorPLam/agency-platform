@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { initAnalytics } from '@agency/analytics'
+import { initAnalytics } from '@agency/analytics/client'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {

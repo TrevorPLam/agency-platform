@@ -3,17 +3,15 @@
 import 'client-only'
 
 import { useEffect, type ReactNode } from 'react'
-import {
-  ConsentProvider,
-  SimpleConsentBanner,
-  initAnalyticsWithConsent,
-  useAnalyticsConsent,
-} from '@agency/analytics'
+import { ConsentProvider, useAnalyticsConsent } from '@agency/analytics/consent-context'
+import { SimpleConsentBanner } from '@agency/analytics/consent-banner'
+import { initAnalyticsWithConsent } from '@agency/analytics/client'
 import {
   usePerformanceBudgetPresets,
   usePerformanceBudgets,
   useWebVitals,
-} from '@agency/monitoring'
+} from '@agency/monitoring/client'
+import type { PerformanceBudget } from '@agency/monitoring/client'
 
 function AnalyticsInitializer({ tenantSlug }: { tenantSlug: string }) {
   const hasConsent = useAnalyticsConsent()
@@ -43,7 +41,7 @@ function PerformanceMonitor({ tenantSlug }: { tenantSlug: string }) {
     }
 
     const defaultBudgets = getDefaultBudgets(tenantSlug)
-    defaultBudgets.forEach((budget) => {
+    defaultBudgets.forEach((budget: PerformanceBudget) => {
       addBudget(budget)
     })
   }, [webVitalsMonitor, tenantSlug, getDefaultBudgets, addBudget])

@@ -10,14 +10,20 @@ const EnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   STORAGE_BUCKET_NAME: z.string().default('uploads'),
-  VIRUS_SCANNING_ENABLED: z.enum(['true', 'false']).transform(val => val === 'true').default(false),
+  VIRUS_SCANNING_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true')
+    .default(false),
   VIRUS_SCAN_PROVIDER: z.enum(['clamav', 'virustotal', 'none']).default('none'),
   VIRUSTOTAL_API_KEY: z.string().optional(),
   VIRUS_SCAN_TIMEOUT: z.string().transform(Number).default('30000'),
   VIRUS_SCAN_RETRY_ATTEMPTS: z.string().transform(Number).default('3'),
   VIRUS_SCAN_RETRY_DELAY: z.string().transform(Number).default('1000'),
   MAX_FILE_SIZE: z.string().transform(Number).default('52428800'),
-  ENABLE_FILE_QUARANTINE: z.enum(['true', 'false']).transform(val => val !== 'false').default(true),
+  ENABLE_FILE_QUARANTINE: z
+    .enum(['true', 'false'])
+    .transform((val) => val !== 'false')
+    .default(true),
   FILE_RETENTION_DAYS: z.string().transform(Number).default('365'),
 })
 
@@ -122,7 +128,7 @@ export async function POST(request: NextRequest) {
         originalContentType: file.type,
         lastModified: file.lastModified,
         userAgent: request.headers.get('user-agent'),
-        ipAddress: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
       },
     })
 
@@ -151,7 +157,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
   } catch (error) {
     console.error('Upload error:', error)
 
@@ -223,7 +228,6 @@ export async function GET(request: NextRequest) {
       limit,
       offset,
     })
-
   } catch (error) {
     console.error('List files error:', error)
 
@@ -308,7 +312,6 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       )
     }
-
   } catch (error) {
     console.error('Delete file error:', error)
 

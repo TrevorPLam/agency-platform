@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import { cacheLife, cacheTag } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { Button } from '@agency/ui'
 import { BlogPosting, WithContext } from 'schema-dts'
-import { getPostBySlug, getAllPosts } from '@/content/blog'
+import { getPostBySlug, getAllPosts } from '../../../content/blog'
 
 // Generate static params for blog posts
 export async function generateStaticParams() {
@@ -27,12 +28,20 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params
+  return renderBlogPostPage(slug)
+}
+
+async function renderBlogPostPage(slug: string) {
+  'use cache'
+
+  cacheLife('days')
+  cacheTag('page:blog', `page:blog:${slug}`, 'blog', `blog:${slug}`, 'site:firm')
+
   const post = await getPostBySlug(slug)
   if (!post) notFound()
 
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
+  const vercelUrl = process.env['VERCEL_URL']
+  const baseUrl = vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000'
 
   // JSON-LD structured data for BlogPosting
   const blogPosting: WithContext<BlogPosting> = {

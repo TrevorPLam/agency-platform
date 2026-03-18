@@ -100,6 +100,10 @@ export type CaseStudy = z.infer<typeof CaseStudySchema>
 export type ServicePage = z.infer<typeof ServicePageSchema>
 
 export type Content = BlogPost | CaseStudy | ServicePage
+export type ContentDraft =
+  | Omit<BlogPost, 'id' | 'publishedAt' | 'updatedAt'>
+  | Omit<CaseStudy, 'id' | 'publishedAt' | 'updatedAt'>
+  | Omit<ServicePage, 'id' | 'publishedAt' | 'updatedAt'>
 
 // ============================================================================
 // CONTENT VALIDATION
@@ -194,7 +198,7 @@ export interface ContentRepository {
   getBySlug(slug: string): Promise<Content | null>
   getByType(type: Content['type']): Promise<Content[]>
   search(query: string): Promise<Content[]>
-  create(content: Omit<Content, 'id' | 'publishedAt' | 'updatedAt'>): Promise<Content>
+  create(content: ContentDraft): Promise<Content>
   update(id: string, content: Partial<Content>): Promise<Content>
   delete(id: string): Promise<void>
 }
@@ -230,9 +234,9 @@ export class FileContentRepository implements ContentRepository {
     )
   }
 
-  async create(content: Omit<Content, 'id' | 'publishedAt' | 'updatedAt'>): Promise<Content> {
+  async create(content: ContentDraft): Promise<Content> {
     const now = new Date().toISOString()
-    const newContent: Content = {
+    const newContent = {
       ...content,
       id: crypto.randomUUID(),
       slug: content.slug || generateSlug(content.title),
@@ -252,6 +256,10 @@ export class FileContentRepository implements ContentRepository {
     }
 
     const existingContent = this.content[index]
+    if (!existingContent) {
+      throw new Error(`Content with id ${id} not found`)
+    }
+
     const updatedContent = {
       ...existingContent,
       ...updates,

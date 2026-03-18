@@ -1,13 +1,19 @@
 import { getAdminClient } from '@agency/database/admin'
-import { BookingWidget } from '@agency/booking'
+import { BookingWidget } from '@agency/booking/widget'
 import { submitBooking } from './actions'
 
 const AGENCY_TENANT_SLUG = 'agency'
 
 async function getAgencyTenantId(): Promise<string | null> {
-  const admin = getAdminClient()
-  const { data } = await admin.from('tenants').select('id').eq('slug', AGENCY_TENANT_SLUG).single()
-  return data?.id ?? null
+  try {
+    const admin = getAdminClient()
+    const { data } = await admin.from('tenants').select('id').eq('slug', AGENCY_TENANT_SLUG).single()
+    const tenantId = data?.['id']
+
+    return typeof tenantId === 'string' ? tenantId : null
+  } catch {
+    return null
+  }
 }
 
 export const metadata = {
@@ -20,7 +26,9 @@ export default async function BookPage() {
   if (!tenantId) {
     return (
       <main className="container mx-auto max-w-md px-4 py-12">
-        <p className="text-slate-600">Booking is not configured. Add the agency tenant to the database.</p>
+        <p className="text-slate-600">
+          Booking is not configured. Add the agency tenant to the database.
+        </p>
       </main>
     )
   }
@@ -28,19 +36,15 @@ export default async function BookPage() {
   return (
     <main className="container mx-auto max-w-md px-4 py-12">
       <div className="space-y-8">
-        <div className="text-center space-y-4">
+        <div className="space-y-4 text-center">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Book a Call</h1>
           <p className="text-slate-600 dark:text-slate-300">
             Tell us a bit about yourself and we&apos;ll get back to you to schedule a time.
           </p>
         </div>
-        
-        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-          <BookingWidget 
-            config={{ tenantId }} 
-            submitAction={submitBooking}
-            className="space-y-4"
-          />
+
+        <div className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-800">
+          <BookingWidget config={{ tenantId }} submitAction={submitBooking} className="space-y-4" />
         </div>
 
         <div className="text-center text-sm text-slate-500 dark:text-slate-400">

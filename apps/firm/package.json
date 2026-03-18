@@ -16,6 +16,7 @@
   "dependencies": {
     "@agency/analytics": "workspace:*",
     "@agency/booking": "workspace:*",
+    "@agency/content": "workspace:*",
     "@agency/database": "workspace:*",
     "@agency/email": "workspace:*",
     "@agency/marketing": "workspace:*",

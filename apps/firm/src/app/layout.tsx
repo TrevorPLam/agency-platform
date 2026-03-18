@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cacheLife, cacheTag } from 'next/cache'
 import { Inter } from 'next/font/google'
 import { SiteProviders } from '@agency/marketing/providers'
 import { SiteShell } from '@agency/marketing/shell'
@@ -14,7 +15,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'
+    process.env['VERCEL_URL'] ? `https://${process.env['VERCEL_URL']}` : 'http://localhost:3000'
   ),
   title: { default: 'Agency — Digital Marketing Excellence', template: '%s | Agency' },
   description:
@@ -25,10 +26,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : 'http://localhost:3000'
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  'use cache'
+
+  cacheLife('days')
+  cacheTag('site-shell', `site-shell:${siteConfig.slug}`)
+
+  const vercelUrl = process.env['VERCEL_URL']
+  const baseUrl = vercelUrl ? `https://${vercelUrl}` : 'http://localhost:3000'
 
   // JSON-LD structured data for LocalBusiness
   const localBusiness: WithContext<LocalBusiness> = {

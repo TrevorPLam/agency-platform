@@ -1,8 +1,14 @@
 import Link from 'next/link'
+import { cacheLife, cacheTag } from 'next/cache'
 import { FeatureGrid } from '@agency/marketing'
 import { Button } from '@agency/ui'
 
-export default function HomePage() {
+export default async function HomePage() {
+  'use cache'
+
+  cacheLife('days')
+  cacheTag('page:home', 'page:marketing', 'site:firm')
+
   const features = [
     {
       title: 'Strategy',

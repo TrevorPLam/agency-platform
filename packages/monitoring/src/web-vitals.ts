@@ -1,16 +1,16 @@
 /**
  * Web Vitals monitoring system
- * 
+ *
  * Provides comprehensive Core Web Vitals tracking with tenant isolation,
  * real user monitoring, and performance budget enforcement.
  */
 
 import type { TenantId } from '@agency/database'
-import type { 
-  WebVitalsMetrics, 
-  PerformanceBudget, 
-  PerformanceAlert, 
-  PerformanceAggregation 
+import type {
+  WebVitalsMetrics,
+  PerformanceBudget,
+  PerformanceAlert,
+  PerformanceAggregation,
 } from './types'
 
 /**
@@ -18,8 +18,8 @@ import type {
  */
 const VITAL_THRESHOLDS = {
   lcp: { good: 2500, poor: 4000 }, // Largest Contentful Paint (ms)
-  inp: { good: 200, poor: 500 },   // Interaction to Next Paint (ms)
-  cls: { good: 0.1, poor: 0.25 },  // Cumulative Layout Shift
+  inp: { good: 200, poor: 500 }, // Interaction to Next Paint (ms)
+  cls: { good: 0.1, poor: 0.25 }, // Cumulative Layout Shift
   fcp: { good: 1800, poor: 3000 }, // First Contentful Paint (ms)
   ttfb: { good: 800, poor: 1800 }, // Time to First Byte (ms)
 } as const
@@ -27,7 +27,10 @@ const VITAL_THRESHOLDS = {
 /**
  * Get performance rating for a metric value
  */
-function getRating(metric: keyof typeof VITAL_THRESHOLDS, value: number): 'good' | 'needs-improvement' | 'poor' {
+function getRating(
+  metric: keyof typeof VITAL_THRESHOLDS,
+  value: number
+): 'good' | 'needs-improvement' | 'poor' {
   const thresholds = VITAL_THRESHOLDS[metric]
   if (value <= thresholds.good) return 'good'
   if (value <= thresholds.poor) return 'needs-improvement'
@@ -39,15 +42,15 @@ function getRating(metric: keyof typeof VITAL_THRESHOLDS, value: number): 'good'
  */
 function getDeviceCategory(userAgent: string): 'mobile' | 'tablet' | 'desktop' {
   const ua = userAgent.toLowerCase()
-  
+
   if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) {
     return 'mobile'
   }
-  
+
   if (ua.includes('tablet') || ua.includes('ipad')) {
     return 'tablet'
   }
-  
+
   return 'desktop'
 }
 
@@ -58,18 +61,24 @@ function getConnectionType(): 'slow-2g' | '2g' | '3g' | '4g' | '5g' | 'unknown' 
   if (typeof window === 'undefined' || !('connection' in navigator)) {
     return 'unknown'
   }
-  
+
   const connection = (navigator as any).connection
   if (!connection) return 'unknown'
-  
+
   const effectiveType = connection.effectiveType
   switch (effectiveType) {
-    case 'slow-2g': return 'slow-2g'
-    case '2g': return '2g'
-    case '3g': return '3g'
-    case '4g': return '4g'
-    case '5g': return '5g'
-    default: return 'unknown'
+    case 'slow-2g':
+      return 'slow-2g'
+    case '2g':
+      return '2g'
+    case '3g':
+      return '3g'
+    case '4g':
+      return '4g'
+    case '5g':
+      return '5g'
+    default:
+      return 'unknown'
   }
 }
 
@@ -82,12 +91,14 @@ export class WebVitalsMonitor {
   private alerts: Map<string, PerformanceAlert> = new Map()
   private isCollecting = false
 
-  constructor(private config: {
-    tenantId: TenantId
-    batchSize?: number
-    flushInterval?: number
-    enableRealUserMonitoring?: boolean
-  }) {
+  constructor(
+    private config: {
+      tenantId: TenantId
+      batchSize?: number
+      flushInterval?: number
+      enableRealUserMonitoring?: boolean
+    }
+  ) {
     this.config = {
       batchSize: 10,
       flushInterval: 30000, // 30 seconds
@@ -101,26 +112,28 @@ export class WebVitalsMonitor {
    */
   startCollection(): void {
     if (this.isCollecting || typeof window === 'undefined') return
-    
+
     this.isCollecting = true
-    
+
     // Load web-vitals library dynamically
-    this.loadWebVitalsLibrary().then(({ getCLS, getFID, getFCP, getLCP, getTTFB, getINP }) => {
-      // Collect Core Web Vitals
-      getCLS((metric) => this.handleMetric('cls', metric.value))
-      getFID((metric) => this.handleMetric('fid', metric.value)) // Legacy FID for compatibility
-      getFCP((metric) => this.handleMetric('fcp', metric.value))
-      getLCP((metric) => this.handleMetric('lcp', metric.value))
-      getTTFB((metric) => this.handleMetric('ttfb', metric.value))
-      getINP((metric) => this.handleMetric('inp', metric.value))
-      
-      // Start periodic flushing
-      if (this.config.enableRealUserMonitoring) {
-        setInterval(() => this.flushMetrics(), this.config.flushInterval!)
-      }
-    }).catch(error => {
-      console.error('Failed to load web-vitals library:', error)
-    })
+    this.loadWebVitalsLibrary()
+      .then(({ getCLS, getFID, getFCP, getLCP, getTTFB, getINP }) => {
+        // Collect Core Web Vitals
+        getCLS((metric) => this.handleMetric('cls', metric.value))
+        getFID((metric) => this.handleMetric('fid', metric.value)) // Legacy FID for compatibility
+        getFCP((metric) => this.handleMetric('fcp', metric.value))
+        getLCP((metric) => this.handleMetric('lcp', metric.value))
+        getTTFB((metric) => this.handleMetric('ttfb', metric.value))
+        getINP((metric) => this.handleMetric('inp', metric.value))
+
+        // Start periodic flushing
+        if (this.config.enableRealUserMonitoring) {
+          setInterval(() => this.flushMetrics(), this.config.flushInterval!)
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to load web-vitals library:', error)
+      })
   }
 
   /**
@@ -140,7 +153,7 @@ export class WebVitalsMonitor {
     const userAgent = navigator.userAgent
     const deviceCategory = getDeviceCategory(userAgent)
     const connectionType = getConnectionType()
-    
+
     // Create metric record
     const metric: WebVitalsMetrics = {
       id: this.generateId(),
@@ -154,7 +167,11 @@ export class WebVitalsMonitor {
       cls: name === 'cls' ? value : 0,
       fcp: name === 'fcp' ? value : 0,
       ttfb: name === 'ttfb' ? value : 0,
-      rating: this.getOverallRating({ lcp: name === 'lcp' ? value : 0, inp: name === 'inp' ? value : 0, cls: name === 'cls' ? value : 0 }),
+      rating: this.getOverallRating({
+        lcp: name === 'lcp' ? value : 0,
+        inp: name === 'inp' ? value : 0,
+        cls: name === 'cls' ? value : 0,
+      }),
       timestamp: new Date().toISOString(),
       context: {
         referrer: document.referrer,
@@ -162,15 +179,17 @@ export class WebVitalsMonitor {
           width: window.innerWidth,
           height: window.innerHeight,
         },
-        memory: (performance as any).memory ? {
-          used: (performance as any).memory.usedJSHeapSize,
-          total: (performance as any).memory.totalJSHeapSize,
-        } : null,
+        memory: (performance as any).memory
+          ? {
+              used: (performance as any).memory.usedJSHeapSize,
+              total: (performance as any).memory.totalJSHeapSize,
+            }
+          : null,
       },
     }
 
     // Update existing metric or add new one
-    const existingIndex = this.metricsBuffer.findIndex(m => m.pageUrl === metric.pageUrl)
+    const existingIndex = this.metricsBuffer.findIndex((m) => m.pageUrl === metric.pageUrl)
     if (existingIndex >= 0) {
       // Merge with existing metric (some metrics arrive at different times)
       const existing = this.metricsBuffer[existingIndex]
@@ -181,7 +200,7 @@ export class WebVitalsMonitor {
 
     // Check performance budgets
     this.checkBudgets(metric)
-    
+
     // Auto-flush if buffer is full
     if (this.metricsBuffer.length >= this.config.batchSize!) {
       this.flushMetrics()
@@ -191,14 +210,22 @@ export class WebVitalsMonitor {
   /**
    * Get overall performance rating
    */
-  private getOverallRating(metrics: { lcp: number; inp: number; cls: number }): 'good' | 'needs-improvement' | 'poor' {
+  private getOverallRating(metrics: {
+    lcp: number
+    inp: number
+    cls: number
+  }): 'good' | 'needs-improvement' | 'poor' {
     const lcpRating = getRating('lcp', metrics.lcp)
     const inpRating = getRating('inp', metrics.inp)
     const clsRating = getRating('cls', metrics.cls)
-    
+
     // Overall rating is the worst of the three Core Web Vitals
     if (lcpRating === 'poor' || inpRating === 'poor' || clsRating === 'poor') return 'poor'
-    if (lcpRating === 'needs-improvement' || inpRating === 'needs-improvement' || clsRating === 'needs-improvement') {
+    if (
+      lcpRating === 'needs-improvement' ||
+      inpRating === 'needs-improvement' ||
+      clsRating === 'needs-improvement'
+    ) {
       return 'needs-improvement'
     }
     return 'good'
@@ -208,21 +235,33 @@ export class WebVitalsMonitor {
    * Check performance budgets and trigger alerts
    */
   private checkBudgets(metric: WebVitalsMetrics): void {
-    this.budgets.forEach(budget => {
+    this.budgets.forEach((budget) => {
       if (!budget.active || budget.tenantId !== this.config.tenantId) return
-      
+
       let value: number
       switch (budget.category) {
-        case 'lcp': value = metric.lcp; break
-        case 'inp': value = metric.inp; break
-        case 'cls': value = metric.cls; break
-        case 'fcp': value = metric.fcp; break
-        case 'ttfb': value = metric.ttfb; break
-        default: return
+        case 'lcp':
+          value = metric.lcp
+          break
+        case 'inp':
+          value = metric.inp
+          break
+        case 'cls':
+          value = metric.cls
+          break
+        case 'fcp':
+          value = metric.fcp
+          break
+        case 'ttfb':
+          value = metric.ttfb
+          break
+        default:
+          return
       }
 
-      const isViolation = budget.type === 'maximum' ? value > budget.threshold : value < budget.threshold
-      
+      const isViolation =
+        budget.type === 'maximum' ? value > budget.threshold : value < budget.threshold
+
       if (isViolation) {
         this.triggerBudgetAlert(budget, value)
       }
@@ -235,7 +274,7 @@ export class WebVitalsMonitor {
   private triggerBudgetAlert(budget: PerformanceBudget, currentValue: number): void {
     const alertKey = `${budget.id}-${budget.category}`
     let alert = this.alerts.get(alertKey)
-    
+
     if (!alert) {
       alert = {
         id: this.generateId(),
@@ -290,7 +329,7 @@ export class WebVitalsMonitor {
     try {
       // Send to analytics system (PostHog, custom endpoint, etc.)
       await this.sendMetricsToAnalytics(metricsToSend)
-      
+
       // Store in database for historical analysis
       await this.storeMetrics(metricsToSend)
     } catch (error) {
@@ -305,9 +344,9 @@ export class WebVitalsMonitor {
    */
   private async sendMetricsToAnalytics(metrics: WebVitalsMetrics[]): Promise<void> {
     // Integrate with existing analytics package
-    const { captureEvent } = await import('@agency/analytics')
-    
-    metrics.forEach(metric => {
+    const { captureEvent } = await import('@agency/analytics/client')
+
+    metrics.forEach((metric) => {
       captureEvent('web_vitals', {
         page_url: metric.pageUrl,
         device_category: metric.deviceCategory,
@@ -367,7 +406,7 @@ export class WebVitalsMonitor {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
-    
+
     this.budgets.set(fullBudget.id, fullBudget)
   }
 
@@ -402,10 +441,12 @@ export class WebVitalsMonitor {
   /**
    * Get performance aggregation for dashboard
    */
-  async getPerformanceAggregation(period: 'hourly' | 'daily' | 'weekly' | 'monthly'): Promise<PerformanceAggregation> {
+  async getPerformanceAggregation(
+    period: 'hourly' | 'daily' | 'weekly' | 'monthly'
+  ): Promise<PerformanceAggregation> {
     // This would aggregate stored metrics from your database
     // Implementation depends on your database schema
-    
+
     // Mock implementation for now
     return {
       period,

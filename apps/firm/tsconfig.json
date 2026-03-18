@@ -2,7 +2,11 @@
   "extends": "@agency/typescript-config/nextjs.json",
   "compilerOptions": {
     "composite": true,
-    "rootDir": "."
+    "typeRoots": ["./node_modules/@types"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@agency/content": ["../../packages/content/src/index.ts"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

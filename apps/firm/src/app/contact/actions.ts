@@ -8,8 +8,14 @@ import { z } from 'zod'
 // Zod schema for contact form validation
 const contactFormSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-  email: z.string().email('Please enter a valid email address').max(255, 'Email must be less than 255 characters'),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(2000, 'Message must be less than 2000 characters'),
+  email: z
+    .string()
+    .email('Please enter a valid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  message: z
+    .string()
+    .min(10, 'Message must be at least 10 characters')
+    .max(2000, 'Message must be less than 2000 characters'),
   // Honeypot field - should be empty for legitimate submissions
   website: z.string().max(0, 'Invalid submission').optional(),
 })
@@ -17,7 +23,11 @@ const contactFormSchema = z.object({
 export type ContactFormState = {
   success: boolean
   message: string
-  errors?: Record<string, string>
+  errors?: {
+    name?: string
+    email?: string
+    message?: string
+  }
 }
 
 export async function submitContactForm(
@@ -43,7 +53,7 @@ export async function submitContactForm(
         name: errors.name?.[0] || '',
         email: errors.email?.[0] || '',
         message: errors.message?.[0] || '',
-      }
+      },
     }
   }
 
