@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { SiteProviders } from '@agency/marketing/providers'
+import { SiteShell } from '@agency/marketing/shell'
 import './globals.css'
-import { Providers } from '@/components/providers'
-import { SiteHeader } from '@/components/site-header'
-import { SiteFooter } from '@/components/site-footer'
+import { AuthAnalytics } from '@/components/auth-analytics'
+import { siteConfig } from '@/config/site'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' })
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -18,21 +19,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} flex min-h-screen flex-col`}>
-        <Providers>
-          <a 
-            href="#main-content" 
-            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            Skip to main content
-          </a>
-          <SiteHeader />
-          <main id="main-content" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-        </Providers>
+    <html lang="en" className={inter.variable} data-theme={siteConfig.slug}>
+      <body className="flex min-h-screen flex-col">
+        <SiteProviders tenantSlug={siteConfig.slug} authAnalytics={<AuthAnalytics />}>
+          <SiteShell config={siteConfig}>{children}</SiteShell>
+        </SiteProviders>
       </body>
     </html>
   )

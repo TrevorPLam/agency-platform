@@ -14,10 +14,11 @@
     "test:coverage": "pnpm dlx vitest run --coverage"
   },
   "dependencies": {
-    "@agency/ui": "workspace:*",
-    "@agency/database": "workspace:*",
     "@agency/analytics": "workspace:*",
+    "@agency/database": "workspace:*",
     "@agency/email": "workspace:*",
+    "@agency/marketing": "workspace:*",
+    "@agency/ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

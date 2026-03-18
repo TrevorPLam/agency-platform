@@ -1,20 +1,13 @@
-import { cache } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
-import { getAllServices, type ServicePage } from '@/content/services'
-
-/** ISR: revalidate this marketing page every 60 seconds. See docs/RENDERING.md. */
-export const revalidate = 60
+import { getAllServices } from '@/content/services'
 
 export const metadata = {
   title: 'Services',
   description: 'Strategy, design, and growth marketing services from our agency.',
 }
 
-// Cache content loading to avoid duplicate fetches in same render
-const getServices = cache(() => getAllServices())
-
-export default function ServicesPage() {
-  const services = getServices()
+export default async function ServicesPage() {
+  const services = await getAllServices()
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -40,7 +33,7 @@ export default function ServicesPage() {
                     <ul className="space-y-2">
                       {service.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-primary"></span>
+                          <span className="bg-brand-primary mt-1 h-1.5 w-1.5 shrink-0 rounded-full"></span>
                           <div>
                             <strong className="text-slate-900">{feature.title}</strong>
                             <p className="text-slate-600">{feature.description}</p>
@@ -55,8 +48,12 @@ export default function ServicesPage() {
                   <div className="mb-6 rounded-lg bg-slate-50 p-4">
                     <h4 className="mb-2 font-semibold text-slate-900">Pricing</h4>
                     <p className="text-slate-600">
-                      <span className="font-semibold text-slate-900">{service.pricing.startingAt}</span>
-                      <span className="text-sm text-slate-500">/{service.pricing.model.toLowerCase()}</span>
+                      <span className="font-semibold text-slate-900">
+                        {service.pricing.startingAt}
+                      </span>
+                      <span className="text-sm text-slate-500">
+                        /{service.pricing.model.toLowerCase()}
+                      </span>
                     </p>
                     {service.pricing.notes && (
                       <p className="mt-1 text-xs text-slate-500">{service.pricing.notes}</p>
@@ -70,7 +67,7 @@ export default function ServicesPage() {
                     <div className="space-y-3">
                       {service.process.map((step, index) => (
                         <div key={index} className="flex gap-3">
-                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary text-xs font-bold text-white">
+                          <div className="bg-brand-primary flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
                             {step.step}
                           </div>
                           <div>

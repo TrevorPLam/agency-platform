@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import { type ServicePage } from './types'
 
 /**
@@ -12,22 +13,26 @@ export const services: ServicePage[] = [
     type: 'service',
     slug: 'digital-strategy',
     title: 'Digital Strategy',
-    description: 'Evidence-based strategic planning that aligns your marketing with business goals and customer needs.',
+    description:
+      'Evidence-based strategic planning that aligns your marketing with business goals and customer needs.',
     publishedAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     author: 'Agency Team',
     features: [
       {
         title: 'Audience Research',
-        description: 'Deep dive into your target audience demographics, behaviors, and preferences to inform all marketing decisions.',
+        description:
+          'Deep dive into your target audience demographics, behaviors, and preferences to inform all marketing decisions.',
       },
       {
         title: 'Competitive Analysis',
-        description: 'Comprehensive analysis of your competitive landscape to identify opportunities and positioning strategies.',
+        description:
+          'Comprehensive analysis of your competitive landscape to identify opportunities and positioning strategies.',
       },
       {
         title: 'Campaign Planning',
-        description: 'Strategic campaign development with clear objectives, KPIs, and execution timelines.',
+        description:
+          'Strategic campaign development with clear objectives, KPIs, and execution timelines.',
       },
     ],
     pricing: {
@@ -59,7 +64,8 @@ export const services: ServicePage[] = [
     ],
     seo: {
       title: 'Digital Strategy Services | Agency',
-      description: 'Evidence-based digital strategy services that align marketing with business goals.',
+      description:
+        'Evidence-based digital strategy services that align marketing with business goals.',
       keywords: ['digital strategy', 'marketing strategy', 'campaign planning'],
     },
   },
@@ -68,22 +74,26 @@ export const services: ServicePage[] = [
     type: 'service',
     slug: 'web-design',
     title: 'Web Design & Development',
-    description: 'Custom web design and development that creates exceptional user experiences and drives business results.',
+    description:
+      'Custom web design and development that creates exceptional user experiences and drives business results.',
     publishedAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     author: 'Agency Team',
     features: [
       {
         title: 'Custom Design',
-        description: 'Unique, brand-aligned web design that stands out from competitors and resonates with your audience.',
+        description:
+          'Unique, brand-aligned web design that stands out from competitors and resonates with your audience.',
       },
       {
         title: 'Responsive Development',
-        description: 'Mobile-first development ensuring perfect functionality across all devices and screen sizes.',
+        description:
+          'Mobile-first development ensuring perfect functionality across all devices and screen sizes.',
       },
       {
         title: 'Performance Optimization',
-        description: 'Lightning-fast load times and smooth interactions for optimal user experience and SEO.',
+        description:
+          'Lightning-fast load times and smooth interactions for optimal user experience and SEO.',
       },
     ],
     pricing: {
@@ -115,7 +125,8 @@ export const services: ServicePage[] = [
     ],
     seo: {
       title: 'Web Design & Development Services | Agency',
-      description: 'Custom web design and development services that create exceptional user experiences.',
+      description:
+        'Custom web design and development services that create exceptional user experiences.',
       keywords: ['web design', 'web development', 'UX design', 'responsive design'],
     },
   },
@@ -124,14 +135,16 @@ export const services: ServicePage[] = [
     type: 'service',
     slug: 'growth-marketing',
     title: 'Growth Marketing',
-    description: 'Data-driven marketing campaigns that acquire customers, optimize conversions, and scale your business.',
+    description:
+      'Data-driven marketing campaigns that acquire customers, optimize conversions, and scale your business.',
     publishedAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     author: 'Agency Team',
     features: [
       {
         title: 'SEO Optimization',
-        description: 'Comprehensive SEO strategy to improve search rankings and drive organic traffic.',
+        description:
+          'Comprehensive SEO strategy to improve search rankings and drive organic traffic.',
       },
       {
         title: 'Paid Advertising',
@@ -139,7 +152,8 @@ export const services: ServicePage[] = [
       },
       {
         title: 'Analytics & Reporting',
-        description: 'Detailed performance tracking and actionable insights to optimize marketing ROI.',
+        description:
+          'Detailed performance tracking and actionable insights to optimize marketing ROI.',
       },
     ],
     pricing: {
@@ -171,7 +185,8 @@ export const services: ServicePage[] = [
     ],
     seo: {
       title: 'Growth Marketing Services | Agency',
-      description: 'Data-driven growth marketing services that acquire customers and scale your business.',
+      description:
+        'Data-driven growth marketing services that acquire customers and scale your business.',
       keywords: ['growth marketing', 'SEO', 'paid advertising', 'analytics'],
     },
   },
@@ -180,15 +195,21 @@ export const services: ServicePage[] = [
 /**
  * Get all services
  */
-export function getAllServices(): ServicePage[] {
+export async function getAllServices(): Promise<ServicePage[]> {
+  'use cache'
+  cacheLife({ stale: 60, revalidate: 60, expire: 3600 })
+  cacheTag('services')
   return services
 }
 
 /**
  * Get a single service by slug
  */
-export function getServiceBySlug(slug: string): ServicePage | null {
-  return services.reduce((found, service) => found || (service.slug === slug ? service : null), null as ServicePage | null)
+export async function getServiceBySlug(slug: string): Promise<ServicePage | null> {
+  'use cache'
+  cacheLife({ stale: 60, revalidate: 60, expire: 3600 })
+  cacheTag('services', `services:${slug}`)
+  return services.find((service) => service.slug === slug) ?? null
 }
 
 /**

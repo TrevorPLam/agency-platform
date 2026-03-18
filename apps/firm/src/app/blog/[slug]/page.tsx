@@ -1,19 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { cache } from 'react'
 import { Button } from '@agency/ui'
 import { BlogPosting, WithContext } from 'schema-dts'
-import { getPostBySlug, getAllPosts, type BlogPost } from '@/content/blog'
-
-// ISR revalidation - regenerate every hour
-export const revalidate = 3600
-
-// Cache content loading to avoid duplicate fetches in same render
-const getPosts = cache(() => getAllPosts())
+import { getPostBySlug, getAllPosts } from '@/content/blog'
 
 // Generate static params for blog posts
 export async function generateStaticParams() {
-  const posts = getPosts()
+  const posts = await getAllPosts()
   return posts.map((post) => ({
     slug: post.slug,
   }))
@@ -23,18 +16,18 @@ type PageProps = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlug(slug)
   if (!post) return { title: 'Post Not Found' }
 
   return {
     title: post.seo?.title || post.title,
-    description: post.seo?.description || post.description
+    description: post.seo?.description || post.description,
   }
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params
-  const post = getPostBySlug(slug)
+  const post = await getPostBySlug(slug)
   if (!post) notFound()
 
   const baseUrl = process.env.VERCEL_URL
@@ -100,7 +93,7 @@ export default async function BlogPostPage({ params }: PageProps) {
                 {post.readingTime && <span>• {post.readingTime} min read</span>}
               </div>
               {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {post.tags.map((tag) => (
                     <span
                       key={tag}
@@ -114,7 +107,7 @@ export default async function BlogPostPage({ params }: PageProps) {
             </header>
             <div className="prose prose-slate max-w-none">
               {/* Render markdown content - for now just render as text with basic formatting */}
-              <div className="whitespace-pre-wrap text-slate-700 leading-relaxed">
+              <div className="leading-relaxed whitespace-pre-wrap text-slate-700">
                 {post.content}
               </div>
             </div>

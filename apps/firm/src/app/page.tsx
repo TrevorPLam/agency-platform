@@ -1,15 +1,18 @@
 import Link from 'next/link'
-import { Button, FeatureGrid } from '@agency/ui'
+import { FeatureGrid } from '@agency/marketing'
+import { Button } from '@agency/ui'
 
 export default function HomePage() {
   const features = [
     {
       title: 'Strategy',
-      description: 'Audience research, positioning, and campaign planning so your marketing is built on evidence, not guesswork.',
+      description:
+        'Audience research, positioning, and campaign planning so your marketing is built on evidence, not guesswork.',
     },
     {
       title: 'Design',
-      description: 'Brand systems, web design, and creative that fits your voice and converts—without the generic look.',
+      description:
+        'Brand systems, web design, and creative that fits your voice and converts—without the generic look.',
     },
     {
       title: 'Growth',

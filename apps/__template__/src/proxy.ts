@@ -10,8 +10,6 @@ import {
   type RateLimitContext,
   handleCorsPreflight,
   setCorsHeaders,
-  logCorsViolation,
-  isOriginAllowed,
 } from '@agency/database'
 
 function ensureRequestId(request: NextRequest): string {
@@ -22,16 +20,10 @@ function ensureRequestId(request: NextRequest): string {
   return crypto.randomUUID()
 }
 
-/**
- * Generate a cryptographically secure nonce for CSP
- */
 function generateNonce(): string {
   return Buffer.from(crypto.randomUUID()).toString('base64')
 }
 
-/**
- * Build Content Security Policy header with nonce
- */
 function buildCspHeader(nonce: string, isDev: boolean): string {
   const directives = [
     `default-src 'self'`,
@@ -46,13 +38,13 @@ function buildCspHeader(nonce: string, isDev: boolean): string {
     `form-action 'self'`,
     `frame-ancestors 'none'`,
     `upgrade-insecure-requests`,
-    `report-uri /api/csp-report`
+    `report-uri /api/csp-report`,
   ]
 
   return directives.join('; ')
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   const requestId = ensureRequestId(request)
   const incomingTraceparent = request.headers.get('traceparent')
@@ -60,31 +52,17 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin')
 
   requestHeaders.set('x-request-id', requestId)
-  if (incomingTraceparent) {
-    requestHeaders.set('traceparent', incomingTraceparent)
-  }
-  if (incomingSentryTrace) {
-    requestHeaders.set('sentry-trace', incomingSentryTrace)
-  }
+  if (incomingTraceparent) requestHeaders.set('traceparent', incomingTraceparent)
+  if (incomingSentryTrace) requestHeaders.set('sentry-trace', incomingSentryTrace)
 
-  // Handle CORS preflight requests first
   const preflightResponse = handleCorsPreflight(request, origin, requestId)
-  if (preflightResponse) {
-    return preflightResponse
-  }
+  if (preflightResponse) return preflightResponse
 
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  })
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
   response.headers.set('x-request-id', requestId)
-  if (incomingTraceparent) {
-    response.headers.set('traceparent', incomingTraceparent)
-  }
-  if (incomingSentryTrace) {
-    response.headers.set('sentry-trace', incomingSentryTrace)
-  }
+  if (incomingTraceparent) response.headers.set('traceparent', incomingTraceparent)
+  if (incomingSentryTrace) response.headers.set('sentry-trace', incomingSentryTrace)
 
-  // Set CORS headers for all responses
   setCorsHeaders(response, origin, requestId)
 
   const cookieStore = {
@@ -102,12 +80,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   let tenantId: string | undefined
-  let tenantSlug: string | undefined
 
   try {
     const tenant = await resolveTenantFromRequest(request)
     tenantId = tenant.tenantId
-    tenantSlug = tenant.tenantSlug
     response.headers.set('x-tenant-id', tenant.tenantId)
     response.headers.set('x-tenant-slug', tenant.tenantSlug)
     response.headers.set('x-tenant-source', tenant.source)
@@ -116,8 +92,8 @@ export async function middleware(request: NextRequest) {
       JSON.stringify({
         timestamp: new Date().toISOString(),
         level: 'warn',
-        message: 'Tenant resolution failed in middleware',
-        service: 'riley-day-care',
+        message: 'Tenant resolution failed in proxy',
+        service: 'TEMPLATE_SLUG',
         requestId,
         pathname: request.nextUrl.pathname,
         errorName: error instanceof Error ? error.name : 'UnknownError',
@@ -125,7 +101,6 @@ export async function middleware(request: NextRequest) {
     )
   }
 
-  // Apply rate limiting
   const clientIP = getClientIP(request)
   const isAPIRoute = request.nextUrl.pathname.startsWith('/api/')
   const rateLimitContext: RateLimitContext = {
@@ -135,7 +110,6 @@ export async function middleware(request: NextRequest) {
     isService: false,
   }
 
-  // Choose rate limiter based on authentication status and route type
   const limiter = user
     ? RateLimitPresets.authenticated
     : isAPIRoute
@@ -143,23 +117,14 @@ export async function middleware(request: NextRequest) {
       : RateLimitPresets.general
 
   const { allowed, result } = await applyRateLimit(request, rateLimitContext, limiter)
-
-  // Add rate limit headers to response
   addRateLimitHeaders(response, result)
 
-  // Add CSP headers for non-API routes
   if (!isAPIRoute) {
     const nonce = generateNonce()
     const isDev = process.env.NODE_ENV === 'development'
-
-    // Set CSP header
     const cspHeader = buildCspHeader(nonce, isDev)
     response.headers.set('Content-Security-Policy', cspHeader)
-
-    // Set nonce header for Next.js to use in components
     response.headers.set('x-nonce', nonce)
-
-    // Set other security headers
     response.headers.set('X-Frame-Options', 'DENY')
     response.headers.set('X-Content-Type-Options', 'nosniff')
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
@@ -167,17 +132,11 @@ export async function middleware(request: NextRequest) {
       'Permissions-Policy',
       'camera=(), microphone=(), geolocation=(), interest-cohort=()'
     )
-
-    // Production-safe HSTS
     if (process.env.NODE_ENV === 'production') {
-      response.headers.set(
-        'Strict-Transport-Security',
-        'max-age=63072000; includeSubDomains'
-      )
+      response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
     }
   }
 
-  // Return 429 Too Many Requests if rate limit exceeded
   if (!allowed) {
     return NextResponse.json(
       {

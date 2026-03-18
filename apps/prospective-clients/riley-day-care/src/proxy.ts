@@ -10,6 +10,8 @@ import {
   type RateLimitContext,
   handleCorsPreflight,
   setCorsHeaders,
+  logCorsViolation,
+  isOriginAllowed,
 } from '@agency/database'
 
 function ensureRequestId(request: NextRequest): string {
@@ -44,7 +46,7 @@ function buildCspHeader(nonce: string, isDev: boolean): string {
   return directives.join('; ')
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   const requestId = ensureRequestId(request)
   const incomingTraceparent = request.headers.get('traceparent')
@@ -52,16 +54,28 @@ export async function middleware(request: NextRequest) {
   const origin = request.headers.get('origin')
 
   requestHeaders.set('x-request-id', requestId)
-  if (incomingTraceparent) requestHeaders.set('traceparent', incomingTraceparent)
-  if (incomingSentryTrace) requestHeaders.set('sentry-trace', incomingSentryTrace)
+  if (incomingTraceparent) {
+    requestHeaders.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    requestHeaders.set('sentry-trace', incomingSentryTrace)
+  }
 
   const preflightResponse = handleCorsPreflight(request, origin, requestId)
-  if (preflightResponse) return preflightResponse
+  if (preflightResponse) {
+    return preflightResponse
+  }
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  })
   response.headers.set('x-request-id', requestId)
-  if (incomingTraceparent) response.headers.set('traceparent', incomingTraceparent)
-  if (incomingSentryTrace) response.headers.set('sentry-trace', incomingSentryTrace)
+  if (incomingTraceparent) {
+    response.headers.set('traceparent', incomingTraceparent)
+  }
+  if (incomingSentryTrace) {
+    response.headers.set('sentry-trace', incomingSentryTrace)
+  }
 
   setCorsHeaders(response, origin, requestId)
 
@@ -80,10 +94,12 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   let tenantId: string | undefined
+  let tenantSlug: string | undefined
 
   try {
     const tenant = await resolveTenantFromRequest(request)
     tenantId = tenant.tenantId
+    tenantSlug = tenant.tenantSlug
     response.headers.set('x-tenant-id', tenant.tenantId)
     response.headers.set('x-tenant-slug', tenant.tenantSlug)
     response.headers.set('x-tenant-source', tenant.source)
@@ -92,8 +108,8 @@ export async function middleware(request: NextRequest) {
       JSON.stringify({
         timestamp: new Date().toISOString(),
         level: 'warn',
-        message: 'Tenant resolution failed in middleware',
-        service: 'TEMPLATE_SLUG',
+        message: 'Tenant resolution failed in proxy',
+        service: 'riley-day-care',
         requestId,
         pathname: request.nextUrl.pathname,
         errorName: error instanceof Error ? error.name : 'UnknownError',
@@ -117,6 +133,7 @@ export async function middleware(request: NextRequest) {
       : RateLimitPresets.general
 
   const { allowed, result } = await applyRateLimit(request, rateLimitContext, limiter)
+
   addRateLimitHeaders(response, result)
 
   if (!isAPIRoute) {
@@ -132,6 +149,7 @@ export async function middleware(request: NextRequest) {
       'Permissions-Policy',
       'camera=(), microphone=(), geolocation=(), interest-cohort=()'
     )
+
     if (process.env.NODE_ENV === 'production') {
       response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains')
     }

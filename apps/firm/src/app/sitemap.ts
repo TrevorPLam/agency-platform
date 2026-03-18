@@ -1,11 +1,7 @@
 import type { MetadataRoute } from 'next'
-import { cache } from 'react'
-import { getAllPosts, type BlogPost } from '@/content/blog'
+import { getAllPosts } from '@/content/blog'
 
-// Cache content loading to avoid duplicate fetches in same render
-const getPosts = cache(() => getAllPosts())
-
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.VERCEL_URL
     ? `https://${process.env.VERCEL_URL}`
     : 'http://localhost:3000'
@@ -51,7 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   // Dynamic blog post routes
-  const posts = getPosts()
+  const posts = await getAllPosts()
   const blogPostRoutes = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
     lastModified: new Date(post.updatedAt),

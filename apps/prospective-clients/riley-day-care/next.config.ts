@@ -1,7 +1,13 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@agency/ui', '@agency/database', '@agency/analytics'],
+  transpilePackages: [
+    '@agency/ui',
+    '@agency/database',
+    '@agency/analytics',
+    '@agency/marketing',
+    '@agency/monitoring',
+  ],
 }
 
 export default nextConfig

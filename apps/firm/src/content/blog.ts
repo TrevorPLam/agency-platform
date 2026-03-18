@@ -1,3 +1,4 @@
+import { cacheLife, cacheTag } from 'next/cache'
 import { type BlogPost } from './types'
 
 /**
@@ -36,7 +37,8 @@ Our team specializes in helping businesses navigate the digital landscape with c
     featured: true,
     seo: {
       title: 'Getting Started with Digital Marketing | Agency',
-      description: 'A practical guide for small businesses taking their first steps in digital marketing.',
+      description:
+        'A practical guide for small businesses taking their first steps in digital marketing.',
       keywords: ['digital marketing', 'small business', 'marketing strategy'],
     },
   },
@@ -80,15 +82,21 @@ Ensure your design works perfectly on mobile devices, as that's where most users
 /**
  * Get all blog posts
  */
-export function getAllPosts(): BlogPost[] {
+export async function getAllPosts(): Promise<BlogPost[]> {
+  'use cache'
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
+  cacheTag('blog')
   return posts
 }
 
 /**
  * Get a single blog post by slug
  */
-export function getPostBySlug(slug: string): BlogPost | null {
-  return posts.reduce((found, post) => found || (post.slug === slug ? post : null), null as BlogPost | null)
+export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  'use cache'
+  cacheLife({ stale: 300, revalidate: 3600, expire: 86400 })
+  cacheTag('blog', `blog:${slug}`)
+  return posts.find((post) => post.slug === slug) ?? null
 }
 
 /**

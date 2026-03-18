@@ -1,3 +1,5 @@
+import 'server-only'
+
 import { PostHog } from 'posthog-node'
 
 // Singleton instance for server-side PostHog client
@@ -28,12 +30,12 @@ function getServerClient(): PostHog | null {
       flushAt: 10,
       flushInterval: 10000,
     }
-    
+
     const host = process.env['NEXT_PUBLIC_POSTHOG_HOST']
     if (host) {
       options['host'] = host
     }
-    
+
     posthogInstance = new PostHog(process.env['NEXT_PUBLIC_POSTHOG_KEY'], options)
   }
 

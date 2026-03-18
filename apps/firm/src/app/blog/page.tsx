@@ -1,29 +1,22 @@
 import Link from 'next/link'
-import { cache } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@agency/ui'
-import { getAllPosts, type BlogPost } from '@/content/blog'
+import { getAllPosts } from '@/content/blog'
 
 export const metadata = {
   title: 'Blog',
   description: 'Insights and updates from our agency on marketing, design, and growth.',
 }
 
-// ISR revalidation - regenerate every hour
-export const revalidate = 3600
-
-// Cache content loading to avoid duplicate fetches in same render
-const getPosts = cache(() => getAllPosts())
-
 // Generate static params for individual blog posts
 export async function generateStaticParams() {
-  const posts = getPosts()
+  const posts = await getAllPosts()
   return posts.map((post) => ({
     slug: post.slug,
   }))
 }
 
-export default function BlogPage() {
-  const posts = getPosts()
+export default async function BlogPage() {
+  const posts = await getAllPosts()
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -47,7 +40,7 @@ export default function BlogPage() {
                     {post.readingTime && ` • ${post.readingTime} min read`}
                   </p>
                   {post.tags && post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {post.tags.map((tag) => (
                         <span
                           key={tag}

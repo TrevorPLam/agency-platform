@@ -9,6 +9,26 @@
       "types": "./src/index.ts",
       "import": "./src/index.ts",
       "require": "./src/index.ts"
+    },
+    "./client": {
+      "types": "./src/client/index.ts",
+      "import": "./src/client/index.ts",
+      "require": "./src/client/index.ts"
+    },
+    "./components": {
+      "types": "./src/components/index.ts",
+      "import": "./src/components/index.ts",
+      "require": "./src/components/index.ts"
+    },
+    "./hooks": {
+      "types": "./src/hooks/index.ts",
+      "import": "./src/hooks/index.ts",
+      "require": "./src/hooks/index.ts"
+    },
+    "./server": {
+      "types": "./src/server/index.ts",
+      "import": "./src/server/index.ts",
+      "require": "./src/server/index.ts"
     }
   },
   "sideEffects": false,
