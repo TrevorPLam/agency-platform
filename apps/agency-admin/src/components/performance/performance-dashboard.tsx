@@ -1,6 +1,6 @@
 /**
  * Performance monitoring dashboard component
- * 
+ *
  * Provides comprehensive view of Core Web Vitals, performance budgets,
  * and alerting for all tenant applications.
  */
@@ -11,17 +11,18 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@agency/ui'
 import { Badge } from '@agency/ui'
 import { Button } from '@agency/ui'
-import { 
-  usePerformanceData, 
+import {
+  usePerformanceData,
   useWebVitals,
   usePerformanceBudgets,
   usePerformanceBudgetPresets,
   type PerformanceAlert,
   type PerformanceAggregation
 } from '@agency/monitoring'
+import type { TenantId } from '@agency/database'
 
 interface PerformanceDashboardProps {
-  tenantId: string
+  tenantId: TenantId
 }
 
 export function PerformanceDashboard({ tenantId }: PerformanceDashboardProps) {
@@ -31,7 +32,7 @@ export function PerformanceDashboard({ tenantId }: PerformanceDashboardProps) {
 
   // Initialize Web Vitals monitoring for dashboard
   const webVitalsMonitor = useWebVitals({
-    tenantId: tenantId as any,
+    tenantId,
     enableRealUserMonitoring: false, // Disable for admin dashboard
   })
 
@@ -90,7 +91,7 @@ export function PerformanceDashboard({ tenantId }: PerformanceDashboardProps) {
           </select>
           <select
             value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as any)}
+            onChange={(e) => setSelectedPeriod(e.target.value as 'hourly' | 'daily' | 'weekly' | 'monthly')}
             className="px-3 py-2 border rounded-md"
           >
             <option value="hourly">Hourly</option>

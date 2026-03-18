@@ -3,23 +3,43 @@ import { createClient } from '@agency/database/admin'
 import { StorageService, StorageConfig } from '@agency/storage'
 import { getCurrentUser } from '@/lib/auth'
 import { validateTenantAccess } from '@/lib/tenant-validation'
+import { z } from 'zod'
 
-// Storage configuration from environment
+// Environment variable validation schema
+const EnvSchema = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  STORAGE_BUCKET_NAME: z.string().default('uploads'),
+  VIRUS_SCANNING_ENABLED: z.enum(['true', 'false']).transform(val => val === 'true').default(false),
+  VIRUS_SCAN_PROVIDER: z.enum(['clamav', 'virustotal', 'none']).default('none'),
+  VIRUSTOTAL_API_KEY: z.string().optional(),
+  VIRUS_SCAN_TIMEOUT: z.string().transform(Number).default('30000'),
+  VIRUS_SCAN_RETRY_ATTEMPTS: z.string().transform(Number).default('3'),
+  VIRUS_SCAN_RETRY_DELAY: z.string().transform(Number).default('1000'),
+  MAX_FILE_SIZE: z.string().transform(Number).default('52428800'),
+  ENABLE_FILE_QUARANTINE: z.enum(['true', 'false']).transform(val => val !== 'false').default(true),
+  FILE_RETENTION_DAYS: z.string().transform(Number).default('365'),
+})
+
+// Validate environment variables
+const env = EnvSchema.parse(process.env)
+
+// Storage configuration from validated environment
 const storageConfig: StorageConfig = {
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  bucketName: process.env.STORAGE_BUCKET_NAME || 'uploads',
+  supabaseUrl: env.NEXT_PUBLIC_SUPABASE_URL,
+  supabaseServiceKey: env.SUPABASE_SERVICE_ROLE_KEY,
+  bucketName: env.STORAGE_BUCKET_NAME,
   virusScanning: {
-    enabled: process.env.VIRUS_SCANNING_ENABLED === 'true',
-    provider: (process.env.VIRUS_SCAN_PROVIDER as any) || 'mock',
-    apiKey: process.env.VIRUSTOTAL_API_KEY,
-    timeout: parseInt(process.env.VIRUS_SCAN_TIMEOUT || '30000'),
-    retryAttempts: parseInt(process.env.VIRUS_SCAN_RETRY_ATTEMPTS || '3'),
-    retryDelay: parseInt(process.env.VIRUS_SCAN_RETRY_DELAY || '1000'),
+    enabled: env.VIRUS_SCANNING_ENABLED,
+    provider: env.VIRUS_SCAN_PROVIDER,
+    apiKey: env.VIRUSTOTAL_API_KEY,
+    timeout: env.VIRUS_SCAN_TIMEOUT,
+    retryAttempts: env.VIRUS_SCAN_RETRY_ATTEMPTS,
+    retryDelay: env.VIRUS_SCAN_RETRY_DELAY,
   },
-  maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '52428800'), // 50MB
-  enableQuarantine: process.env.ENABLE_FILE_QUARANTINE !== 'false',
-  retentionDays: parseInt(process.env.FILE_RETENTION_DAYS || '365'),
+  maxFileSize: env.MAX_FILE_SIZE,
+  enableQuarantine: env.ENABLE_FILE_QUARANTINE,
+  retentionDays: env.FILE_RETENTION_DAYS,
 }
 
 export async function POST(request: NextRequest) {
@@ -55,7 +75,7 @@ export async function POST(request: NextRequest) {
     // 3. Parse multipart form data
     const formData = await request.formData()
     const file = formData.get('file') as File
-    
+
     if (!file) {
       return NextResponse.json(
         {
@@ -134,7 +154,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Upload error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_SERVER_ERROR',
@@ -206,7 +226,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('List files error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_SERVER_ERROR',
@@ -291,7 +311,7 @@ export async function DELETE(request: NextRequest) {
 
   } catch (error) {
     console.error('Delete file error:', error)
-    
+
     return NextResponse.json(
       {
         code: 'INTERNAL_SERVER_ERROR',

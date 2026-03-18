@@ -32,6 +32,9 @@ import {
 } from 'lucide-react'
 import { SecurityComplianceDashboard } from './compliance-dashboard'
 
+// Type for time range selector
+type TimeRange = '1h' | '24h' | '7d' | '30d'
+
 // Types for the security dashboard
 interface SecurityMetrics {
   totalEvents: number
@@ -93,7 +96,7 @@ export function SecurityDashboard({ tenantId, className }: SecurityDashboardProp
   const [alerts, setAlerts] = useState<SecurityAlert[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [timeRange, setTimeRange] = useState<'1h' | '24h' | '7d' | '30d'>('24h')
+  const [timeRange, setTimeRange] = useState<TimeRange>('24h')
   const [refreshing, setRefreshing] = useState(false)
 
   // Fetch security data
@@ -236,7 +239,7 @@ export function SecurityDashboard({ tenantId, className }: SecurityDashboardProp
         <div className="flex items-center gap-2">
           <select
             value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value as any)}
+            onChange={(e) => setTimeRange(e.target.value as TimeRange)}
             className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm"
           >
             <option value="1h">Last Hour</option>
