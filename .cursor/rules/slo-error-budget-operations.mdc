@@ -1,0 +1,17 @@
+---
+description: Reliability targets, burn-rate implications, and observability requirements for operationally significant changes
+globs:
+  - "docs/ERROR_HANDLING_SLO_PROGRAM.md"
+  - "docs/OPERATIONS_RUNBOOK.md"
+  - "apps/**"
+  - "packages/**"
+alwaysApply: false
+---
+
+# SLO And Error Budget Operations
+
+- Consider how changes affect availability, latency, and operational error budgets.
+- Preserve route-level visibility for status, latency, error code, correlation ID, and trace context where the repo already supports it.
+- Reliability-sensitive changes should not make fast-burn, medium-burn, or slow-burn analysis harder.
+- When adding major retries, timeouts, or degraded-mode behavior, consider the impact on SLO measurements.
+- If a change materially alters failure patterns or observability, update the relevant operational documentation.

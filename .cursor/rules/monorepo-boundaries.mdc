@@ -1,0 +1,18 @@
+---
+description: Monorepo package boundaries, exports discipline, and workspace dependency rules
+globs:
+  - "apps/**"
+  - "packages/**"
+  - "package.json"
+  - "pnpm-workspace.yaml"
+  - "turbo.json"
+alwaysApply: false
+---
+
+# Monorepo Boundaries
+
+- Never import between apps. Shared logic belongs in packages.
+- Use `workspace:*` for internal packages and `catalog:` for external dependencies.
+- Package exports must match actual build outputs. Do not declare broken `main`, `types`, or subpath exports.
+- Prefer single-file lint, type-check, format, and test commands before broad workspace runs.
+- Changes to shared packages must consider downstream app consumers and package entrypoints.

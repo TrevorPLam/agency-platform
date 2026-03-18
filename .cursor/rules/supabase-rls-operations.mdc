@@ -1,0 +1,18 @@
+---
+description: Supabase migration, RLS, local verification, and generated-types discipline
+globs:
+  - "supabase/**"
+  - "packages/database/**"
+  - "**/actions/**"
+  - "**/api/**"
+alwaysApply: false
+---
+
+# Supabase And RLS Operations
+
+- Use port 6543 for Supabase connections. Never assume 5432 in this repo.
+- Keep migration filenames unique and sequential. Do not create conflicting numeric prefixes.
+- Default Supabase migrations are transactional. Do not use CREATE INDEX CONCURRENTLY inside them.
+- Every new tenant-scoped table must ship with RLS enabled, tenant_id indexing, and all required policies.
+- Add or update pgTAP coverage for security-sensitive schema changes and RLS behavior.
+- Regenerate generated database types after schema changes. Do not hand-maintain drift-prone types.

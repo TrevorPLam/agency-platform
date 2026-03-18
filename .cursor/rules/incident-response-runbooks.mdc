@@ -1,0 +1,17 @@
+---
+description: Incident classification, runbook mapping, and operational response expectations for reliability and security failures
+globs:
+  - "docs/OPERATIONS_RUNBOOK.md"
+  - "docs/ERROR_HANDLING_SLO_PROGRAM.md"
+  - "apps/**"
+  - "packages/**"
+alwaysApply: false
+---
+
+# Incident Response Runbooks
+
+- Preserve stable error classes and operationally meaningful failure signals when changing error handling.
+- When introducing a new critical failure mode, define how it maps to detection, mitigation, and follow-up actions.
+- Favor error responses and logs that help operators identify the correct runbook quickly.
+- Do not remove or rename important error classes without updating dashboards, alerts, and runbook references.
+- Reliability and security-sensitive changes should keep incident response practical, not just technically correct.

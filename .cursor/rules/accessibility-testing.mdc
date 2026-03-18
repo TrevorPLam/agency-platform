@@ -1,0 +1,17 @@
+---
+description: Accessibility expectations for UI changes and test coverage in the monorepo
+globs:
+  - "apps/**/*.tsx"
+  - "packages/ui/**/*.tsx"
+  - "test/**"
+  - "docs/ACCESSIBILITY_CHECKLIST.md"
+alwaysApply: false
+---
+
+# Accessibility Testing
+
+- Treat accessibility as a functional requirement, not a polish pass.
+- Use semantic HTML, visible focus states, keyboard support, and correct labeling.
+- Update or add accessibility-focused tests when UI behavior changes materially.
+- Prefer existing a11y tooling and checklist guidance in the repo.
+- Do not ship interactive UI that cannot be operated without a pointer.

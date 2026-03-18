@@ -1,0 +1,16 @@
+---
+description: Multi-tenant SaaS invariants for tenant isolation, context propagation, and safe cross-cutting behavior
+globs:
+  - "apps/**"
+  - "packages/**"
+  - "supabase/**"
+alwaysApply: false
+---
+
+# Multi-Tenant SaaS Invariants
+
+- Tenant isolation is non-negotiable across database, API, caching, analytics, background jobs, and logs.
+- Prefer server-derived tenant context. Do not trust tenant identifiers from query params, headers, or client payloads when authenticated server context exists.
+- Every tenant-scoped feature must answer: how is tenant context resolved, authorized, logged, cached, and tested?
+- Never mix tenant data in shared cache keys, analytics events, job payloads, or exported files.
+- Tenant-aware failures must degrade safely: deny access, avoid fallback to another tenant, and emit structured diagnostics.

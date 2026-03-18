@@ -1,0 +1,16 @@
+---
+description: Next.js route rendering, ISR, cache, and no-store strategy for this monorepo
+globs:
+  - "apps/**/src/app/**/*.tsx"
+  - "apps/**/next.config.ts"
+  - "docs/FRONTEND_ARCHITECTURE.md"
+alwaysApply: false
+---
+
+# Rendering And Cache Strategy
+
+- Public marketing pages should default toward static generation or ISR unless they truly need per-request freshness.
+- Session-dependent, tenant-dependent, or user-specific pages should use dynamic rendering.
+- When using ISR, choose an explicit `revalidate` value instead of accidental defaults.
+- Use `generateStaticParams` when a route can be precomputed safely.
+- Use no-store or equivalent cache avoidance for sensitive or user-specific responses.

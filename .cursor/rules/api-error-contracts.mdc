@@ -1,0 +1,16 @@
+---
+description: API response and error contract rules, including Problem JSON and stable machine-readable codes
+globs:
+  - "apps/**/src/app/api/**/*.ts"
+  - "packages/**/src/**/*.ts"
+  - "**/middleware.ts"
+alwaysApply: false
+---
+
+# API Error Contracts
+
+- Standardize 4xx and 5xx API failures around Problem JSON style fields: type, title, status, detail, instance.
+- Include stable machine-readable error codes where the API already exposes them.
+- Do not leak stack traces, secrets, SQL details, or internal infrastructure identifiers in responses.
+- Include correlation or request identifiers in server-side logs and expose them in safe error metadata when supported.
+- Keep success and error shapes consistent within the same API surface.

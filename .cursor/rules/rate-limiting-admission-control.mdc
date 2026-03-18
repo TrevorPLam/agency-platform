@@ -1,0 +1,16 @@
+---
+description: Rate limiting presets, tenant-aware bucketing, and admission-control rules for APIs and middleware
+globs:
+  - "apps/**/src/app/api/**/*.ts"
+  - "apps/**/middleware.ts"
+  - "packages/**/src/**/*.ts"
+alwaysApply: false
+---
+
+# Rate Limiting And Admission Control
+
+- Apply rate limiting intentionally to auth, public, and expensive endpoints.
+- Use tenant-aware or actor-aware bucketing when the endpoint is tenant scoped.
+- Reuse the existing preset and middleware utilities before creating new limit logic.
+- Failure responses should be explicit and safe, with consistent headers when supported.
+- Rate limiting is part of both security and cost control in this repo.

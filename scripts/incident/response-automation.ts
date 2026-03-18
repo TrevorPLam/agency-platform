@@ -67,7 +67,7 @@ interface IncidentAction {
   id: string;
   type: 'containment' | 'recovery' | 'communication' | 'investigation';
   description: string;
-  status: 'pending' | 'in-progress' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
   assignedTo?: string;
   timestamp: Date;
   result?: string;
@@ -88,7 +88,7 @@ function loadConfig(): IncidentConfig {
   if (!existsSync(configPath)) {
     throw new Error(`Configuration file not found: ${configPath}`);
   }
-  
+
   const configData = readFileSync(configPath, 'utf-8');
   return JSON.parse(configData);
 }
@@ -295,21 +295,21 @@ function checkStorageUtilization(): number {
 function checkSystemFailures(): string[] {
   try {
     const failures: string[] = [];
-    
+
     // Check GitHub API status
     try {
       execSync('gh api user', { stdio: 'pipe' });
     } catch (error) {
       failures.push('github-api');
     }
-    
+
     // Check CI/CD pipeline status
     try {
       execSync('gh api repos/TrevorPLam/agency-platform/actions/runs', { stdio: 'pipe' });
     } catch (error) {
       failures.push('ci-cd-pipeline');
     }
-    
+
     return failures;
   } catch (error) {
     console.error('Failed to check system failures:', error);
@@ -575,7 +575,7 @@ async function main(): Promise<void> {
 // CLI interface
 if (require.main === module) {
   const args = process.argv.slice(2);
-  
+
   if (args.includes('--help') || args.includes('-h')) {
     console.log(`
 Incident Response Automation

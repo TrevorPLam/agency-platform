@@ -1,0 +1,17 @@
+---
+description: Structured logging, request correlation, and observability rules for tenant-aware systems
+globs:
+  - "apps/**"
+  - "packages/analytics/**"
+  - "packages/monitoring/**"
+  - "packages/database/**"
+alwaysApply: false
+---
+
+# Structured Logging And Observability
+
+- Prefer structured logs over ad hoc string logging.
+- Include request ID, tenant ID, route or operation name, severity, and actor context when available.
+- Never log secrets, tokens, raw credentials, or unnecessary personal data.
+- Reuse request-context helpers and existing monitoring packages instead of inventing parallel logging patterns.
+- Errors, security warnings, and background-job failures must be traceable across app, job, and database boundaries.

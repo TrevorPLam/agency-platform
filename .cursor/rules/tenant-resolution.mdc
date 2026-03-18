@@ -1,0 +1,16 @@
+---
+description: Tenant resolution order, failure behavior, and debugging guidance for hostname and subdomain routing
+globs:
+  - "apps/**/middleware.ts"
+  - "apps/**/src/app/layout.tsx"
+  - "packages/database/**"
+alwaysApply: false
+---
+
+# Tenant Resolution
+
+- Treat tenant resolution as a first-class security concern.
+- Follow the repo's established resolution order for hostname, subdomain, and local-development fallback.
+- Missing or disabled tenants must fail closed and must not fall through to another tenant.
+- Do not duplicate tenant-resolution logic in many places when shared middleware or package helpers already exist.
+- When debugging tenant issues, capture request host, resolved tenant source, and correlation identifiers.

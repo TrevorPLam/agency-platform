@@ -1,0 +1,18 @@
+---
+description: Tenant-aware cost attribution, expensive workload review, and quota-aware feature design
+globs:
+  - "docs/OPERATIONS_RUNBOOK.md"
+  - "apps/**"
+  - "packages/cost/**"
+  - "packages/monitoring/**"
+  - "packages/metrics/**"
+alwaysApply: false
+---
+
+# Cost Attribution And Quotas
+
+- Expensive features must be reasoned about per tenant, not just globally.
+- Preserve or add attribution signals for storage, compute, API, analytics, and background-job costs.
+- Use tenant-aware rate limits, quotas, or safeguards when a feature can create runaway cost.
+- Do not introduce high-cost workflows without clear ownership, alerting, or observability.
+- Cost control in this repo is part of product operations, not an afterthought.

@@ -1,0 +1,16 @@
+---
+description: PostHog deployment, privacy, GDPR, and tenant-filtering expectations for analytics infrastructure
+globs:
+  - "docs/POSTHOG_DEPLOYMENT.md"
+  - "packages/analytics/**"
+  - "apps/**"
+alwaysApply: false
+---
+
+# PostHog Privacy And Deployment
+
+- Preserve the documented Cloud versus self-hosted decision model unless there is a deliberate architecture change.
+- Analytics configuration must remain privacy-aware, especially around IP capture, personal data, and tenant segmentation.
+- Keep tenant attribution compatible with the shared analytics strategy for this repo.
+- Do not assume self-hosted infrastructure behavior unless the deployment target is explicitly changed.
+- Changes to analytics infrastructure should respect GDPR and data-residency requirements already documented in the repo.

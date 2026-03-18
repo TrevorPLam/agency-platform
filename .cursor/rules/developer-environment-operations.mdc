@@ -1,0 +1,19 @@
+---
+description: Developer environment, pnpm catalog discipline, workspace performance, and root-level operations guidance
+globs:
+  - "docs/DEVELOPER_OPERATIONS.md"
+  - "pnpm-workspace.yaml"
+  - "package.json"
+  - "apps/**"
+  - "packages/**"
+  - "scripts/**"
+alwaysApply: false
+---
+
+# Developer Environment And Operations
+
+- Prefer documented root-level workflows for pnpm, Git, sparse checkout, and workspace maintenance.
+- Treat `pnpm-workspace.yaml` as operationally sensitive because catalog mistakes can break the monorepo.
+- Avoid sub-package dependency changes that bypass the repo's catalog and root-install discipline.
+- Preserve existing developer-experience and workspace-performance scripts when changing tooling.
+- Changes to workspace tooling should align with the repo's documented IDE and Git performance guidance.

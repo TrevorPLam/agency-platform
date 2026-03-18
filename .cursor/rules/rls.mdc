@@ -10,7 +10,7 @@ alwaysApply: false
 ## Every tenant-scoped table
 - ALTER TABLE public.[name] ENABLE ROW LEVEL SECURITY;
 - tenant_id column: uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE
-- CREATE INDEX CONCURRENTLY idx_[name]_tenant_id ON public.[name] (tenant_id); all indexes in migrations MUST use CONCURRENTLY
+- CREATE INDEX idx_[name]_tenant_id ON public.[name] (tenant_id); default Supabase migrations are transactional, so do not use CONCURRENTLY there
 - Composite index for time-ordered queries: (tenant_id, created_at DESC)
 
 ## Policy checklist

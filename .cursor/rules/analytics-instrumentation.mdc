@@ -1,0 +1,15 @@
+---
+description: Tenant-safe analytics instrumentation, event naming, and PII-aware capture rules
+globs:
+  - "apps/**"
+  - "packages/analytics/**"
+alwaysApply: false
+---
+
+# Analytics Instrumentation
+
+- Reuse shared analytics packages and helpers instead of ad hoc event calls.
+- Use consistent event naming and include only necessary metadata.
+- Do not capture secrets or unnecessary personal data.
+- Be explicit about whether an event is client-side, server-side, security-related, or business-operational.
+- Tenant attribution must be correct and must never cross-contaminate reporting.

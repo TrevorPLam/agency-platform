@@ -1,0 +1,17 @@
+---
+description: Documentation, task-structure, and requirement-traceability rules for agentic development
+globs:
+  - "AGENTS.md"
+  - "PROMPT.md"
+  - "TODO.md"
+  - "docs/**/*.md"
+alwaysApply: false
+---
+
+# Documentation And Task Governance
+
+- Keep implementation work aligned with task docs, runbooks, and research-backed decisions.
+- Update documentation when behavior, architecture, workflows, or operational steps materially change.
+- Reuse the repo's task-template structure for substantial scoped work.
+- Record strict rules, out-of-scope items, and definition-of-done expectations for complex tasks.
+- Prefer traceable changes over undocumented agent-only decisions.
