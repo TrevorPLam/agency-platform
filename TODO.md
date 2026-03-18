@@ -360,7 +360,7 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 
 ## P1 — App Quality (Enable Production)
 
-## [ ] TASK-007: Firm App OpenGraph, JSON-LD & ISR
+## [x] TASK-007: Firm App OpenGraph, JSON-LD & ISR
 
 **Why:** Security headers ✅ implemented in `apps/firm/src/middleware.ts`. `sitemap.ts` ✅ and `robots.ts` ✅ exist. Remaining: no `opengraph-image.tsx`, no JSON-LD structured data in `layout.tsx`, and blog routes have no `generateStaticParams` or ISR revalidation (content is currently static hardcoded data — dynamic generation is required once CMS is in place).
 
@@ -375,10 +375,10 @@ export function toHttpResponse(status: number, error: AppError): NextResponse {
 - ~~`apps/firm/next.config.ts`: full header block~~ ✅ Done via middleware
 - ~~`apps/firm/src/app/sitemap.ts`~~ ✅ Exists
 - ~~`apps/firm/src/app/robots.ts`~~ ✅ Exists
-- `apps/firm/src/app/opengraph-image.tsx`: `ImageResponse` with brand identity
-- `apps/firm/src/app/layout.tsx`: JSON-LD `<script>` block for `LocalBusiness` + `WebSite` schema
-- `apps/firm/src/app/blog/[slug]/page.tsx`: `generateStaticParams` + `revalidate = 3600` + JSON-LD `BlogPosting`
-- `apps/firm/src/app/blog/page.tsx`: `revalidate = 3600`
+- ✅ `apps/firm/src/app/opengraph-image.tsx`: `ImageResponse` with brand identity
+- ✅ `apps/firm/src/app/layout.tsx`: JSON-LD `<script>` block for `LocalBusiness` + `WebSite` schema
+- ✅ `apps/firm/src/app/blog/[slug]/page.tsx`: `generateStaticParams` + `revalidate = 3600` + JSON-LD `BlogPosting`
+- ✅ `apps/firm/src/app/blog/page.tsx`: `revalidate = 3600`
 
 **Implementation Tips:**
 
@@ -399,14 +399,16 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 
 **Target Files**
 
-- `apps/firm/src/app/opengraph-image.tsx` (new)
-- `apps/firm/src/app/layout.tsx`
-- `apps/firm/src/app/blog/page.tsx`
-- `apps/firm/src/app/blog/[slug]/page.tsx`
+- ✅ `apps/firm/src/app/opengraph-image.tsx` (new)
+- ✅ `apps/firm/src/app/layout.tsx`
+- ✅ `apps/firm/src/app/blog/page.tsx`
+- ✅ `apps/firm/src/app/blog/[slug]/page.tsx`
+
+**Completed**: ✅ All requirements implemented with proper ISR, JSON-LD structured data, and dynamic OG image generation.
 
 ---
 
-## [ ] TASK-008: Auth Link Fixes & Message Length Correction
+## [x] TASK-008: Auth Link Fixes & Message Length Correction
 
 **Why:** Contact form Zod validation ✅ implemented in all three apps. Remaining: auth pages in both prospective-client apps use `<a href>` instead of `next/link` — the only 4 raw internal anchor tags in the codebase, causing full-page navigation and breaking prefetching. Additionally, all three contact form schemas use `message: z.string().min(1)` but the spec requires `min(10)`.
 
@@ -418,11 +420,18 @@ export default async function Image({ params }: { params: { slug?: string } }) {
 **Definition of Done**
 
 - ~~All contact form server actions: Zod schema~~ ✅ Done in all three apps
-- All three contact form `actions.ts`: `message` validation updated to `min(10, 'Message must be at least 10 characters')`
-- `apps/prospective-clients/riley-day-care/src/app/(auth)/login/page.tsx`: `<a href="/signup">` → `<Link href="/signup">`
-- `apps/prospective-clients/riley-day-care/src/app/(auth)/signup/page.tsx`: `<a href="/login">` → `<Link href="/login">`
-- Same two fixes in `apps/prospective-clients/the-barber-cave/src/app/(auth)/`
-- Zero raw `<a href=` for internal navigation across all apps
+- ✅ All three contact form `actions.ts`: `message` validation updated to `min(10, 'Message must be at least 10 characters')`
+- ✅ `apps/prospective-clients/riley-day-care/src/app/(auth)/login/page.tsx`: `<a href="/signup">` → `<Link href="/signup">`
+- ✅ `apps/prospective-clients/riley-day-care/src/app/(auth)/signup/page.tsx`: `<a href="/login">` → `<Link href="/login">`
+- ✅ Same two fixes in `apps/prospective-clients/the-barber-cave/src/app/(auth)/`
+- ✅ Zero raw `<a href=` for internal navigation across all apps
+
+**Implementation Notes (03/17/2026):**
+
+- Successfully updated all 4 auth pages to import `Link` from `next/link` and replace internal anchor tags
+- Updated all 3 contact form validation schemas to use `min(10, 'Message must be at least 10 characters')`
+- Changes improve UX by enabling client-side navigation and increase lead quality by filtering single-character spam messages
+- All changes follow Next.js best practices for SPA navigation and form validation
 
 **Implementation Tips:**
 

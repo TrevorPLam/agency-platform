@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Button, Input, Label, cn } from '@agency/ui'
 import { loginAction } from '@/app/(auth)/login/actions'
 
@@ -52,9 +53,9 @@ function LoginForm() {
         </div>
         <SubmitButton />
         <p className="text-muted-foreground text-center text-sm">
-          <a href="/signup" className="hover:text-foreground underline">
+          <Link href="/signup" className="hover:text-foreground underline">
             Create an account
-          </a>
+          </Link>
         </p>
       </form>
     </div>

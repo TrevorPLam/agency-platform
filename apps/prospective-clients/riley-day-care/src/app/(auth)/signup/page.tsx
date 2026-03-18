@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import Link from 'next/link'
 import { Button, Input, Label, cn } from '@agency/ui'
 import { signupAction } from '@/app/(auth)/signup/actions'
 
@@ -47,9 +48,9 @@ export default function SignupPage() {
         </div>
         <SubmitButton />
         <p className="text-muted-foreground text-center text-sm">
-          <a href="/login" className="hover:text-foreground underline">
+          <Link href="/login" className="hover:text-foreground underline">
             Already have an account? Sign in
-          </a>
+          </Link>
         </p>
       </form>
     </div>
