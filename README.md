@@ -167,32 +167,7 @@ This platform uses a **three-tier design token hierarchy** following W3C DTCG st
 
 ## 📚 Documentation
 
-### 🚀 Getting Started
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Development guidelines, local runbook, and contribution requirements
-- **[docs/README.md](docs/README.md)** — Complete platform documentation and guides
 
-### 🏗️ Architecture & Design
-- **[docs/architecture/ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md)** — Monorepo structure, isolation layers, and scaling phases
-- **[docs/FRONTEND_ARCHITECTURE.md](docs/FRONTEND_ARCHITECTURE.md)** — Frontend architecture patterns and component hierarchy
-
-### 🔒 Security & Compliance
-- **[SECURITY.md](SECURITY.md)** — Security model, threat vectors, and compliance frameworks
-- **[docs/security/MULTI_TENANT_BEST_PRACTICES_RESEARCH.md](docs/security/MULTI_TENANT_BEST_PRACTICES_RESEARCH.md)** — Multi-tenant security research and implementation
-- **[docs/security/](docs/security/)** — Supply chain security and incident response
-
-### ⚙️ Operations & Tooling
-- **[TOOLCHAIN.md](TOOLCHAIN.md)** — Tool versions and setup requirements
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — Deployment strategies and operational procedures
-- **[docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md)** — Monitoring, backups, and operational workflows
-
-### 📋 Governance
-- **[docs/GOVERNANCE.md](docs/GOVERNANCE.md)** — Design system governance and strategic direction
-- **[AGENTS.md](AGENTS.md)** — AI agent research, implementation guide, and governance framework
-
-### 🤖 AI Agent Governance
-- **[docs/AI_DEVELOPMENT_GUIDE.md](docs/AI_DEVELOPMENT_GUIDE.md)** — AI development guide with agent governance
-- **[packages/governance/](packages/governance/)** — Agent classification, risk assessment, and authorization
-- **[packages/security/](packages/security/)** — Agent auditing, monitoring, and compliance validation
 
 ## 🤝 Contributing
 
