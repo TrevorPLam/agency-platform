@@ -1,0 +1,61 @@
+{
+  "name": "@agency/ai-automation",
+  "version": "0.1.0",
+  "description": "Advanced AI agent operations for repository automation, self-healing CI/CD, and code review",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./automation": {
+      "types": "./dist/automation/index.d.ts",
+      "default": "./dist/automation/index.js"
+    },
+    "./cicd": {
+      "types": "./dist/cicd/index.d.ts", 
+      "default": "./dist/cicd/index.js"
+    },
+    "./review": {
+      "types": "./dist/review/index.d.ts",
+      "default": "./dist/review/index.js"
+    },
+    "./orchestration": {
+      "types": "./dist/orchestration/index.d.ts",
+      "default": "./dist/orchestration/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@agency/database": "workspace:*",
+    "@agency/governance": "workspace:*",
+    "@agency/security": "workspace:*",
+    "zod": "^3.22.4",
+    "openai": "^4.20.1",
+    "@octokit/rest": "^20.0.2",
+    "@octokit/webhooks": "^12.0.3",
+    "node-fetch": "^3.3.2",
+    "winston": "^3.11.0",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/uuid": "^9.0.7",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.2",
+    "vitest": "^1.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "restricted"
+  }
+}
