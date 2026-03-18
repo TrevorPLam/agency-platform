@@ -1,0 +1,68 @@
+{
+  "name": "@agency/cost",
+  "version": "1.0.0",
+  "description": "Advanced cost management and resource optimization for the Agency Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./monitoring": {
+      "types": "./dist/monitoring.d.ts",
+      "import": "./dist/monitoring.js"
+    },
+    "./optimization": {
+      "types": "./dist/optimization.d.ts",
+      "import": "./dist/optimization.js"
+    },
+    "./budget": {
+      "types": "./dist/budget.d.ts",
+      "import": "./dist/budget.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@agency/eslint-config": "workspace:*",
+    "@agency/typescript-config": "workspace:*",
+    "@types/node": "^20.11.17",
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.2",
+    "typescript": "^5.7.2",
+    "vitest": "^1.3.1"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "cost-management",
+    "optimization",
+    "budgeting",
+    "monitoring",
+    "finops",
+    "agency-platform"
+  ],
+  "author": "Agency Platform",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TrevorPLam/agency-platform",
+    "directory": "packages/cost"
+  },
+  "bugs": {
+    "url": "https://github.com/TrevorPLam/agency-platform/issues"
+  },
+  "homepage": "https://github.com/TrevorPLam/agency-platform/tree/main/packages/cost#readme"
+}

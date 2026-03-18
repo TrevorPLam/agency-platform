@@ -255,9 +255,70 @@ export const isValidArtifactName = (name: string): name is ArtifactName => {
 };
 
 export const isValidVersion = (version: string): version is VersionString => {
-  return /^\d+\.\d+\.\d+/.test(version);
+  return /^\d+\.\d+\.[0-9]+/.test(version);
 };
 
 export const isValidIntegrityHash = (hash: string): hash is IntegrityHash => {
   return /^sha256:[a-f0-9]{64}$/.test(hash);
 };
+
+// Lifecycle management types
+export type LifecycleEventId = Brand<string, 'LifecycleEventId'>;
+
+export const createLifecycleEventId = (id: string): LifecycleEventId => id as LifecycleEventId;
+
+export type LifecycleEventType =
+  | 'registered'
+  | 'testing_started'
+  | 'testing_completed'
+  | 'promoted'
+  | 'archived'
+  | 'decommissioned'
+  | 'maintenance_completed'
+  | 'security_scan_completed'
+  | 'vulnerability_detected';
+
+export interface LifecycleEvent {
+  id: LifecycleEventId;
+  artifactId: ArtifactId;
+  type: LifecycleEventType;
+  timestamp: Date;
+  data: Record<string, any>;
+  tenantId: string;
+}
+
+export interface LifecycleHook {
+  id: string;
+  description: string;
+  handler: (event: LifecycleEvent) => Promise<void>;
+}
+
+// Zod schemas for lifecycle types
+export const LifecycleEventIdSchema = z.string().regex(/^lifecycle-[a-f0-9-]+$/);
+
+export const LifecycleEventTypeSchema = z.enum([
+  'registered',
+  'testing_started',
+  'testing_completed',
+  'promoted',
+  'archived',
+  'decommissioned',
+  'maintenance_completed',
+  'security_scan_completed',
+  'vulnerability_detected',
+]);
+
+export const LifecycleEventSchema = z.object({
+  id: LifecycleEventIdSchema,
+  artifactId: ArtifactIdSchema,
+  type: LifecycleEventTypeSchema,
+  timestamp: z.date(),
+  data: z.record(z.unknown()),
+  tenantId: z.string(),
+});
+
+export const LifecycleHookSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  handler: z.function().args(z.any()).returns(z.promise(z.void())),
+});

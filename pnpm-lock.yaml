@@ -639,6 +639,9 @@ importers:
       '@agency/security':
         specifier: workspace:*
         version: link:../security
+      '@supabase/supabase-js':
+        specifier: ^2.45.0
+        version: 2.99.1
       crypto:
         specifier: ^1.0.1
         version: 1.0.1

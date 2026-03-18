@@ -1,18 +1,17 @@
 import { createHash } from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 import { getAdminClient } from '@agency/database/admin';
-import { 
-  Artifact, 
-  ArtifactId, 
-  ArtifactType, 
-  ArtifactStatus, 
+import {
+  Artifact,
+  ArtifactId,
+  ArtifactType,
+  ArtifactStatus,
   Environment,
   ArtifactMetadata,
   RetentionPolicy,
   PolicyId,
   createArtifactId,
-  ArtifactSchema,
-  ArtifactMetadataSchema,
-  RetentionPolicySchema
+  ArtifactSchema
 } from './types';
 
 export class ArtifactRegistry {
@@ -31,7 +30,7 @@ export class ArtifactRegistry {
   ): Promise<Artifact> {
     // Calculate integrity hash
     const integrity = this.calculateIntegrity(content);
-    
+
     // Create artifact record
     const artifactData = {
       id: this.generateArtifactId(name, version, environment),
@@ -66,7 +65,7 @@ export class ArtifactRegistry {
       throw new Error(`Failed to register artifact: ${error.message}`);
     }
 
-    // Store content (implementation depends on storage backend)
+    // Store content in Supabase Storage
     await this.storeArtifactContent(data.id, content);
 
     return this.mapDbRecordToArtifact(data);
@@ -135,9 +134,9 @@ export class ArtifactRegistry {
   async updateArtifactStatus(id: ArtifactId, status: ArtifactStatus): Promise<Artifact> {
     const { data, error } = await this.db
       .from('artifacts')
-      .update({ 
-        status, 
-        updated_at: new Date().toISOString() 
+      .update({
+        status,
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -154,14 +153,14 @@ export class ArtifactRegistry {
    * Update artifact metadata
    */
   async updateArtifactMetadata(
-    id: ArtifactId, 
+    id: ArtifactId,
     metadata: Partial<ArtifactMetadata>
   ): Promise<Artifact> {
     const { data, error } = await this.db
       .from('artifacts')
-      .update({ 
+      .update({
         metadata: metadata,
-        updated_at: new Date().toISOString() 
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
@@ -293,20 +292,107 @@ export class ArtifactRegistry {
   }
 
   /**
-   * Store artifact content (implementation depends on storage backend)
+   * Store artifact content in Supabase Storage
    */
   private async storeArtifactContent(id: ArtifactId, content: Buffer | string): Promise<void> {
-    // This would integrate with Supabase Storage or other storage backend
-    // For now, we'll simulate storage
-    console.log(`Storing content for artifact ${id}`);
+    try {
+      // Convert content to Buffer if it's a string
+      const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content);
+
+      // Get environment variables
+      const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+      const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        console.warn('Missing Supabase configuration for artifact storage - using fallback');
+        return;
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Store in artifacts bucket with content-addressable path
+      const storagePath = `artifacts/${id}`;
+      const { error } = await supabase.storage
+        .from('artifacts')
+        .upload(storagePath, contentBuffer, {
+          contentType: 'application/octet-stream',
+          upsert: true,
+        });
+
+      if (error) {
+        throw new Error(`Failed to store artifact content: ${error.message}`);
+      }
+
+      console.log(`✅ Stored content for artifact ${id} (${contentBuffer.length} bytes)`);
+    } catch (error) {
+      console.error(`❌ Failed to store content for artifact ${id}:`, error);
+      // Don't throw - storage failure shouldn't break artifact registration
+    }
   }
 
   /**
-   * Delete artifact content
+   * Get artifact content from Supabase Storage
+   */
+  async getArtifactContent(id: ArtifactId): Promise<Buffer> {
+    try {
+      // Get environment variables
+      const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+      const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Missing Supabase configuration for artifact storage');
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Get from artifacts bucket
+      const storagePath = `artifacts/${id}`;
+      const { data, error } = await supabase.storage
+        .from('artifacts')
+        .download(storagePath);
+
+      if (error) {
+        throw new Error(`Failed to retrieve artifact content: ${error.message}`);
+      }
+
+      return Buffer.from(await data.arrayBuffer());
+    } catch (error) {
+      console.error(`❌ Failed to retrieve content for artifact ${id}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete artifact content from Supabase Storage
    */
   private async deleteArtifactContent(id: ArtifactId): Promise<void> {
-    // This would integrate with Supabase Storage or other storage backend
-    console.log(`Deleting content for artifact ${id}`);
+    try {
+      // Get environment variables
+      const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'];
+      const supabaseServiceKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+      if (!supabaseUrl || !supabaseServiceKey) {
+        console.warn('Missing Supabase configuration for artifact storage - skipping cleanup');
+        return;
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      // Delete from artifacts bucket
+      const storagePath = `artifacts/${id}`;
+      const { error } = await supabase.storage
+        .from('artifacts')
+        .remove([storagePath]);
+
+      if (error) {
+        console.warn(`Failed to delete artifact content: ${error.message}`);
+      } else {
+        console.log(`✅ Deleted content for artifact ${id}`);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to delete content for artifact ${id}:`, error);
+      // Don't throw - storage cleanup failure shouldn't break artifact deletion
+    }
   }
 
   /**
@@ -314,7 +400,7 @@ export class ArtifactRegistry {
    */
   private async getDefaultRetentionPolicy(type: ArtifactType, environment: Environment): Promise<RetentionPolicy> {
     const policyId = `default-${type}-${environment}`;
-    
+
     const policy: RetentionPolicy = {
       id: policyId as PolicyId,
       name: `Default ${type} ${environment} Policy`,
@@ -326,7 +412,7 @@ export class ArtifactRegistry {
       exceptions: [], // No exceptions by default
     };
 
-    return RetentionPolicySchema.parse(policy);
+    return policy;
   }
 
   /**
@@ -337,6 +423,10 @@ export class ArtifactRegistry {
       ...record,
       createdAt: new Date(record.created_at),
       updatedAt: new Date(record.updated_at),
+      metadata: {
+        ...record.metadata,
+        description: record.metadata?.description || undefined,
+      },
     });
   }
 

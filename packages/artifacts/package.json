@@ -48,6 +48,7 @@
     "@agency/database": "workspace:*",
     "@agency/governance": "workspace:*",
     "@agency/security": "workspace:*",
+    "@supabase/supabase-js": "^2.45.0",
     "zod": "^3.25.0",
     "semver": "^7.6.0",
     "crypto": "^1.0.1"

@@ -11,7 +11,7 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,
-  external: ['@agency/database', '@agency/governance', '@agency/security'],
+  external: ['@agency/database', '@agency/governance', '@agency/security', '@supabase/supabase-js'],
   splitting: false,
   sourcemap: true,
   minify: false,

@@ -13,6 +13,14 @@ export { PolicyManager, policyManager } from './policies';
 // Retention management
 export { RetentionManager, retentionManager } from './retention';
 
+// Lifecycle management
+export { ArtifactLifecycleManager, artifactLifecycle } from './lifecycle';
+export { notificationHook, metricsHook, securityHook } from './lifecycle';
+
+// SBOM generation
+export { SBOMGenerator, sbomGenerator } from './sbom';
+export type { SBOMComponent, SBOMDocument } from './sbom';
+
 // Re-export evaluation types
 export type {
   PolicyEvaluationResult,
