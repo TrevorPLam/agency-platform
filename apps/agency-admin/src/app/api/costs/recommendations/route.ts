@@ -20,7 +20,7 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
       .select('slug')
       .eq('id', tenantId)
       .single()
-    return data?.slug || null
+    return typeof data?.slug === 'string' ? data.slug : null
   } catch {
     return null
   }
@@ -122,17 +122,17 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const recommendations = (data || []).map((rec) => ({
-    id: rec.id,
-    tenantId: rec.tenant_id,
-    category: rec.category,
-    title: rec.title,
-    description: rec.description,
-    estimatedSavings: parseFloat(rec.estimated_savings) || 0,
-    difficulty: rec.difficulty,
-    priority: rec.priority,
-    status: rec.status,
-    createdAt: rec.created_at,
-    reviewBy: rec.review_by,
+    id: rec['id'],
+    tenantId: rec['tenant_id'],
+    category: rec['category'],
+    title: rec['title'],
+    description: rec['description'],
+    estimatedSavings: parseFloat(String(rec['estimated_savings'])) || 0,
+    difficulty: rec['difficulty'],
+    priority: rec['priority'],
+    status: rec['status'],
+    createdAt: rec['created_at'],
+    reviewBy: rec['review_by'],
   }))
 
   const tenantSlug = await getTenantSlug(tenantId)
@@ -225,17 +225,17 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const recommendation = {
-    id: data.id,
-    tenantId: data.tenant_id,
-    category: data.category,
-    title: data.title,
-    description: data.description,
-    estimatedSavings: parseFloat(data.estimated_savings) || 0,
-    difficulty: data.difficulty,
-    priority: data.priority,
-    status: data.status,
-    createdAt: data.created_at,
-    reviewBy: data.review_by,
+    id: data['id'],
+    tenantId: data['tenant_id'],
+    category: data['category'],
+    title: data['title'],
+    description: data['description'],
+    estimatedSavings: parseFloat(String(data['estimated_savings'])) || 0,
+    difficulty: data['difficulty'],
+    priority: data['priority'],
+    status: data['status'],
+    createdAt: data['created_at'],
+    reviewBy: data['review_by'],
   }
 
   const tenantSlug = await getTenantSlug(tenantId)
@@ -291,15 +291,27 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest) => {
     throw new ResourceNotFoundError('Recommendation not found.')
   }
 
-  if (!auth.isPlatformAdmin && existingRec.tenant_id !== auth.tenantId) {
+  const existingTenantId = typeof existingRec['tenant_id'] === 'string' ? existingRec['tenant_id'] : null
+
+  if (!existingTenantId) {
+    throw new ResourceNotFoundError('Recommendation tenant could not be resolved.')
+  }
+
+  if (!auth.isPlatformAdmin && existingTenantId !== auth.tenantId) {
     throw new AuthorizationError('Cannot access recommendation from another tenant.')
+  }
+
+  const targetTenantId = auth.isPlatformAdmin ? existingTenantId : auth.tenantId
+
+  if (!targetTenantId) {
+    throw new AuthorizationError('Tenant context is required to update recommendation.')
   }
 
   const { data, error } = await admin
     .from('optimization_recommendations')
     .update({ status })
     .eq('id', id)
-    .eq('tenant_id', auth.isPlatformAdmin ? existingRec.tenant_id : auth.tenantId)
+    .eq('tenant_id', targetTenantId)
     .select()
     .single()
 
@@ -308,27 +320,27 @@ export const PATCH = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const recommendation = {
-    id: data.id,
-    tenantId: data.tenant_id,
-    category: data.category,
-    title: data.title,
-    description: data.description,
-    estimatedSavings: parseFloat(data.estimated_savings) || 0,
-    difficulty: data.difficulty,
-    priority: data.priority,
-    status: data.status,
-    createdAt: data.created_at,
-    reviewBy: data.review_by,
+    id: data['id'],
+    tenantId: data['tenant_id'],
+    category: data['category'],
+    title: data['title'],
+    description: data['description'],
+    estimatedSavings: parseFloat(String(data['estimated_savings'])) || 0,
+    difficulty: data['difficulty'],
+    priority: data['priority'],
+    status: data['status'],
+    createdAt: data['created_at'],
+    reviewBy: data['review_by'],
   }
 
-  if (data.tenant_id) {
-    const tenantSlug = await getTenantSlug(data.tenant_id)
+  if (typeof data['tenant_id'] === 'string') {
+    const tenantSlug = await getTenantSlug(data['tenant_id'])
     if (tenantSlug) {
       try {
         captureServerEvent('system', 'costs:recommendation_updated', {
           tenant: tenantSlug,
           new_status: status,
-          category: data.category,
+          category: data['category'],
         })
       } catch (analyticsError) {
         logger.warn('Failed to capture recommendation update analytics event', {

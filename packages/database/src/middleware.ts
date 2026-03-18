@@ -1,5 +1,4 @@
 import { getAdminClient } from './admin'
-import type { NextRequest } from 'next/server'
 import {
   DatabaseOperationError,
   TenantResolutionError,
@@ -18,6 +17,12 @@ export interface TenantResolution {
   tenantId: string
   tenantSlug: string
   source: 'development' | 'hostname' | 'subdomain' | 'header'
+}
+
+type RequestHeadersLike = {
+  headers: {
+    get(name: string): string | null
+  }
 }
 
 function toTenantRecord(value: unknown): { id: string; slug: string; domain: string } | null {
@@ -101,7 +106,7 @@ function toTenantRecord(value: unknown): { id: string; slug: string; domain: str
  * }
  * ```
  */
-export async function resolveTenantFromRequest(request: NextRequest): Promise<TenantResolution> {
+export async function resolveTenantFromRequest(request: RequestHeadersLike): Promise<TenantResolution> {
   const hostname = request.headers.get('host') || ''
   const isDevelopment = process.env['NODE_ENV'] === 'development'
 
@@ -299,7 +304,7 @@ export function validateTenantContext(tenant: TenantResolution): void {
  * }
  * ```
  */
-export function getTenantFromHeaders(request: NextRequest): TenantResolution | null {
+export function getTenantFromHeaders(request: RequestHeadersLike): TenantResolution | null {
   const tenantId = request.headers.get('x-tenant-id')
   const tenantSlug = request.headers.get('x-tenant-slug')
   const source = request.headers.get('x-tenant-source') as TenantResolution['source']

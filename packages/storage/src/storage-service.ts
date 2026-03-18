@@ -1,9 +1,9 @@
 import { Buffer } from 'node:buffer'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createDatabaseAdminClient } from '@agency/database/admin'
 import { z } from 'zod'
 import { FileValidator, FileValidationInput, FileValidationResult, FileMetadata } from './file-validator'
-import { VirusScanningService, VirusScanConfig, ScanResult } from './virus-scanner'
-import { captureAnalyticsEvent } from '@agency/analytics/server'
+import { VirusScanningService, type VirusScanConfig, type ScanResult } from './virus-scanner'
+import { captureServerEvent } from '@agency/analytics/server'
 
 export const StorageConfigSchema = z.object({
   supabaseUrl: z.string().url(),
@@ -57,14 +57,14 @@ export interface FileRecord {
 }
 
 export class StorageService {
-  private supabase: SupabaseClient
+  private supabase: ReturnType<typeof createDatabaseAdminClient>
   private fileValidator: FileValidator
   private virusScanner: VirusScanningService
   private config: StorageConfig
 
   constructor(config: StorageConfig) {
     this.config = config
-    this.supabase = createClient(config.supabaseUrl, config.supabaseServiceKey)
+    this.supabase = createDatabaseAdminClient()
     this.fileValidator = FileValidator.getInstance()
     this.virusScanner = new VirusScanningService(config.virusScanning)
   }
@@ -522,7 +522,13 @@ export class StorageService {
 
   private async logAnalyticsEvent(event: string, properties: Record<string, unknown>): Promise<void> {
     try {
-      await captureAnalyticsEvent(event, properties)
+      const tenant = typeof properties['tenantId'] === 'string' ? properties['tenantId'] : 'unknown'
+      const distinctId = typeof properties['uploadedBy'] === 'string' ? properties['uploadedBy'] : tenant
+
+      captureServerEvent(distinctId, event, {
+        ...properties,
+        tenant,
+      })
     } catch (error) {
       console.error('Failed to log analytics event:', error)
     }
@@ -533,8 +539,12 @@ export class StorageService {
     properties: Record<string, unknown>
   ): Promise<void> {
     try {
-      await captureAnalyticsEvent(`security_${event}`, {
+      const tenant = typeof properties['tenantId'] === 'string' ? properties['tenantId'] : 'unknown'
+      const distinctId = typeof properties['uploadedBy'] === 'string' ? properties['uploadedBy'] : tenant
+
+      captureServerEvent(distinctId, `security_${event}`, {
         ...properties,
+        tenant,
         timestamp: new Date().toISOString(),
         service: 'storage',
       })

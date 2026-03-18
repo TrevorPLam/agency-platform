@@ -6,15 +6,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { validateTenantAccess } from '@agency/database/auth'
+import { validateTenantAccess } from '@/lib/auth'
 import {
-  SecurityEvent,
   SecurityEventType,
   SecuritySeverity,
   createSecurityEvent,
   logSecurityEvent,
   securityMonitoringEngine,
-} from '@agency/analytics'
+} from '@agency/analytics/security-server'
+
+const SECURITY_SEVERITIES = Object.values(SecuritySeverity)
 
 /**
  * GET /api/security/events
@@ -34,6 +35,19 @@ export async function GET(request: NextRequest) {
           detail: 'Authentication required',
         },
         { status: 401 }
+      )
+    }
+
+    const tenantId = auth.tenantId
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to retrieve security events',
+        },
+        { status: 400 }
       )
     }
 
@@ -69,10 +83,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get security metrics (includes filtered events)
-    const metrics = securityMonitoringEngine.calculateMetrics(auth.tenantId, timeRange)
+    securityMonitoringEngine.calculateMetrics(tenantId, timeRange)
+
+    const eventStore = (securityMonitoringEngine as unknown as { eventStore?: Array<ReturnType<typeof createSecurityEvent>> }).eventStore ?? []
 
     // Filter events based on query parameters
-    let filteredEvents = metrics.events || []
+    let filteredEvents = eventStore.filter((event) => event.actor.tenantId === tenantId)
 
     if (severity) {
       filteredEvents = filteredEvents.filter((event) => event.severity === severity)
@@ -118,11 +134,11 @@ export async function GET(request: NextRequest) {
         sourceIp,
       },
       summary: {
-        totalEvents: metrics.totalEvents,
-        criticalEvents: metrics.criticalEvents,
-        highEvents: metrics.highEvents,
-        mediumEvents: metrics.mediumEvents,
-        lowEvents: metrics.lowEvents,
+        totalEvents: filteredEvents.length,
+        criticalEvents: filteredEvents.filter((event) => event.severity === 'critical').length,
+        highEvents: filteredEvents.filter((event) => event.severity === 'high').length,
+        mediumEvents: filteredEvents.filter((event) => event.severity === 'medium').length,
+        lowEvents: filteredEvents.filter((event) => event.severity === 'low').length,
       },
     })
   } catch (error) {
@@ -161,6 +177,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const tenantId = auth.tenantId
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to log security events',
+        },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
 
     // Validate required fields
@@ -192,7 +221,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!Object.values(SecuritySeverity).includes(body.severity)) {
+    if (!SECURITY_SEVERITIES.includes(body.severity)) {
       return NextResponse.json(
         {
           code: 'INVALID_SEVERITY',
@@ -216,7 +245,7 @@ export async function POST(request: NextRequest) {
     const securityEvent = createSecurityEvent({
       eventType: body.eventType,
       severity: body.severity,
-      tenantId: auth.tenantId,
+      tenantId,
       description: body.description,
       outcome: body.outcome,
       application: {
@@ -234,9 +263,8 @@ export async function POST(request: NextRequest) {
       },
       actor: {
         userId: auth.userId,
-        tenantId: auth.tenantId,
-        email: auth.userEmail,
-        role: auth.role,
+        tenantId,
+        email: auth.user.email,
         ...body.actor,
       },
       context: {
@@ -263,12 +291,12 @@ export async function POST(request: NextRequest) {
     await securityMonitoringEngine.addEvents([securityEvent])
 
     // Process alerts
-    const { processSecurityAlerts } = await import('@agency/analytics')
+    const { processSecurityAlerts } = await import('@agency/analytics/security-server')
     await processSecurityAlerts([securityEvent])
 
     return NextResponse.json(
       {
-        id: securityEvent.context.correlationId,
+        id: securityEvent.context.correlationId ?? securityEvent.timestamp,
         timestamp: securityEvent.timestamp,
         eventType: securityEvent.eventType,
         severity: securityEvent.severity,

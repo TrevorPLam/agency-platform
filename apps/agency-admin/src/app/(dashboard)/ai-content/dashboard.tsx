@@ -9,9 +9,7 @@ import { Progress } from '@agency/ui/components/progress'
 import { 
   BarChart3, 
   FileText, 
-  CheckCircle, 
   AlertTriangle, 
-  Clock, 
   Users,
   TrendingUp,
   Shield,

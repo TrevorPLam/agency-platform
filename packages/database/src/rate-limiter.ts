@@ -1,5 +1,11 @@
 import { Redis } from 'ioredis'
-import type { NextRequest } from 'next/server'
+
+type RequestLike = {
+  headers: {
+    get(name: string): string | null
+  }
+  ip?: string
+}
 
 export interface RateLimitConfig {
   /** Number of requests allowed in the window */
@@ -273,7 +279,7 @@ export const RateLimitPresets = {
 /**
  * Extract client IP from Next.js request
  */
-export function getClientIP(request: NextRequest): string {
+export function getClientIP(request: RequestLike): string {
   // Try various headers for real IP
   const forwardedFor = request.headers.get('x-forwarded-for')
   const realIP = request.headers.get('x-real-ip')
@@ -316,7 +322,7 @@ export function addRateLimitHeaders(
  * Middleware helper function for rate limiting
  */
 export async function applyRateLimit(
-  _request: NextRequest,
+  _request: RequestLike,
   context: RateLimitContext,
   limiter: RateLimiter = RateLimitPresets.general
 ): Promise<{ allowed: boolean; result: RateLimitResult }> {

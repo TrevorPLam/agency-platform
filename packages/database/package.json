@@ -10,6 +10,11 @@
       "import": "./src/index.ts",
       "require": "./src/index.ts"
     },
+    "./auth": {
+      "types": "./src/auth.ts",
+      "import": "./src/auth.ts",
+      "require": "./src/auth.ts"
+    },
     "./admin": {
       "types": "./src/admin.ts",
       "import": "./src/admin.ts",

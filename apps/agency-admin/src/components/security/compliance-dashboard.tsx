@@ -1,18 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@agency/ui/card'
 import { Badge } from '@agency/ui/badge'
 import { Button } from '@agency/ui/button'
 import { Progress } from '@agency/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@agency/ui/tabs'
 import { Alert, AlertDescription, AlertTitle } from '@agency/ui/alert'
-import {
-  SecurityScoreReport,
-  calculateSecurityScore,
-  generateSecurityScoreReport,
-  SecurityCompliance
-} from '@agency/security'
 import { AlertTriangle, CheckCircle, XCircle, Shield, TrendingUp, AlertCircle } from 'lucide-react'
 
 interface SecurityDashboardProps {
@@ -184,7 +178,6 @@ export function SecurityComplianceDashboard({ className }: SecurityDashboardProp
 
     const report = app.report!
     const securityScore = report.security?.score || 0
-    const cspScore = report.csp?.score || 0
 
     return (
       <Card className="cursor-pointer hover:shadow-md transition-shadow"

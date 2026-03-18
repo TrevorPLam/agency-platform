@@ -10,8 +10,6 @@ import {
   type RateLimitContext,
   handleCorsPreflight,
   setCorsHeaders,
-  logCorsViolation,
-  isOriginAllowed,
 } from '@agency/database'
 import { ensureRequestId, logStructuredWarning } from '@/lib/request-context'
 
@@ -95,12 +93,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   let tenantId: string | undefined
-  let tenantSlug: string | undefined
 
   try {
     const tenant = await resolveTenantFromRequest(request)
     tenantId = tenant.tenantId
-    tenantSlug = tenant.tenantSlug
     response.headers.set('x-tenant-id', tenant.tenantId)
     response.headers.set('x-tenant-slug', tenant.tenantSlug)
     response.headers.set('x-tenant-source', tenant.source)
@@ -141,10 +137,13 @@ export async function middleware(request: NextRequest) {
   const clientIP = getClientIP(request)
   const isAPIRoute = request.nextUrl.pathname.startsWith('/api/')
   const rateLimitContext: RateLimitContext = {
-    tenantId,
     ip: clientIP,
     authenticated: !!user,
     isService: false, // Service operations can be identified by specific headers if needed
+  }
+
+  if (tenantId) {
+    rateLimitContext.tenantId = tenantId
   }
 
   // Choose rate limiter based on authentication status and route type

@@ -7,7 +7,14 @@ export default async function AdminDashboard() {
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+      cookiesToSet.forEach(({ name, value, options }) => {
+        if (options) {
+          cookieStore.set(name, value, options)
+          return
+        }
+
+        cookieStore.set(name, value)
+      })
     },
   })
 

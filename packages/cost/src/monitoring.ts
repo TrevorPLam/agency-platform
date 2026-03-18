@@ -156,6 +156,10 @@ export class CostMonitoringService {
     // Calculate trends for each provider/service combination
     providerServices.forEach((metrics, key) => {
       const [provider, service] = key.split(':')
+      if (!provider || !service) {
+        return
+      }
+
       const trend = this.calculateTrend(metrics, provider, service, lookbackDays)
       if (trend) {
         trends.push(trend)

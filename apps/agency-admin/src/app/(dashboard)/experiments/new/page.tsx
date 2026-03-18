@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@agency/ui/badge'
 import { Plus, Trash2, ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
-import { ExperimentFormData } from '@agency/database/experiments'
 
 export default function NewExperimentPage() {
   // In a real implementation, this would be handled by a form library

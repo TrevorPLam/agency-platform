@@ -13,13 +13,19 @@
  * - Integration with major cloud providers
  */
 
+import { CostMonitoringService } from './monitoring'
+import type { CostSummary, CostTrend } from './monitoring'
+import { CostOptimizationEngine } from './optimization'
+import type { OptimizationRecommendation, ROIAnalysis } from './optimization'
+import { BudgetManager } from './budget'
+
 export { CostMonitoringService, type CostMetrics, type CostAlert, type CostThreshold, type CostTrend, type CostSummary } from './monitoring'
 export { CostOptimizationEngine, type OptimizationRecommendation, type ScalingPattern, type ROIAnalysis, type ResourceUsage } from './optimization'
 export { BudgetManager, type BudgetCategory, type BudgetAlert as BudgetAlertType, type CostAllocation, type BudgetForecast } from './budget'
 
 // Re-export main classes for convenience
-export { default as CostMonitor } from './monitoring'
-export { default as CostOptimizer } from './optimization'
+export { CostMonitoringService as CostMonitor } from './monitoring'
+export { CostOptimizationEngine as CostOptimizer } from './optimization'
 
 // Package version and metadata
 export const PACKAGE_VERSION = '1.0.0'
@@ -99,12 +105,3 @@ export interface CostAnalysis {
   roi: ROIAnalysis
   lastUpdated: Date
 }
-
-// Budget management exports (placeholder - would be implemented in separate file)
-// export class BudgetManager {
-//   async trackSpending(): Promise<void> {
-//     // Implementation would go here
-//   }
-// }
-
-export type { BudgetCategory, BudgetAlertType, CostAllocation, BudgetForecast } from './budget'

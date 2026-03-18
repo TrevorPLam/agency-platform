@@ -18,6 +18,7 @@
     "@agency/database": "workspace:*",
     "@agency/email": "workspace:*",
     "@agency/marketing": "workspace:*",
+    "@agency/security": "workspace:*",
     "@agency/ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",

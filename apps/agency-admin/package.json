@@ -14,16 +14,22 @@
     "test:coverage": "pnpm dlx vitest run --coverage"
   },
   "dependencies": {
+    "@agency/cost": "workspace:*",
     "@agency/ui": "workspace:*",
     "@agency/database": "workspace:*",
     "@agency/analytics": "workspace:*",
     "@agency/email": "workspace:*",
+    "@agency/error-handling": "workspace:*",
+    "@agency/metrics": "workspace:*",
+    "@agency/monitoring": "workspace:*",
     "@agency/security": "workspace:*",
+    "@agency/storage": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "inngest": "catalog:",
-    "lucide-react": "catalog:"
+    "lucide-react": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@agency/eslint-config": "workspace:*",

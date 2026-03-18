@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { urls, format = 'json' } = body
+    const { urls } = body
 
     if (!Array.isArray(urls) || urls.length === 0) {
       return NextResponse.json(

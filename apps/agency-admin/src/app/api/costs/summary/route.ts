@@ -19,7 +19,7 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
       .select('slug')
       .eq('id', tenantId)
       .single()
-    return data?.slug || null
+    return typeof data?.slug === 'string' ? data.slug : null
   } catch {
     return null
   }
@@ -92,7 +92,9 @@ export const GET = async (request: NextRequest) => {
       throw new DatabaseOperationError('Failed to fetch cost summary.')
     }
 
-    if (!data || data.length === 0) {
+    const summaries = Array.isArray(data) ? data : []
+
+    if (summaries.length === 0) {
       return NextResponse.json({
         totalCost: 0,
         storageCost: 0,
@@ -104,7 +106,7 @@ export const GET = async (request: NextRequest) => {
       })
     }
 
-    const summary = data[0]
+    const summary = summaries[0]
 
     const tenantSlug = await getTenantSlug(tenantId)
     if (tenantSlug) {
@@ -113,7 +115,7 @@ export const GET = async (request: NextRequest) => {
           tenant: tenantSlug,
           period_days: 7,
           has_data: true,
-          trend_direction: summary?.trend_direction || 'stable',
+          trend_direction: summary?.['trend_direction'] || 'stable',
         })
       } catch (analyticsError) {
         logger.warn('Failed to capture summary analytics event', {
@@ -123,13 +125,13 @@ export const GET = async (request: NextRequest) => {
     }
 
     return NextResponse.json({
-      totalCost: parseFloat(summary.total_cost) || 0,
-      storageCost: parseFloat(summary.storage_cost) || 0,
-      cicdCost: parseFloat(summary.cicd_cost) || 0,
-      bandwidthCost: parseFloat(summary.bandwidth_cost) || 0,
-      averageDailyCost: parseFloat(summary.average_daily_cost) || 0,
-      trendDirection: summary.trend_direction || 'stable',
-      trendPercentage: parseFloat(summary.trend_percentage) || 0,
+      totalCost: parseFloat(String(summary['total_cost'])) || 0,
+      storageCost: parseFloat(String(summary['storage_cost'])) || 0,
+      cicdCost: parseFloat(String(summary['cicd_cost'])) || 0,
+      bandwidthCost: parseFloat(String(summary['bandwidth_cost'])) || 0,
+      averageDailyCost: parseFloat(String(summary['average_daily_cost'])) || 0,
+      trendDirection: summary['trend_direction'] || 'stable',
+      trendPercentage: parseFloat(String(summary['trend_percentage'])) || 0,
     })
   } catch (error) {
     logger.error('Cost summary API error', {

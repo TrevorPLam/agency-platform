@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@agency/ui/tabs'
 import { Progress } from '@agency/ui/progress'
 import { 
   ArrowLeft, 
-  Play, 
   Pause, 
   Square, 
   BarChart3, 

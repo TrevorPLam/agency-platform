@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateSecurityHeaders, generateSecurityReport } from '@agency/security'
-import { validateCSP, generateCSPReport } from '@agency/security'
 
 export async function POST(request: NextRequest) {
   try {
@@ -188,6 +186,7 @@ async function createSecurityAlert(alert: any) {
 }
 
 function detectSecurityRegressions(results: any): any[] {
+  void results
   // In a real implementation, this would compare with previous scans
   // For now, return empty array
   return []
@@ -197,7 +196,7 @@ function generateScanId(): string {
   return `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 }
 
-function generateMonitoringData(period: string, eventType: string) {
+function generateMonitoringData(period: string, _eventType: string) {
   // Generate mock monitoring data
   const now = new Date()
   const periodHours = period === '24h' ? 24 : period === '7d' ? 168 : 1

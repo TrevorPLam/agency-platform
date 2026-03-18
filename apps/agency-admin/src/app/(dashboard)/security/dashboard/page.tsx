@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: 'Real-time security monitoring and threat intelligence dashboard',
 }
 
-export default function SecurityPage() {
+export default function SecurityDashboardPage() {
   return (
     <div className="container mx-auto py-6">
       <SecurityDashboard />

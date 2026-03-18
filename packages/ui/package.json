@@ -29,6 +29,96 @@
       "types": "./src/server/index.ts",
       "import": "./src/server/index.ts",
       "require": "./src/server/index.ts"
+    },
+    "./alert": {
+      "types": "./src/components/molecules/alert.tsx",
+      "import": "./src/components/molecules/alert.tsx",
+      "require": "./src/components/molecules/alert.tsx"
+    },
+    "./badge": {
+      "types": "./src/components/atoms/badge.tsx",
+      "import": "./src/components/atoms/badge.tsx",
+      "require": "./src/components/atoms/badge.tsx"
+    },
+    "./button": {
+      "types": "./src/components/atoms/button.tsx",
+      "import": "./src/components/atoms/button.tsx",
+      "require": "./src/components/atoms/button.tsx"
+    },
+    "./card": {
+      "types": "./src/components/molecules/card.tsx",
+      "import": "./src/components/molecules/card.tsx",
+      "require": "./src/components/molecules/card.tsx"
+    },
+    "./input": {
+      "types": "./src/components/atoms/input.tsx",
+      "import": "./src/components/atoms/input.tsx",
+      "require": "./src/components/atoms/input.tsx"
+    },
+    "./label": {
+      "types": "./src/components/atoms/label.tsx",
+      "import": "./src/components/atoms/label.tsx",
+      "require": "./src/components/atoms/label.tsx"
+    },
+    "./progress": {
+      "types": "./src/components/atoms/progress.tsx",
+      "import": "./src/components/atoms/progress.tsx",
+      "require": "./src/components/atoms/progress.tsx"
+    },
+    "./tabs": {
+      "types": "./src/components/molecules/tabs.tsx",
+      "import": "./src/components/molecules/tabs.tsx",
+      "require": "./src/components/molecules/tabs.tsx"
+    },
+    "./textarea": {
+      "types": "./src/components/atoms/textarea.tsx",
+      "import": "./src/components/atoms/textarea.tsx",
+      "require": "./src/components/atoms/textarea.tsx"
+    },
+    "./select": {
+      "types": "./src/components/molecules/select.tsx",
+      "import": "./src/components/molecules/select.tsx",
+      "require": "./src/components/molecules/select.tsx"
+    },
+    "./components/alert": {
+      "types": "./src/components/molecules/alert.tsx",
+      "import": "./src/components/molecules/alert.tsx",
+      "require": "./src/components/molecules/alert.tsx"
+    },
+    "./components/badge": {
+      "types": "./src/components/atoms/badge.tsx",
+      "import": "./src/components/atoms/badge.tsx",
+      "require": "./src/components/atoms/badge.tsx"
+    },
+    "./components/button": {
+      "types": "./src/components/atoms/button.tsx",
+      "import": "./src/components/atoms/button.tsx",
+      "require": "./src/components/atoms/button.tsx"
+    },
+    "./components/card": {
+      "types": "./src/components/molecules/card.tsx",
+      "import": "./src/components/molecules/card.tsx",
+      "require": "./src/components/molecules/card.tsx"
+    },
+    "./components/progress": {
+      "types": "./src/components/atoms/progress.tsx",
+      "import": "./src/components/atoms/progress.tsx",
+      "require": "./src/components/atoms/progress.tsx"
+    },
+    "./components/tabs": {
+      "types": "./src/components/molecules/tabs.tsx",
+      "import": "./src/components/molecules/tabs.tsx",
+      "require": "./src/components/molecules/tabs.tsx"
+    },
+    "./components/select": {
+      "types": "./src/components/molecules/select.tsx",
+      "import": "./src/components/molecules/select.tsx",
+      "require": "./src/components/molecules/select.tsx"
+    },
+    "./components/textarea": {
+      "types": "./src/components/atoms/textarea.tsx",
+      "import": "./src/components/atoms/textarea.tsx",
+      "require": "./src/components/atoms/textarea.tsx"
     }
   },
   "sideEffects": false,

@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { validateSecurityHeaders, generateSecurityReport } from '@agency/security/header-validator'
-import { validateCSP, generateCSPReport } from '@agency/security/csp-validator'
 
 /**
  * GET /api/security/report
@@ -142,13 +141,23 @@ export async function GET(request: NextRequest) {
         if (!typeAnalysis[app.type]) {
           typeAnalysis[app.type] = { count: 0, avgScore: 0 }
         }
-        typeAnalysis[app.type].count++
-        typeAnalysis[app.type].avgScore += (validation.overallScore / validation.maxScore) * 100
+        const entry = typeAnalysis[app.type]
+        if (!entry) {
+          return
+        }
+
+        entry.count++
+        entry.avgScore += (validation.overallScore / validation.maxScore) * 100
       }
     })
 
     Object.keys(typeAnalysis).forEach(type => {
-      typeAnalysis[type].avgScore = Math.round(typeAnalysis[type].avgScore / typeAnalysis[type].count)
+      const entry = typeAnalysis[type]
+      if (!entry) {
+        return
+      }
+
+      entry.avgScore = Math.round(entry.avgScore / entry.count)
     })
 
     report += `## Application Type Analysis\n\n`
@@ -160,13 +169,17 @@ export async function GET(request: NextRequest) {
     // Security Headers Compliance
     const headerStats: Record<string, { present: number; valid: number; total: number }> = {}
     validations.forEach(validation => {
-      validation.results.forEach(result => {
+      validation.results.forEach((result: any) => {
         if (!headerStats[result.header]) {
           headerStats[result.header] = { present: 0, valid: 0, total: 0 }
         }
-        headerStats[result.header].total++
-        if (result.present) headerStats[result.header].present++
-        if (result.valid) headerStats[result.header].valid++
+        const stats = headerStats[result.header]
+        if (!stats) {
+          return
+        }
+        stats.total++
+        if (result.present) stats.present++
+        if (result.valid) stats.valid++
       })
     })
 
@@ -200,7 +213,7 @@ export async function GET(request: NextRequest) {
         if (validation.criticalIssues.length > 0) {
           const app = applications.find(a => a.url === validation.url)
           report += `### ${app?.name || validation.url}\n`
-          validation.criticalIssues.forEach(issue => {
+          validation.criticalIssues.forEach((issue: string) => {
             report += `- ${issue}\n`
           })
           report += `\n`
@@ -211,19 +224,19 @@ export async function GET(request: NextRequest) {
     // Errors section
     if (errors.length > 0) {
       report += `## Scan Errors\n\n`
-      errors.forEach(error => {
+      errors.forEach((error: string) => {
         report += `- ${error}\n`
       })
       report += `\n`
     }
 
     // Recommendations
-    const allRecommendations = validations.flatMap(v => v.recommendations)
+    const allRecommendations = validations.flatMap((v: any) => v.recommendations)
     const uniqueRecommendations = [...new Set(allRecommendations)]
 
     if (uniqueRecommendations.length > 0) {
       report += `## Recommendations\n\n`
-      uniqueRecommendations.forEach(rec => {
+      uniqueRecommendations.forEach((rec: string) => {
         report += `- ${rec}\n`
       })
       report += `\n`
@@ -232,17 +245,17 @@ export async function GET(request: NextRequest) {
     // Security Best Practices Checklist
     report += `## Security Best Practices Checklist\n\n`
     const checklist = [
-      { item: 'All applications have CSP with nonce-based policies', status: validations.every(v => v.results.find(r => r.header === 'Content-Security-Policy')?.present) },
-      { item: 'HSTS is properly configured with max-age ≥ 31536000', status: validations.every(v => {
-        const hsts = v.results.find(r => r.header === 'Strict-Transport-Security')
+      { item: 'All applications have CSP with nonce-based policies', status: validations.every((v: any) => v.results.find((r: any) => r.header === 'Content-Security-Policy')?.present) },
+      { item: 'HSTS is properly configured with max-age ≥ 31536000', status: validations.every((v: any) => {
+        const hsts = v.results.find((r: any) => r.header === 'Strict-Transport-Security')
         return hsts?.present && hsts.value?.includes('max-age=31536000')
       })},
-      { item: 'X-Frame-Options is set to DENY or SAMEORIGIN', status: validations.every(v => v.results.find(r => r.header === 'X-Frame-Options')?.present) },
-      { item: 'X-Content-Type-Options is set to nosniff', status: validations.every(v => v.results.find(r => r.header === 'X-Content-Type-Options')?.valid) },
-      { item: 'Referrer-Policy is configured securely', status: validations.every(v => v.results.find(r => r.header === 'Referrer-Policy')?.present) },
-      { item: 'Permissions-Policy disables unnecessary features', status: validations.every(v => v.results.find(r => r.header === 'Permissions-Policy')?.present) },
+      { item: 'X-Frame-Options is set to DENY or SAMEORIGIN', status: validations.every((v: any) => v.results.find((r: any) => r.header === 'X-Frame-Options')?.present) },
+      { item: 'X-Content-Type-Options is set to nosniff', status: validations.every((v: any) => v.results.find((r: any) => r.header === 'X-Content-Type-Options')?.valid) },
+      { item: 'Referrer-Policy is configured securely', status: validations.every((v: any) => v.results.find((r: any) => r.header === 'Referrer-Policy')?.present) },
+      { item: 'Permissions-Policy disables unnecessary features', status: validations.every((v: any) => v.results.find((r: any) => r.header === 'Permissions-Policy')?.present) },
       { item: 'No critical security issues present', status: criticalIssuesCount === 0 },
-      { item: 'All applications score ≥ 70%', status: validations.every(v => (v.overallScore / v.maxScore) * 100 >= 70) }
+      { item: 'All applications score ≥ 70%', status: validations.every((v: any) => (v.overallScore / v.maxScore) * 100 >= 70) }
     ]
 
     checklist.forEach(({ item, status }) => {
@@ -291,7 +304,7 @@ export async function GET(request: NextRequest) {
         gradeDistribution,
         typeAnalysis,
         headerCompliance: Object.fromEntries(
-          Object.entries(headerStats).map(([header, stats]) => [
+            Object.entries(headerStats).map(([header, stats]: [string, { present: number; valid: number; total: number }]) => [
             header,
             {
               ...stats,

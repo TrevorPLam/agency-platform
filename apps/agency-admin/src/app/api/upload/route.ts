@@ -1,34 +1,68 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@agency/database/admin'
 import { StorageService, StorageConfig } from '@agency/storage'
 import { getCurrentUser } from '@/lib/auth'
 import { validateTenantAccess } from '@/lib/tenant-validation'
-import { z } from 'zod'
 
-// Environment variable validation schema
-const EnvSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  STORAGE_BUCKET_NAME: z.string().default('uploads'),
-  VIRUS_SCANNING_ENABLED: z
-    .enum(['true', 'false'])
-    .transform((val) => val === 'true')
-    .default(false),
-  VIRUS_SCAN_PROVIDER: z.enum(['clamav', 'virustotal', 'none']).default('none'),
-  VIRUSTOTAL_API_KEY: z.string().optional(),
-  VIRUS_SCAN_TIMEOUT: z.string().transform(Number).default('30000'),
-  VIRUS_SCAN_RETRY_ATTEMPTS: z.string().transform(Number).default('3'),
-  VIRUS_SCAN_RETRY_DELAY: z.string().transform(Number).default('1000'),
-  MAX_FILE_SIZE: z.string().transform(Number).default('52428800'),
-  ENABLE_FILE_QUARANTINE: z
-    .enum(['true', 'false'])
-    .transform((val) => val !== 'false')
-    .default(true),
-  FILE_RETENTION_DAYS: z.string().transform(Number).default('365'),
-})
+function readRequiredEnv(name: string): string {
+  const value = process.env[name]
 
-// Validate environment variables
-const env = EnvSchema.parse(process.env)
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`)
+  }
+
+  return value
+}
+
+function readBooleanEnv(name: string, defaultValue: boolean): boolean {
+  const value = process.env[name]
+
+  if (value === undefined) {
+    return defaultValue
+  }
+
+  return value === 'true'
+}
+
+function readNumberEnv(name: string, defaultValue: number): number {
+  const value = process.env[name]
+
+  if (value === undefined) {
+    return defaultValue
+  }
+
+  const parsed = Number(value)
+
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Invalid numeric environment variable: ${name}`)
+  }
+
+  return parsed
+}
+
+function readVirusScanProvider(): 'clamav' | 'virustotal' | 'none' {
+  const value = process.env['VIRUS_SCAN_PROVIDER']
+
+  if (value === undefined || value === 'clamav' || value === 'virustotal' || value === 'none') {
+    return value ?? 'none'
+  }
+
+  throw new Error('Invalid VIRUS_SCAN_PROVIDER environment variable')
+}
+
+const env = {
+  NEXT_PUBLIC_SUPABASE_URL: readRequiredEnv('NEXT_PUBLIC_SUPABASE_URL'),
+  SUPABASE_SERVICE_ROLE_KEY: readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+  STORAGE_BUCKET_NAME: process.env['STORAGE_BUCKET_NAME'] ?? 'uploads',
+  VIRUS_SCANNING_ENABLED: readBooleanEnv('VIRUS_SCANNING_ENABLED', false),
+  VIRUS_SCAN_PROVIDER: readVirusScanProvider(),
+  VIRUSTOTAL_API_KEY: process.env['VIRUSTOTAL_API_KEY'],
+  VIRUS_SCAN_TIMEOUT: readNumberEnv('VIRUS_SCAN_TIMEOUT', 30000),
+  VIRUS_SCAN_RETRY_ATTEMPTS: readNumberEnv('VIRUS_SCAN_RETRY_ATTEMPTS', 3),
+  VIRUS_SCAN_RETRY_DELAY: readNumberEnv('VIRUS_SCAN_RETRY_DELAY', 1000),
+  MAX_FILE_SIZE: readNumberEnv('MAX_FILE_SIZE', 52428800),
+  ENABLE_FILE_QUARANTINE: readBooleanEnv('ENABLE_FILE_QUARANTINE', true),
+  FILE_RETENTION_DAYS: readNumberEnv('FILE_RETENTION_DAYS', 365),
+}
 
 // Storage configuration from validated environment
 const storageConfig: StorageConfig = {
@@ -66,7 +100,9 @@ export async function POST(request: NextRequest) {
 
     // 2. Tenant validation
     const tenantAccess = await validateTenantAccess(request)
-    if (!tenantAccess) {
+    const tenantId = tenantAccess?.tenantId
+
+    if (!tenantAccess || !tenantId) {
       return NextResponse.json(
         {
           code: 'TENANT_NOT_FOUND',
@@ -77,6 +113,8 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       )
     }
+
+    const maxFileSize = typeof storageConfig.maxFileSize === 'number' ? storageConfig.maxFileSize : env.MAX_FILE_SIZE
 
     // 3. Parse multipart form data
     const formData = await request.formData()
@@ -95,13 +133,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Validate file size
-    if (file.size > storageConfig.maxFileSize) {
+    if (file.size > maxFileSize) {
       return NextResponse.json(
         {
           code: 'FILE_TOO_LARGE',
           status: 413,
           title: 'File too large',
-          detail: `File size ${file.size} bytes exceeds maximum allowed size of ${storageConfig.maxFileSize} bytes.`,
+          detail: `File size ${file.size} bytes exceeds maximum allowed size of ${maxFileSize} bytes.`,
         },
         { status: 413 }
       )
@@ -122,7 +160,7 @@ export async function POST(request: NextRequest) {
       file: buffer,
       filename: file.name,
       contentType,
-      tenantId: tenantAccess.tenantId,
+      tenantId,
       uploadedBy: user.id,
       metadata: {
         originalContentType: file.type,
@@ -190,7 +228,9 @@ export async function GET(request: NextRequest) {
 
     // 2. Tenant validation
     const tenantAccess = await validateTenantAccess(request)
-    if (!tenantAccess) {
+    const tenantId = tenantAccess?.tenantId
+
+    if (!tenantAccess || !tenantId) {
       return NextResponse.json(
         {
           code: 'TENANT_NOT_FOUND',
@@ -212,13 +252,26 @@ export async function GET(request: NextRequest) {
     // 4. Initialize storage service
     const storageService = new StorageService(storageConfig)
 
-    // 5. List files
-    const result = await storageService.listFiles(tenantAccess.tenantId, {
+    const listOptions: {
+      limit?: number
+      offset?: number
+      search?: string
+      contentType?: string
+    } = {
       limit,
       offset,
-      search,
-      contentType,
-    })
+    }
+
+    if (search) {
+      listOptions.search = search
+    }
+
+    if (contentType) {
+      listOptions.contentType = contentType
+    }
+
+    // 5. List files
+    const result = await storageService.listFiles(tenantId, listOptions)
 
     // 6. Return results
     return NextResponse.json({
@@ -261,7 +314,9 @@ export async function DELETE(request: NextRequest) {
 
     // 2. Tenant validation
     const tenantAccess = await validateTenantAccess(request)
-    if (!tenantAccess) {
+    const tenantId = tenantAccess?.tenantId
+
+    if (!tenantAccess || !tenantId) {
       return NextResponse.json(
         {
           code: 'TENANT_NOT_FOUND',
@@ -277,7 +332,7 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json()
     const { fileId } = body
 
-    if (!fileId) {
+    if (typeof fileId !== 'string' || !fileId) {
       return NextResponse.json(
         {
           code: 'MISSING_FILE_ID',
@@ -293,7 +348,7 @@ export async function DELETE(request: NextRequest) {
     const storageService = new StorageService(storageConfig)
 
     // 5. Delete file
-    const result = await storageService.deleteFile(fileId, tenantAccess.tenantId)
+    const result = await storageService.deleteFile(fileId, tenantId)
 
     // 6. Return result
     if (result.success) {

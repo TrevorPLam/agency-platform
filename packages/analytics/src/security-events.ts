@@ -10,7 +10,14 @@ import { captureServerEvent } from './server'
 /**
  * Security event severity levels
  */
-export type SecuritySeverity = 'critical' | 'high' | 'medium' | 'low'
+export const SecuritySeverity = {
+  critical: 'critical',
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const
+
+export type SecuritySeverity = (typeof SecuritySeverity)[keyof typeof SecuritySeverity]
 
 /**
  * Security event types following OWASP guidelines
@@ -233,6 +240,28 @@ export function createSecurityEvent(params: {
   threat?: Partial<SecurityEvent['threat']>
 }): SecurityEvent {
   const timestamp = new Date().toISOString()
+  const geolocation = params.source.geolocation
+    ? {
+        ...(params.source.geolocation.country ? { country: params.source.geolocation.country } : {}),
+        ...(params.source.geolocation.city ? { city: params.source.geolocation.city } : {}),
+        ...(typeof params.source.geolocation.latitude === 'number'
+          ? { latitude: params.source.geolocation.latitude }
+          : {}),
+        ...(typeof params.source.geolocation.longitude === 'number'
+          ? { longitude: params.source.geolocation.longitude }
+          : {}),
+      }
+    : undefined
+  const threat = params.threat
+    ? {
+        ...(params.threat.ioc ? { ioc: params.threat.ioc } : {}),
+        ...(params.threat.pattern ? { pattern: params.threat.pattern } : {}),
+        ...(typeof params.threat.confidence === 'number'
+          ? { confidence: params.threat.confidence }
+          : {}),
+        ...(params.threat.source ? { source: params.threat.source } : {}),
+      }
+    : undefined
   
   return {
     timestamp,
@@ -240,22 +269,24 @@ export function createSecurityEvent(params: {
     application: {
       name: params.application.name || 'agency-platform',
       version: params.application.version || '1.0.0',
-      endpoint: params.application.endpoint,
-      method: params.application.method,
-      statusCode: params.application.statusCode,
+      ...(params.application.endpoint ? { endpoint: params.application.endpoint } : {}),
+      ...(params.application.method ? { method: params.application.method } : {}),
+      ...(typeof params.application.statusCode === 'number'
+        ? { statusCode: params.application.statusCode }
+        : {}),
     },
     source: {
       ip: params.source.ip || 'unknown',
-      userAgent: params.source.userAgent,
-      geolocation: params.source.geolocation,
-      hostname: params.source.hostname,
+      ...(params.source.userAgent ? { userAgent: params.source.userAgent } : {}),
+      ...(geolocation ? { geolocation } : {}),
+      ...(params.source.hostname ? { hostname: params.source.hostname } : {}),
     },
     actor: {
       tenantId: params.tenantId,
-      userId: params.actor?.userId,
-      sessionId: params.actor?.sessionId,
-      email: params.actor?.email,
-      role: params.actor?.role,
+      ...(params.actor?.userId ? { userId: params.actor.userId } : {}),
+      ...(params.actor?.sessionId ? { sessionId: params.actor.sessionId } : {}),
+      ...(params.actor?.email ? { email: params.actor.email } : {}),
+      ...(params.actor?.role ? { role: params.actor.role } : {}),
     },
     eventType: params.eventType,
     severity: params.severity,
@@ -263,9 +294,9 @@ export function createSecurityEvent(params: {
     outcome: params.outcome,
     context: {
       correlationId: params.context?.correlationId || generateCorrelationId(),
-      requestId: params.context?.requestId,
-      error: params.context?.error,
-      stackTrace: params.context?.stackTrace,
+      ...(params.context?.requestId ? { requestId: params.context.requestId } : {}),
+      ...(params.context?.error ? { error: params.context.error } : {}),
+      ...(params.context?.stackTrace ? { stackTrace: params.context.stackTrace } : {}),
       metadata: params.context?.metadata || {},
     },
     compliance: {
@@ -275,7 +306,7 @@ export function createSecurityEvent(params: {
       gdpr: params.compliance?.gdpr || false,
       sox: params.compliance?.sox || false,
     },
-    threat: params.threat,
+    ...(threat ? { threat } : {}),
   }
 }
 
@@ -381,8 +412,13 @@ export const SecurityEvents = {
       description: `Authentication failure${params.reason ? `: ${params.reason}` : ''}`,
       outcome: 'failure',
       application: { name: 'agency-platform' },
-      source: { ip: params.ip, userAgent: params.userAgent },
-      actor: { email: params.email },
+      source: {
+        ip: params.ip,
+        ...(params.userAgent ? { userAgent: params.userAgent } : {}),
+      },
+      actor: {
+        ...(params.email ? { email: params.email } : {}),
+      },
       context: { metadata: { reason: params.reason } },
     })
     logSecurityEvent(event)
@@ -406,9 +442,14 @@ export const SecurityEvents = {
       tenantId: params.tenantId,
       description: `Rate limit exceeded: ${params.limit} requests per ${params.window}`,
       outcome: 'blocked',
-      application: { name: 'agency-platform', endpoint: params.endpoint },
+      application: {
+        name: 'agency-platform',
+        ...(params.endpoint ? { endpoint: params.endpoint } : {}),
+      },
       source: { ip: params.ip },
-      actor: { userId: params.userId },
+      actor: {
+        ...(params.userId ? { userId: params.userId } : {}),
+      },
       context: { metadata: { limit: params.limit, window: params.window } },
     })
     logSecurityEvent(event)
@@ -431,9 +472,14 @@ export const SecurityEvents = {
       tenantId: params.tenantId,
       description: `Cross-tenant access attempt to ${params.targetTenantId}`,
       outcome: 'blocked',
-      application: { name: 'agency-platform', endpoint: params.endpoint },
+      application: {
+        name: 'agency-platform',
+        ...(params.endpoint ? { endpoint: params.endpoint } : {}),
+      },
       source: { ip: params.ip },
-      actor: { userId: params.userId },
+      actor: {
+        ...(params.userId ? { userId: params.userId } : {}),
+      },
       context: { metadata: { targetTenantId: params.targetTenantId } },
       compliance: { dataBreach: true },
     })
@@ -459,7 +505,9 @@ export const SecurityEvents = {
       outcome: 'blocked',
       application: { name: 'agency-platform' },
       source: { ip: params.ip },
-      actor: { userId: params.userId },
+      actor: {
+        ...(params.userId ? { userId: params.userId } : {}),
+      },
       context: { metadata: { pattern: params.pattern, riskScore: params.riskScore } },
     })
     logSecurityEvent(event)
@@ -485,7 +533,9 @@ export const SecurityEvents = {
       outcome: 'failure',
       application: { name: 'agency-platform' },
       source: { ip: params.ip },
-      actor: { userId: params.userId },
+      actor: {
+        ...(params.userId ? { userId: params.userId } : {}),
+      },
       context: { 
         metadata: { 
           field: params.field, 

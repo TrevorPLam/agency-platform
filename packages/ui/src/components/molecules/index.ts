@@ -60,3 +60,10 @@ export {
   TabsContent,
 } from './tabs'
 export { Alert, AlertTitle, AlertDescription, alertVariants } from './alert'
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './select'

@@ -18,7 +18,7 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
       .select('slug')
       .eq('id', tenantId)
       .single()
-    return data?.slug || null
+    return typeof data?.slug === 'string' ? data.slug : null
   } catch {
     return null
   }
@@ -104,15 +104,15 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const metrics = (data || []).map((metric) => ({
-    id: metric.id,
-    storageUsage: metric.storage_usage || 0,
-    cicdRuntime: metric.cicd_runtime || 0,
-    bandwidthUsage: metric.bandwidth_usage || 0,
-    totalCost: parseFloat(metric.total_cost) || 0,
-    currency: metric.currency || 'USD',
-    timestamp: metric.timestamp,
-    period: metric.period,
-    metadata: metric.metadata || {},
+    id: metric['id'],
+    storageUsage: metric['storage_usage'] || 0,
+    cicdRuntime: metric['cicd_runtime'] || 0,
+    bandwidthUsage: metric['bandwidth_usage'] || 0,
+    totalCost: parseFloat(String(metric['total_cost'])) || 0,
+    currency: metric['currency'] || 'USD',
+    timestamp: metric['timestamp'],
+    period: metric['period'],
+    metadata: metric['metadata'] || {},
   }))
 
   const tenantSlug = await getTenantSlug(tenantId)
@@ -186,15 +186,15 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const metric = {
-    id: data.id,
-    storageUsage: data.storage_usage || 0,
-    cicdRuntime: data.cicd_runtime || 0,
-    bandwidthUsage: data.bandwidth_usage || 0,
-    totalCost: parseFloat(data.total_cost) || 0,
-    currency: data.currency || 'USD',
-    timestamp: data.timestamp,
-    period: data.period,
-    metadata: data.metadata || {},
+    id: data['id'],
+    storageUsage: data['storage_usage'] || 0,
+    cicdRuntime: data['cicd_runtime'] || 0,
+    bandwidthUsage: data['bandwidth_usage'] || 0,
+    totalCost: parseFloat(String(data['total_cost'])) || 0,
+    currency: data['currency'] || 'USD',
+    timestamp: data['timestamp'],
+    period: data['period'],
+    metadata: data['metadata'] || {},
   }
 
   const tenantSlug = await getTenantSlug(tenantId)

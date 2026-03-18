@@ -10,14 +10,11 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@agency/ui'
 import { Badge } from '@agency/ui'
-import { Button } from '@agency/ui'
 import {
   usePerformanceData,
   useWebVitals,
   usePerformanceBudgets,
-  usePerformanceBudgetPresets,
-  type PerformanceAlert,
-  type PerformanceAggregation
+  type PerformanceAlert
 } from '@agency/monitoring'
 import type { TenantId } from '@agency/database'
 

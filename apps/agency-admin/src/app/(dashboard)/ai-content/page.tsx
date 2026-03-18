@@ -15,6 +15,10 @@ export default async function AIContentPage() {
     redirect('/login')
   }
 
+  if (!session.tenantId) {
+    redirect('/dashboard')
+  }
+
   const supabase = createClient()
   
   // Check if user has permission to access AI content operations
@@ -25,7 +29,9 @@ export default async function AIContentPage() {
     .eq('user_id', session.userId)
     .single()
 
-  if (!userRole || !['admin', 'content_manager'].includes(userRole.role)) {
+  const role = typeof userRole?.role === 'string' ? userRole.role : null
+
+  if (!role || !['admin', 'content_manager'].includes(role)) {
     redirect('/dashboard')
   }
 

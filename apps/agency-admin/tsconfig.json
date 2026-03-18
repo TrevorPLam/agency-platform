@@ -1,8 +1,33 @@
 {
   "extends": "@agency/typescript-config/nextjs.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@agency/cost": ["../../packages/cost/src/index.ts"],
+      "@agency/cost/*": ["../../packages/cost/src/*"],
+      "@agency/error-handling": ["../../packages/error-handling/src/index.ts"],
+      "@agency/metrics": ["../../packages/metrics/src/index.ts"],
+      "@agency/monitoring": ["../../packages/monitoring/src/index.ts"],
+      "@agency/monitoring/*": ["../../packages/monitoring/src/*"],
+      "@agency/security": ["../../packages/security/src/index.ts"],
+      "@agency/security/*": ["../../packages/security/src/*"],
+      "@agency/storage": ["../../packages/storage/src/index.ts"]
+    },
     "plugins": [{ "name": "next" }]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "../../packages/cost/src/**/*.ts",
+    "../../packages/error-handling/src/**/*.ts",
+    "../../packages/metrics/src/**/*.ts",
+    "../../packages/monitoring/src/**/*.ts",
+    "../../packages/monitoring/src/**/*.tsx",
+    "../../packages/security/src/**/*.ts",
+    "../../packages/storage/src/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

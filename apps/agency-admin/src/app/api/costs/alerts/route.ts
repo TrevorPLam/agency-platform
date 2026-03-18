@@ -18,7 +18,7 @@ async function getTenantSlug(tenantId: string): Promise<string | null> {
       .select('slug')
       .eq('id', tenantId)
       .single()
-    return data?.slug || null
+    return typeof data?.slug === 'string' ? data.slug : null
   } catch {
     return null
   }
@@ -108,19 +108,19 @@ export const GET = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const alerts = (data || []).map((alert) => ({
-    id: alert.id,
-    tenantId: alert.tenant_id,
-    name: alert.name,
-    category: alert.category,
-    threshold: parseFloat(alert.threshold) || 0,
-    current: parseFloat(alert.current) || 0,
-    thresholdType: alert.threshold_type,
-    severity: alert.severity,
-    active: alert.active,
-    notificationChannels: alert.notification_channels || [],
-    lastTriggered: alert.last_triggered,
-    createdAt: alert.created_at,
-    updatedAt: alert.updated_at,
+    id: alert['id'],
+    tenantId: alert['tenant_id'],
+    name: alert['name'],
+    category: alert['category'],
+    threshold: parseFloat(String(alert['threshold'])) || 0,
+    current: parseFloat(String(alert['current'])) || 0,
+    thresholdType: alert['threshold_type'],
+    severity: alert['severity'],
+    active: alert['active'],
+    notificationChannels: alert['notification_channels'] || [],
+    lastTriggered: alert['last_triggered'],
+    createdAt: alert['created_at'],
+    updatedAt: alert['updated_at'],
   }))
 
   const tenantSlug = await getTenantSlug(tenantId)
@@ -201,19 +201,19 @@ export const POST = withApiErrorHandling(async (request: NextRequest) => {
   }
 
   const alert = {
-    id: data.id,
-    tenantId: data.tenant_id,
-    name: data.name,
-    category: data.category,
-    threshold: parseFloat(data.threshold) || 0,
-    current: parseFloat(data.current) || 0,
-    thresholdType: data.threshold_type,
-    severity: data.severity,
-    active: data.active,
-    notificationChannels: data.notification_channels || [],
-    lastTriggered: data.last_triggered,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
+    id: data['id'],
+    tenantId: data['tenant_id'],
+    name: data['name'],
+    category: data['category'],
+    threshold: parseFloat(String(data['threshold'])) || 0,
+    current: parseFloat(String(data['current'])) || 0,
+    thresholdType: data['threshold_type'],
+    severity: data['severity'],
+    active: data['active'],
+    notificationChannels: data['notification_channels'] || [],
+    lastTriggered: data['last_triggered'],
+    createdAt: data['created_at'],
+    updatedAt: data['updated_at'],
   }
 
   const tenantSlug = await getTenantSlug(tenantId)

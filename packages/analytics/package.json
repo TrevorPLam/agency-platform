@@ -17,6 +17,10 @@
       "import": "./src/server.ts",
       "types": "./src/server.ts"
     },
+    "./security-server": {
+      "import": "./src/security-server.ts",
+      "types": "./src/security-server.ts"
+    },
     "./consent": {
       "import": "./src/consent.ts",
       "types": "./src/consent.ts"

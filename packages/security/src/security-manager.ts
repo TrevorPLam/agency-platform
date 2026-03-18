@@ -8,7 +8,7 @@
 import { SBOMGenerator } from './sbom'
 import { IntegrityVerifier } from './integrity'
 import { ProvenanceTracker } from './provenance'
-import { SupplyChainMonitor } from './monitoring'
+import { SupplyChainMonitor } from './monitoring/index'
 import { CryptoVerifier } from './crypto'
 import { AgentAuditingSystem } from './agent-auditing'
 import { SecurityConfig } from './types'

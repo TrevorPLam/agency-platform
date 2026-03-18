@@ -6,13 +6,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { validateTenantAccess } from '@agency/database/auth'
+import { validateTenantAccess } from '@/lib/auth'
 import { 
   calculateSecurityMetrics,
   detectThreatPatterns,
   getSecurityAlerts,
-  securityMonitoringEngine,
-} from '@agency/analytics'
+} from '@agency/analytics/security-server'
+
+type ThreatPattern = ReturnType<typeof detectThreatPatterns>[number]
+type SecurityAlertItem = ReturnType<typeof getSecurityAlerts>[number]
 
 /**
  * GET /api/security/metrics
@@ -32,6 +34,19 @@ export async function GET(request: NextRequest) {
           detail: 'Authentication required',
         },
         { status: 401 }
+      )
+    }
+
+    const tenantId = auth.tenantId
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to retrieve security metrics',
+        },
+        { status: 400 }
       )
     }
 
@@ -79,18 +94,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Get primary security metrics
-    const metrics = calculateSecurityMetrics(auth.tenantId, timeRangeObj)
+    const metrics = calculateSecurityMetrics(tenantId, timeRangeObj)
 
     // Get additional data if requested
-    let alerts = []
-    let threatPatterns = []
+    let alerts: SecurityAlertItem[] = []
+    let threatPatterns: ThreatPattern[] = []
 
     if (includeAlerts) {
-      alerts = getSecurityAlerts(auth.tenantId).slice(0, 50) // Limit to recent alerts
+      alerts = getSecurityAlerts(tenantId).slice(0, 50)
     }
 
     if (includeThreats) {
-      threatPatterns = detectThreatPatterns(auth.tenantId)
+      threatPatterns = detectThreatPatterns(tenantId)
     }
 
     // Calculate additional derived metrics
@@ -153,7 +168,8 @@ export async function GET(request: NextRequest) {
 function calculateSecurityPostureScore(metrics: any): number {
   // Base score from risk level
   const riskScores = { critical: 20, high: 40, medium: 60, low: 80 }
-  const baseScore = riskScores[metrics.riskLevel] || 50
+  const riskLevel = metrics.riskLevel as keyof typeof riskScores
+  const baseScore = riskScores[riskLevel] || 50
   
   // Event volume factor (fewer events is better)
   const eventVolumeFactor = Math.max(0, 100 - (metrics.totalEvents / 10))
@@ -250,12 +266,12 @@ function calculateRiskBreakdown(metrics: any): any {
  */
 function calculateComplianceStatus(metrics: any): any {
   // Check for compliance-related events
-  const complianceEvents = metrics.events?.filter((event: any) => 
+  const complianceEvents = ((metrics as { events?: Array<{ compliance?: { dataBreach?: boolean; hipaa?: boolean; pci?: boolean; gdpr?: boolean } }> }).events ?? []).filter((event) => 
     event.compliance?.dataBreach || 
     event.compliance?.hipaa || 
     event.compliance?.pci || 
     event.compliance?.gdpr
-  ) || []
+  )
 
   const hasComplianceIssues = complianceEvents.length > 0
   const hasCriticalEvents = metrics.criticalEvents > 0
@@ -282,7 +298,13 @@ function calculateComplianceStatus(metrics: any): any {
  * Identify top security concerns
  */
 function identifyTopSecurityConcerns(metrics: any, alerts: any[], threatPatterns: any[]): any[] {
-  const concerns = []
+  const concerns: Array<{
+    type: string
+    severity: 'critical' | 'high' | 'medium' | 'low'
+    title: string
+    description: string
+    recommendation: string
+  }> = []
 
   // High risk score
   if (metrics.riskScore > 70) {
@@ -342,7 +364,7 @@ function identifyTopSecurityConcerns(metrics: any, alerts: any[], threatPatterns
 
   // Sort by severity and limit to top 5
   const severityOrder = { critical: 3, high: 2, medium: 1, low: 0 }
-  concerns.sort((a, b) => severityOrder[b.severity] - severityOrder[a.severity])
+  concerns.sort((a, b) => severityOrder[b.severity as keyof typeof severityOrder] - severityOrder[a.severity as keyof typeof severityOrder])
 
   return concerns.slice(0, 5)
 }

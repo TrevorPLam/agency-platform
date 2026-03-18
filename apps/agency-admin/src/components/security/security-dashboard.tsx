@@ -7,7 +7,7 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@agency/ui/card'
 import { Badge } from '@agency/ui/badge'
 import { Button } from '@agency/ui/button'
@@ -18,16 +18,10 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  TrendingUp,
-  TrendingDown,
   Activity,
   Users,
   Globe,
-  Lock,
-  Eye,
   RefreshCw,
-  Download,
-  Filter,
   Bell,
 } from 'lucide-react'
 import { SecurityComplianceDashboard } from './compliance-dashboard'

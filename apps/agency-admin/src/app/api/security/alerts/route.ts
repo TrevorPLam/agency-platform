@@ -6,15 +6,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { validateTenantAccess } from '@agency/database/auth'
+import { validateTenantAccess } from '@/lib/auth'
 import {
   SecurityAlert,
   SecurityAlertType,
   SecuritySeverity,
   getSecurityAlerts,
   securityMonitoringEngine,
-  processSecurityAlerts,
-} from '@agency/analytics'
+} from '@agency/analytics/security-server'
+
+const SECURITY_SEVERITIES = Object.values(SecuritySeverity)
 
 /**
  * GET /api/security/alerts
@@ -38,6 +39,19 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
+    const tenantId = auth.tenantId
+
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to retrieve security alerts',
+        },
+        { status: 400 }
+      )
+    }
 
     // Parse query parameters
     const page = parseInt(searchParams.get('page') || '1')
@@ -63,7 +77,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get alerts with filters
-    let alerts = getSecurityAlerts(auth.tenantId, status || undefined)
+    let alerts = getSecurityAlerts(tenantId, status ?? undefined)
 
     // Apply additional filters
     if (severity) {
@@ -91,7 +105,7 @@ export async function GET(request: NextRequest) {
     // Sort alerts by timestamp (newest first) and then by severity
     const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 }
     alerts.sort((a, b) => {
-      const severityDiff = severityOrder[b.severity] - severityOrder[a.severity]
+      const severityDiff = severityOrder[b.severity as keyof typeof severityOrder] - severityOrder[a.severity as keyof typeof severityOrder]
       if (severityDiff !== 0) return severityDiff
 
       return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -184,6 +198,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const tenantId = auth.tenantId
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to create security alerts',
+        },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
 
     // Validate required fields
@@ -203,7 +230,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate enum values
-    if (!Object.values(SecuritySeverity).includes(body.severity)) {
+    if (!SECURITY_SEVERITIES.includes(body.severity)) {
       return NextResponse.json(
         {
           code: 'INVALID_SEVERITY',
@@ -235,10 +262,10 @@ export async function POST(request: NextRequest) {
       type: body.type,
       title: body.title,
       description: body.description,
-      tenantId: auth.tenantId,
+      tenantId,
       events: body.events || [],
       status: 'active',
-      assignedTo: body.assignedTo,
+      assignedTo: typeof body.assignedTo === 'string' ? body.assignedTo : undefined,
       metadata: {
         riskScore: body.metadata?.riskScore || calculateInitialRiskScore(body.severity, body.type),
         affectedUsers: body.metadata?.affectedUsers || 0,
@@ -252,9 +279,9 @@ export async function POST(request: NextRequest) {
     securityMonitoringEngine.addAlert(alert)
 
     // Log alert creation event
-    const { SecurityEvents } = await import('@agency/analytics')
+    const { SecurityEvents } = await import('@agency/analytics/security-server')
     SecurityEvents.suspiciousActivity({
-      tenantId: auth.tenantId,
+      tenantId,
       userId: auth.userId,
       ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
       pattern: 'manual_security_alert_creation',
@@ -309,6 +336,19 @@ export async function PATCH(request: NextRequest) {
           detail: 'Authentication required',
         },
         { status: 401 }
+      )
+    }
+
+    const tenantId = auth.tenantId
+    if (!tenantId) {
+      return NextResponse.json(
+        {
+          code: 'TENANT_CONTEXT_REQUIRED',
+          status: 400,
+          title: 'Tenant Context Required',
+          detail: 'Tenant context is required to update security alerts',
+        },
+        { status: 400 }
       )
     }
 
@@ -378,7 +418,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Get updated alert
-    const alerts = getSecurityAlerts(auth.tenantId)
+    const alerts = getSecurityAlerts(tenantId)
     const updatedAlert = alerts.find((a) => a.id === body.id)
 
     if (!updatedAlert) {
@@ -399,9 +439,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Log alert update event
-    const { SecurityEvents } = await import('@agency/analytics')
+    const { SecurityEvents } = await import('@agency/analytics/security-server')
     SecurityEvents.suspiciousActivity({
-      tenantId: auth.tenantId,
+      tenantId,
       userId: auth.userId,
       ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown',
       pattern: 'security_alert_status_update',
@@ -453,7 +493,7 @@ function calculateInitialRiskScore(severity: SecuritySeverity, type: SecurityAle
     [SecurityAlertType.VULNERABILITY_DETECTED]: 8,
   }
 
-  const baseScore = severityScores[severity]
+  const baseScore = severityScores[severity as keyof typeof severityScores]
   const modifier = typeModifiers[type] || 0
 
   return Math.min(baseScore + modifier, 100)

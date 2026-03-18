@@ -5,8 +5,7 @@
  * following 2026 security monitoring best practices.
  */
 
-import { SecurityEvent, SecurityEventType, SecuritySeverity, SecurityMetrics } from './security-events'
-import { SecurityAlert, SecurityAlertType } from './security-alerting'
+import { SecurityEvent, SecurityEventType, SecuritySeverity, SecurityMetrics, SecurityAlert, createSecurityEvent } from './security-events'
 import { calculateSecurityScore, SecurityScoreReport } from '@agency/security'
 
 /**
@@ -74,7 +73,7 @@ export interface ThreatPattern {
  */
 export interface ThreatPatternCondition {
   field: string
-  operator: 'equals' | 'contains' | 'regex' | 'range'
+  operator: 'equals' | 'not_equals' | 'contains' | 'regex' | 'range'
   value: string | number | RegExp
   weight: number
 }
@@ -99,7 +98,6 @@ export class SecurityMonitoringEngine {
   private alertStore: SecurityAlert[] = []
   private threatIntel: ThreatIntelligence
   private metricsCache: Map<string, SecurityMetrics> = new Map()
-  private processing = false
   private headerComplianceStore: Map<string, SecurityScoreReport[]> = new Map()
 
   constructor(config?: Partial<SecurityMonitoringConfig>) {
@@ -342,27 +340,47 @@ export class SecurityMonitoringEngine {
       end: timeRange?.end || defaultEnd,
     }
 
+    const filteredEvents = this.eventStore.filter(event => {
+      const eventTime = new Date(event.timestamp)
+      const afterStart = eventTime >= new Date(timeRangeObj.start)
+      const beforeEnd = eventTime <= new Date(timeRangeObj.end)
+      const tenantMatch = !tenantId || event.actor.tenantId === tenantId
+
+      return afterStart && beforeEnd && tenantMatch
+    })
+
     const metrics: SecurityMetrics = {
       timeRange: timeRangeObj,
-      tenantId,
-
-      // Filter events by time range and tenant
-      events: this.eventStore.filter(event => {
-        const eventTime = new Date(event.timestamp)
-        const afterStart = eventTime >= new Date(timeRangeObj.start)
-        const beforeEnd = eventTime <= new Date(timeRangeObj.end)
-        const tenantMatch = !tenantId || event.actor.tenantId === tenantId
-
-        return afterStart && beforeEnd && tenantMatch
-      }),
+      ...(tenantId ? { tenantId } : {}),
+      totalEvents: 0,
+      criticalEvents: 0,
+      highEvents: 0,
+      mediumEvents: 0,
+      lowEvents: 0,
+      activeAlerts: 0,
+      acknowledgedAlerts: 0,
+      resolvedAlerts: 0,
+      authenticationFailureRate: 0,
+      rateLimitViolationRate: 0,
+      suspiciousActivityRate: 0,
+      dataAccessAnomalyRate: 0,
+      trends: {
+        authenticationFailures: [],
+        rateLimitViolations: [],
+        suspiciousActivity: [],
+        dataAccessAnomalies: [],
+        timestamps: [],
+      },
+      riskScore: 0,
+      riskLevel: 'low',
     }
 
     // Calculate event counts by severity
-    metrics.totalEvents = metrics.events.length
-    metrics.criticalEvents = metrics.events.filter(e => e.severity === 'critical').length
-    metrics.highEvents = metrics.events.filter(e => e.severity === 'high').length
-    metrics.mediumEvents = metrics.events.filter(e => e.severity === 'medium').length
-    metrics.lowEvents = metrics.events.filter(e => e.severity === 'low').length
+    metrics.totalEvents = filteredEvents.length
+    metrics.criticalEvents = filteredEvents.filter(e => e.severity === 'critical').length
+    metrics.highEvents = filteredEvents.filter(e => e.severity === 'high').length
+    metrics.mediumEvents = filteredEvents.filter(e => e.severity === 'medium').length
+    metrics.lowEvents = filteredEvents.filter(e => e.severity === 'low').length
 
     // Calculate alert status
     const recentAlerts = this.alertStore.filter(alert =>
@@ -376,24 +394,24 @@ export class SecurityMonitoringEngine {
     metrics.resolvedAlerts = recentAlerts.filter(a => a.status === 'resolved').length
 
     // Calculate security KPIs
-    const authEvents = metrics.events.filter(e =>
+    const authEvents = filteredEvents.filter(e =>
       e.eventType === SecurityEventType.AUTH_FAILURE
     )
     const totalAuthEvents = authEvents.length +
-      metrics.events.filter(e => e.eventType === SecurityEventType.AUTH_SUCCESS).length
+      filteredEvents.filter(e => e.eventType === SecurityEventType.AUTH_SUCCESS).length
 
     metrics.authenticationFailureRate = totalAuthEvents > 0
       ? (authEvents.length / totalAuthEvents) * 100
       : 0
 
-    const rateLimitEvents = metrics.events.filter(e =>
+    const rateLimitEvents = filteredEvents.filter(e =>
       e.eventType === SecurityEventType.RATE_LIMIT_EXCEEDED
     )
     metrics.rateLimitViolationRate = metrics.totalEvents > 0
       ? (rateLimitEvents.length / metrics.totalEvents) * 100
       : 0
 
-    const suspiciousEvents = metrics.events.filter(e =>
+    const suspiciousEvents = filteredEvents.filter(e =>
       [
         SecurityEventType.ABNORMAL_BEHAVIOR_PATTERN,
         SecurityEventType.SUSPICIOUS_USER_AGENT,
@@ -404,7 +422,7 @@ export class SecurityMonitoringEngine {
       ? (suspiciousEvents.length / metrics.totalEvents) * 100
       : 0
 
-    const dataAccessEvents = metrics.events.filter(e =>
+    const dataAccessEvents = filteredEvents.filter(e =>
       [
         SecurityEventType.DATA_ACCESS_ANOMALY,
         SecurityEventType.SENSITIVE_DATA_ACCESS,
@@ -416,7 +434,7 @@ export class SecurityMonitoringEngine {
       : 0
 
     // Calculate trends (hourly data points)
-    metrics.trends = this.calculateTrends(metrics.events, metrics.timeRange)
+  metrics.trends = this.calculateTrends(filteredEvents, metrics.timeRange)
 
     // Calculate risk assessment
     metrics.riskScore = this.calculateOverallRiskScore(metrics)
@@ -555,6 +573,8 @@ export class SecurityMonitoringEngine {
       switch (condition.operator) {
         case 'equals':
           return fieldValue === condition.value
+        case 'not_equals':
+          return fieldValue !== condition.value
         case 'contains':
           return typeof fieldValue === 'string' &&
                  (fieldValue as string).includes(condition.value as string)
@@ -564,7 +584,9 @@ export class SecurityMonitoringEngine {
         case 'range':
           if (typeof fieldValue === 'number' && Array.isArray(condition.value)) {
             const [min, max] = condition.value as number[]
-            return fieldValue >= min && fieldValue <= max
+            return typeof min === 'number' && typeof max === 'number'
+              ? fieldValue >= min && fieldValue <= max
+              : false
           }
           return false
         default:
@@ -692,11 +714,16 @@ export class SecurityMonitoringEngine {
       const scorePercentage = (securityReport.overallScore / securityReport.maxScore) * 100
 
       if (scorePercentage < 70) {
-        await this.addEvents([{
-          id: `header-compliance-${url}-${Date.now()}`,
-          timestamp: new Date().toISOString(),
-          eventType: SecurityEventType.SECURITY_POLICY_VIOLATION,
+        await this.addEvents([createSecurityEvent({
+          eventType: SecurityEventType.SECURITY_MISCONFIGURATION,
           severity: scorePercentage < 50 ? 'critical' : 'high',
+          tenantId: tenantId || 'system',
+          description: `Security header compliance check failed: ${securityReport.overallScore}/${securityReport.maxScore} (${securityReport.grade})`,
+          outcome: 'failure',
+          application: {
+            name: 'security-monitoring',
+            endpoint: url,
+          },
           source: {
             ip: 'monitoring-system',
             userAgent: 'Security-Monitoring-Engine/1.0',
@@ -704,25 +731,19 @@ export class SecurityMonitoringEngine {
           },
           actor: {
             userId: 'system',
-            tenantId: tenantId || 'system',
             role: 'system',
           },
-          target: {
-            resource: url,
-            resourceType: 'application',
-            operation: 'header-compliance-check',
-          },
           context: {
-            description: `Security header compliance check failed: ${securityReport.overallScore}/${securityReport.maxScore} (${securityReport.grade})`,
             metadata: {
+              operation: 'header-compliance-check',
               securityScore: securityReport.overallScore,
               maxScore: securityReport.maxScore,
               grade: securityReport.grade,
               criticalIssues: securityReport.criticalIssues.length,
-              url: url,
+              url,
             },
           },
-        }])
+        })])
       }
 
       console.log(`Header compliance monitoring completed for ${url}: ${securityReport.overallScore}/${securityReport.maxScore} (${securityReport.grade})`)
@@ -732,11 +753,16 @@ export class SecurityMonitoringEngine {
       console.error(`Failed to monitor header compliance for ${url}:`, error)
 
       // Create error event
-      await this.addEvents([{
-        id: `header-compliance-error-${url}-${Date.now()}`,
-        timestamp: new Date().toISOString(),
-        eventType: SecurityEventType.SYSTEM_ERROR,
+      await this.addEvents([createSecurityEvent({
+        eventType: SecurityEventType.SECURITY_MISCONFIGURATION,
         severity: 'medium',
+        tenantId: tenantId || 'system',
+        description: `Header compliance monitoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        outcome: 'error',
+        application: {
+          name: 'security-monitoring',
+          endpoint: url,
+        },
         source: {
           ip: 'monitoring-system',
           userAgent: 'Security-Monitoring-Engine/1.0',
@@ -744,22 +770,16 @@ export class SecurityMonitoringEngine {
         },
         actor: {
           userId: 'system',
-          tenantId: tenantId || 'system',
           role: 'system',
         },
-        target: {
-          resource: url,
-          resourceType: 'application',
-          operation: 'header-compliance-check',
-        },
         context: {
-          description: `Header compliance monitoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
           error: error instanceof Error ? error.message : 'Unknown error',
           metadata: {
-            url: url,
+            operation: 'header-compliance-check',
+            url,
           },
         },
-      }])
+      })])
 
       throw error
     }

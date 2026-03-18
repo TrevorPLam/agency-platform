@@ -6,7 +6,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { validateSecurityHeaders, generateSecurityReport } from '@agency/security/header-validator'
-import { validateCSP, generateCSPReport } from '@agency/security/csp-validator'
 
 interface ScanRequest {
   url: string

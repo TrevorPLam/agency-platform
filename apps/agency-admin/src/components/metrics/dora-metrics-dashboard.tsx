@@ -52,6 +52,13 @@ const performanceBadgeColors = {
   Low: 'destructive'
 } as const
 
+const defaultPerformanceLevel: PerformanceLevel = {
+  level: 'Low',
+  minThreshold: 0,
+  maxThreshold: 0,
+  description: 'Not enough data to determine performance level',
+}
+
 export function DORAMetricsDashboard() {
   const [metrics, setMetrics] = useState<MetricsResult | null>(null)
   const [loading, setLoading] = useState(true)
@@ -199,9 +206,10 @@ export function DORAMetricsDashboard() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {metricCards.map((metric) => {
           const Icon = metric.icon
-          const progress = metric.performanceLevel.level === 'Elite' ? 100 :
-                         metric.performanceLevel.level === 'High' ? 75 :
-                         metric.performanceLevel.level === 'Medium' ? 50 : 25
+          const performanceLevel = metric.performanceLevel ?? defaultPerformanceLevel
+          const progress = performanceLevel.level === 'Elite' ? 100 :
+                         performanceLevel.level === 'High' ? 75 :
+                         performanceLevel.level === 'Medium' ? 50 : 25
           
           return (
             <Card key={metric.title}>
@@ -217,8 +225,8 @@ export function DORAMetricsDashboard() {
                     <div className="text-2xl font-bold">
                       {metric.value}
                     </div>
-                    <Badge variant={performanceBadgeColors[metric.performanceLevel.level]}>
-                      {metric.performanceLevel.level}
+                    <Badge variant={performanceBadgeColors[performanceLevel.level]}>
+                      {performanceLevel.level}
                     </Badge>
                   </div>
                   <div className="text-xs text-muted-foreground">
@@ -324,39 +332,43 @@ export function DORAMetricsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {metricCards.map((metric) => (
-                  <div key={metric.title} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">{metric.title}</span>
-                      <Badge variant={performanceBadgeColors[metric.performanceLevel.level]}>
-                        {metric.performanceLevel.level}
-                      </Badge>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2 text-xs">
-                      {Object.entries(metric.benchmark).map(([level, threshold]) => (
-                        <div 
-                          key={level}
-                          className={`p-2 rounded text-center ${
-                            level === metric.performanceLevel.level 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <div className="font-medium">{level}</div>
-                          <div>
-                            {level === 'Low' && metric.title === 'Lead Time for Changes' ? '>1 month' :
-                             level === 'Low' && metric.title === 'Mean Time to Recovery' ? '>1 week' :
-                             level === 'Low' && metric.title === 'Change Failure Rate' ? '>46%' :
-                             threshold === Infinity ? 'N/A' :
-                             metric.title.includes('Rate') ? `≤${threshold}%` :
-                             metric.unit === 'hours' ? `≤${threshold}h` :
-                             `≥${threshold}`}
+                {metricCards.map((metric) => {
+                  const performanceLevel = metric.performanceLevel ?? defaultPerformanceLevel
+
+                  return (
+                    <div key={metric.title} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">{metric.title}</span>
+                        <Badge variant={performanceBadgeColors[performanceLevel.level]}>
+                          {performanceLevel.level}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 text-xs">
+                        {Object.entries(metric.benchmark).map(([level, threshold]) => (
+                          <div
+                            key={level}
+                            className={`p-2 rounded text-center ${
+                              level === performanceLevel.level
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted'
+                            }`}
+                          >
+                            <div className="font-medium">{level}</div>
+                            <div>
+                              {level === 'Low' && metric.title === 'Lead Time for Changes' ? '>1 month' :
+                               level === 'Low' && metric.title === 'Mean Time to Recovery' ? '>1 week' :
+                               level === 'Low' && metric.title === 'Change Failure Rate' ? '>46%' :
+                               threshold === Infinity ? 'N/A' :
+                               metric.title.includes('Rate') ? `≤${threshold}%` :
+                               metric.unit === 'hours' ? `≤${threshold}h` :
+                               `≥${threshold}`}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </CardContent>
           </Card>

@@ -84,6 +84,10 @@ export function getAdminClient() {
   })
 }
 
+export function createClient() {
+  return getAdminClient()
+}
+
 /**
  * Type guard to verify admin client usage context.
  *

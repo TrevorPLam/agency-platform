@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getSecurityMonitor, SecurityAlert, SecurityMetrics } from '@agency/security/monitoring'
+import { getSecurityMonitor } from '@agency/security/monitoring'
 
 /**
  * GET /api/security/monitoring

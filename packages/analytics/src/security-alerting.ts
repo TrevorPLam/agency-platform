@@ -367,7 +367,7 @@ export class SecurityAlertingEngine {
    * Evaluate condition against value
    */
   private evaluateCondition(value: unknown, condition: AlertCondition): boolean {
-    const { operator, conditionValue, caseSensitive = true } = condition
+    const { operator, value: conditionValue, caseSensitive = true } = condition
     
     switch (operator) {
       case 'equals':
@@ -501,7 +501,8 @@ export class SecurityAlertingEngine {
     // For cross-tenant events, return the target tenant
     const crossTenantEvent = events.find(e => e.eventType === SecurityEventType.CROSS_TENANT_ACCESS)
     if (crossTenantEvent) {
-      return crossTenantEvent.context.metadata?.targetTenantId as string || crossTenantEvent.actor.tenantId
+      const targetTenantId = crossTenantEvent.context.metadata?.['targetTenantId']
+      return typeof targetTenantId === 'string' ? targetTenantId : crossTenantEvent.actor.tenantId
     }
     
     // Otherwise return the most common tenant
@@ -521,7 +522,7 @@ export class SecurityAlertingEngine {
     if (events.length === 0) return 0
     
     // Base score from event severities
-    const severityScores = events.map(e => {
+    const severityScores: number[] = events.map(e => {
       switch (e.severity) {
         case 'critical': return 80
         case 'high': return 60
@@ -620,7 +621,7 @@ export class SecurityAlertingEngine {
   /**
    * Send email alert (placeholder implementation)
    */
-  private async sendEmailAlert(alert: SecurityAlert, config: Record<string, unknown>): Promise<void> {
+  private async sendEmailAlert(alert: SecurityAlert, _config: Record<string, unknown>): Promise<void> {
     // Implementation would integrate with email service
     console.log(`Email alert sent for ${alert.id}: ${alert.title}`)
   }
@@ -628,7 +629,7 @@ export class SecurityAlertingEngine {
   /**
    * Send Slack alert (placeholder implementation)
    */
-  private async sendSlackAlert(alert: SecurityAlert, config: Record<string, unknown>): Promise<void> {
+  private async sendSlackAlert(alert: SecurityAlert, _config: Record<string, unknown>): Promise<void> {
     // Implementation would integrate with Slack API
     console.log(`Slack alert sent for ${alert.id}: ${alert.title}`)
   }
@@ -637,7 +638,8 @@ export class SecurityAlertingEngine {
    * Block IP address (placeholder implementation)
    */
   private async blockIPAddress(alert: SecurityAlert, config: Record<string, unknown>): Promise<void> {
-    const duration = (config.duration as number) || 3600 // Default 1 hour
+    const configDuration = config['duration']
+    const duration = typeof configDuration === 'number' ? configDuration : 3600 // Default 1 hour
     const ips = new Set(alert.events.map(e => e.source.ip))
     
     // Implementation would integrate with firewall/rate limiting system
@@ -647,7 +649,7 @@ export class SecurityAlertingEngine {
   /**
    * Require multi-factor authentication (placeholder implementation)
    */
-  private async requireMultiFactorAuth(alert: SecurityAlert, config: Record<string, unknown>): Promise<void> {
+  private async requireMultiFactorAuth(alert: SecurityAlert, _config: Record<string, unknown>): Promise<void> {
     const users = new Set(alert.events.map(e => e.actor.userId).filter(Boolean))
     
     // Implementation would integrate with authentication system

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { userId, tenantId, isPlatformAdmin } = authResult
+    const { tenantId, isPlatformAdmin } = authResult
     const { searchParams } = new URL(request.url)
     
     // Parse query parameters
@@ -32,11 +32,27 @@ export async function GET(request: NextRequest) {
     // Create database client
     const supabase = createClient()
 
+    if (!isPlatformAdmin && !tenantId) {
+      return NextResponse.json(
+        { error: 'Tenant context is required' },
+        { status: 400 }
+      )
+    }
+
+    const tenantFilter = isPlatformAdmin ? app : tenantId
+
+    if (!tenantFilter) {
+      return NextResponse.json(
+        { error: 'Tenant context is required' },
+        { status: 400 }
+      )
+    }
+
     // Build query for performance metrics
     let query = supabase
       .from('web_vitals_metrics')
       .select('*')
-      .eq('tenant_id', isPlatformAdmin ? app : tenantId)
+      .eq('tenant_id', tenantFilter)
 
     // Apply date range filter
     if (startDate) {
@@ -174,7 +190,7 @@ function calculatePerformanceAggregation(
  */
 function calculateTrends(
   metrics: any[],
-  period: 'hourly' | 'daily' | 'weekly' | 'monthly'
+  _period: 'hourly' | 'daily' | 'weekly' | 'monthly'
 ) {
   // Split metrics into current and previous periods
   const midpoint = Math.floor(metrics.length / 2)

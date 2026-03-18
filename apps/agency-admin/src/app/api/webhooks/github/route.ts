@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { getAdminClient } from '@agency/database/admin'
 
 // GitHub webhook signature verification
 function verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
   const hmac = createHmac('sha256', secret)
   const digest = 'sha256=' + hmac.update(payload).digest('hex')
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest))
+  return timingSafeEqual(Buffer.from(signature), Buffer.from(digest))
 }
 
 // Handle different GitHub webhook events
@@ -59,7 +59,7 @@ async function handlePullRequestEvent(payload: any) {
   // Get first commit for lead time calculation
   const commits = await fetch(`https://api.github.com/repos/${repository.full_name}/pulls/${pull_request.number}/commits`, {
     headers: {
-      'Authorization': `token ${process.env.GITHUB_TOKEN}`,
+      'Authorization': `token ${process.env['GITHUB_TOKEN']}`,
       'Accept': 'application/vnd.github.v3+json'
     }
   }).then(res => res.json())
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.text()
-    const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET
+    const webhookSecret = process.env['GITHUB_WEBHOOK_SECRET']
     
     if (!webhookSecret) {
       return NextResponse.json(

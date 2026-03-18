@@ -23,8 +23,6 @@ import {
   XCircle,
   RefreshCw,
   Download,
-  TrendingUp,
-  TrendingDown,
   Info
 } from 'lucide-react'
 
@@ -55,7 +53,7 @@ interface ApplicationSecurity {
   type: 'admin' | 'public' | 'client'
   lastScan: SecurityScanResult | null
   isScanning: boolean
-  error?: string
+  error?: string | undefined
 }
 
 const APPLICATIONS: ApplicationSecurity[] = [

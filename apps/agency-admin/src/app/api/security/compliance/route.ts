@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateSecurityHeaders, generateSecurityReport, meetsMinimumRequirements } from '@agency/security'
 import { validateCSP, generateCSPReport, meetsMinimumCSPRequirements } from '@agency/security'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const applications = [
       { name: 'Agency Admin', url: 'http://localhost:3001', port: 3001 },

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { validateSecurityHeaders, generateSecurityReport } from '@agency/security'
-import { validateCSP, generateCSPReport } from '@agency/security'
+import { validateSecurityHeaders, validateCSP } from '@agency/security'
 
 export async function GET(request: NextRequest) {
   try {
@@ -134,9 +133,9 @@ function calculateHeaderScores(headers: Record<string, string>): Record<string, 
   const cspHeader = headers['content-security-policy']
   if (cspHeader) {
     const cspValidation = validateCSP(cspHeader)
-    scores.csp = Math.round((cspValidation.overallScore / cspValidation.maxScore) * 25)
+    scores['csp'] = Math.round((cspValidation.overallScore / cspValidation.maxScore) * 25)
   } else {
-    scores.csp = 0
+    scores['csp'] = 0
   }
 
   // HSTS score (15 points max)
@@ -150,36 +149,36 @@ function calculateHeaderScores(headers: Record<string, string>): Record<string, 
     }
     if (!hstsHeader.includes('includeSubDomains')) score -= 3
     if (!hstsHeader.includes('preload')) score -= 2
-    scores.hsts = Math.max(0, score)
+    scores['hsts'] = Math.max(0, score)
   } else {
-    scores.hsts = 0
+    scores['hsts'] = 0
   }
 
   // X-Frame-Options score (10 points max)
   const xFrameOptions = headers['x-frame-options']
   if (xFrameOptions === 'DENY') {
-    scores.xFrameOptions = 10
+    scores['xFrameOptions'] = 10
   } else if (xFrameOptions === 'SAMEORIGIN') {
-    scores.xFrameOptions = 7
+    scores['xFrameOptions'] = 7
   } else {
-    scores.xFrameOptions = 0
+    scores['xFrameOptions'] = 0
   }
 
   // X-Content-Type-Options score (10 points max)
   const xContentTypeOptions = headers['x-content-type-options']
-  scores.xContentTypeOptions = xContentTypeOptions === 'nosniff' ? 10 : 0
+  scores['xContentTypeOptions'] = xContentTypeOptions === 'nosniff' ? 10 : 0
 
   // Referrer-Policy score (10 points max)
   const referrerPolicy = headers['referrer-policy']
   const goodPolicies = ['no-referrer', 'no-referrer-when-downgrade', 'strict-origin', 'strict-origin-when-cross-origin']
-  if (goodPolicies.includes(referrerPolicy)) {
-    scores.referrerPolicy = 10
+  if (referrerPolicy && goodPolicies.includes(referrerPolicy)) {
+    scores['referrerPolicy'] = 10
   } else if (referrerPolicy === 'origin' || referrerPolicy === 'origin-when-cross-origin') {
-    scores.referrerPolicy = 7
+    scores['referrerPolicy'] = 7
   } else if (referrerPolicy === 'unsafe-url') {
-    scores.referrerPolicy = 0
+    scores['referrerPolicy'] = 0
   } else {
-    scores.referrerPolicy = 5
+    scores['referrerPolicy'] = 5
   }
 
   // Permissions-Policy score (10 points max)
@@ -195,14 +194,14 @@ function calculateHeaderScores(headers: Record<string, string>): Record<string, 
     if (!permissionsPolicy.includes('interest-cohort=()')) {
       score -= 2
     }
-    scores.permissionsPolicy = Math.max(0, score)
+    scores['permissionsPolicy'] = Math.max(0, score)
   } else {
-    scores.permissionsPolicy = 0
+    scores['permissionsPolicy'] = 0
   }
 
   // Cross-Origin headers score (10 points each)
-  scores.corp = headers['cross-origin-resource-policy'] ? 10 : 0
-  scores.coep = headers['cross-origin-embedder-policy'] ? 10 : 0
+  scores['corp'] = headers['cross-origin-resource-policy'] ? 10 : 0
+  scores['coep'] = headers['cross-origin-embedder-policy'] ? 10 : 0
 
   return scores
 }
@@ -213,8 +212,9 @@ function calculateOverallScore(securityScore: number, cspScore: number | null, h
   const hstsWeight = 0.15
   const otherWeight = 0.60
 
+  void securityScore
   const cspContribution = cspScore !== null ? cspScore * cspWeight : 0
-  const hstsContribution = (headerScores.hsts || 0) / 15 * 100 * hstsWeight
+  const hstsContribution = (headerScores['hsts'] || 0) / 15 * 100 * hstsWeight
 
   // Calculate other headers score (excluding CSP and HSTS which are already weighted)
   const otherHeaderScores = Object.entries(headerScores)
@@ -239,7 +239,7 @@ function calculateGrade(score: number): string {
   return 'F'
 }
 
-function calculateTrends(scores: any[]): any {
+function calculateTrends(_scores: any[]): any {
   // Simplified trend calculation - in a real implementation, this would
   // compare with historical data from a database
   return {

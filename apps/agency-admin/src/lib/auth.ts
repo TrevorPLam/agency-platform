@@ -14,6 +14,7 @@ export interface AuthResult {
     id: string
     email: string
   }
+  userId: string
   tenantId: string | null
   isPlatformAdmin: boolean
 }
@@ -44,7 +45,14 @@ export async function verifySession(): Promise<AuthResult> {
   const supabase = createSupabaseServerClient({
     getAll: () => cookieStore.getAll().map((c) => ({ name: c.name, value: c.value })),
     setAll: (cookiesToSet) => {
-      cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+      cookiesToSet.forEach(({ name, value, options }) => {
+        if (options) {
+          cookieStore.set(name, value, options)
+          return
+        }
+
+        cookieStore.set(name, value)
+      })
     },
   })
 
@@ -55,7 +63,8 @@ export async function verifySession(): Promise<AuthResult> {
   }
 
   // Extract tenant_id from app_metadata (never user_metadata for security)
-  const tenantId = user.app_metadata?.tenant_id as string | null
+  const tenantIdMetadata = user.app_metadata?.['tenant_id']
+  const tenantId = typeof tenantIdMetadata === 'string' ? tenantIdMetadata : null
 
   // Check if user is a platform admin
   const isPlatformAdmin = PLATFORM_ADMINS.includes(user.email || '')
@@ -65,8 +74,37 @@ export async function verifySession(): Promise<AuthResult> {
       id: user.id,
       email: user.email || '',
     },
+    userId: user.id,
     tenantId,
     isPlatformAdmin,
+  }
+}
+
+export async function getCurrentUser(): Promise<AuthResult['user'] | null> {
+  try {
+    const auth = await verifySession()
+    return auth.user
+  } catch {
+    return null
+  }
+}
+
+export async function getServerSession(): Promise<{
+  userId: string
+  tenantId: string | null
+  isPlatformAdmin: boolean
+  user: AuthResult['user']
+} | null> {
+  try {
+    const auth = await verifySession()
+    return {
+      userId: auth.userId,
+      tenantId: auth.tenantId,
+      isPlatformAdmin: auth.isPlatformAdmin,
+      user: auth.user,
+    }
+  } catch {
+    return null
   }
 }
 
@@ -79,7 +117,7 @@ export async function verifySession(): Promise<AuthResult> {
  * @throws {Error} If user cannot access the requested tenant
  */
 export async function validateTenantAccess(
-  request?: NextRequest,
+  _request?: NextRequest,
   requestedTenantId?: string
 ): Promise<AuthResult> {
   const auth = await verifySession()

@@ -215,8 +215,8 @@ export class BudgetManager {
     const actualSpending = await this.loadActualSpending()
 
     // Update budget categories with actual spending
-    this.categories.forEach((category, id) => {
-      const spending = actualSpending[id] || 0
+    this.categories.forEach((category) => {
+      const spending = actualSpending[category.id] || 0
       category.actual.monthly = spending
       category.actual.quarterly = spending * 3
       category.actual.yearly = spending * 12
@@ -264,7 +264,7 @@ export class BudgetManager {
   private async generateForecasts(): Promise<void> {
     console.log('📈 Generating budget forecasts...')
 
-    this.categories.forEach((category, id) => {
+    this.categories.forEach((category) => {
       // Simple forecasting based on trend and variance
       const monthlyGrowthRate = category.trend === 'increasing' ? 1.05 : 
                               category.trend === 'decreasing' ? 0.95 : 1.0
@@ -304,7 +304,7 @@ export class BudgetManager {
   private async checkBudgetAlerts(): Promise<void> {
     console.log('🚨 Checking budget alerts...')
 
-    this.categories.forEach((category, id) => {
+    this.categories.forEach((category) => {
       const utilizationRate = (category.actual.monthly / category.allocation.monthly) * 100
 
       // Critical threshold (95%)
