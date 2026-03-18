@@ -26,13 +26,14 @@ alwaysApply: false
 - Every cache key MUST be prefixed with `tenant:{id}:` so tenant data never collides. WRONG: `redis.get('posts:' + slug)`. CORRECT: `redis.get('tenant:' + tenantId + ':posts:' + slug)`.
 
 ## Migrations
-- All schema changes go in supabase/migrations/ with sequential numbering
+- All schema changes go in supabase/migrations/ with unique, sequential numbering
 - Never use the Supabase dashboard to modify schema in production
-- Always run supabase test db before deploying a migration
+- Default Supabase migrations run in a transaction. Do not use CREATE INDEX CONCURRENTLY inside them.
+- Always run the local migration and RLS verification workflow before deploying a migration
 
 ## RLS policy template (copy for every new table)
 - ALTER TABLE public.[name] ENABLE ROW LEVEL SECURITY;
-- CREATE INDEX CONCURRENTLY idx_[name]_tenant_id ON public.[name] (tenant_id);
+- CREATE INDEX idx_[name]_tenant_id ON public.[name] (tenant_id);
 - All four policies (SELECT, INSERT WITH CHECK, UPDATE USING+WITH CHECK, DELETE) using **public.tenant_id()** — see supabase/migrations/005_auth_tenant_id_helper.sql
 - For tenant-scoped tables: USING (tenant_id = public.tenant_id()); for tenants table: (id = public.tenant_id())
 - WRONG: inline JWT extraction in policy. CORRECT: USING (tenant_id = public.tenant_id())

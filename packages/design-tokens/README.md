@@ -100,7 +100,7 @@ pnpm run tokens:dev
 }
 ```
 
-> 📖 **See:** [docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md](../../docs/research/RESEARCH_MARKETING_MONOREPO_DESIGN_2026.md) §5 for full accessibility build order.
+> 📖 **See:** Architecture documentation for full accessibility build order.
 
 ## 📁 File Structure
 

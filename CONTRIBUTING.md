@@ -81,14 +81,39 @@ pnpm db:generate-types:local
 
 # Linked remote project (requires `supabase link`)
 pnpm db:generate-types:linked
+
+# Validate types are up to date (fails if out of sync)
+pnpm db:types:check
+
+# Update types from current schema
+pnpm db:types:update
+
+# Non-critical validation (warns but doesn't fail)
+pnpm db:types:validate
 ```
 
 ### Type Generation Process
 
-1. **Ensure Supabase is running locally**: `supabase db start` or `supabase start`, then `supabase db reset`
-2. **Generate types**: Run `pnpm db:generate-types:local` from the repository root, or `pnpm --filter @agency/database db:generate-types:local` from the package
-3. **Review changes**: Check the updated `packages/database/src/types.ts` file
-4. **Commit changes**: Include both migration files and updated types in the same commit
+1. **Ensure Supabase is running locally**: `supabase start`, then `supabase db reset`
+2. **Generate types**: Run `pnpm db:generate-types:local` from the repository root
+3. **Validate types**: Run `pnpm db:types:check` to verify types are in sync
+4. **Review changes**: Check the updated `packages/database/src/types.ts` file
+5. **Commit changes**: Include both migration files and updated types in the same commit
+
+### Validation Scripts
+
+The project includes automated validation scripts:
+
+- **`pnpm db:types:check`** - Validates types are current (fails build if not)
+- **`pnpm db:types:update`** - Updates types from current schema
+- **`pnpm db:types:validate`** - Non-critical validation (warns but doesn't fail)
+
+These scripts provide deterministic output by:
+
+- Using `--schema public` to limit to specific schemas
+- Setting consistent locale (`LC_ALL=C`) for reproducible output
+- Normalizing whitespace and line endings for comparison
+- Providing clear error messages and fix suggestions
 
 ### CI Type Drift Gate
 

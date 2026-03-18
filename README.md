@@ -12,7 +12,7 @@ Built with Next.js 16, Turborepo, and modern tooling for scalable client applica
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
 [![pnpm](https://img.shields.io/badge/pnpm-%3E%3D10.0.0-blue)](https://pnpm.io/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-16.1-black)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.1.7-black)](https://nextjs.org/)
 
 </div>
 

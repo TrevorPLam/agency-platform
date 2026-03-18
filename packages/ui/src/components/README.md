@@ -14,9 +14,9 @@
 
 ### 📋 In-Repo Rules & Guidelines
 
-**Levels and in-repo rules:** See [docs/architecture/ATOMIC_DESIGN.md](../../../../docs/architecture/ATOMIC_DESIGN.md) for comprehensive atomic design implementation.
+**Levels and in-repo rules:** See [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md) for comprehensive atomic design implementation.
 
-**Component structure:** See [ARCHITECTURE.md](../../../../docs/architecture/ARCHITECTURE.md) §Component structure for detailed organization patterns.
+**Component structure:** See [docs/ARCHITECTURE.md](../../../../docs/ARCHITECTURE.md) §Component structure for detailed organization patterns.
 
 ### 🎯 Design Principles
 

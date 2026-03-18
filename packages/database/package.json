@@ -26,7 +26,10 @@
     "test:coverage": "pnpm exec vitest run --coverage",
     "db:generate-types": "pnpm run db:generate-types:local",
     "db:generate-types:local": "npx supabase gen types typescript --local --schema public > src/types.ts",
-    "db:generate-types:linked": "npx supabase gen types typescript --linked --schema public > src/types.ts"
+    "db:generate-types:linked": "npx supabase gen types typescript --linked --schema public > src/types.ts",
+    "db:types:check": "tsx ../../scripts/database/validate-types.ts check",
+    "db:types:update": "tsx ../../scripts/database/validate-types.ts update",
+    "db:types:validate": "tsx ../../scripts/database/validate-types.ts check || (echo 'WARNING: Database types may be stale. Run \"pnpm db:types:update\" to update.' && exit 0)"
   },
   "dependencies": {
     "@supabase/supabase-js": "catalog:",
